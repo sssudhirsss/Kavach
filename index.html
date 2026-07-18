@@ -9,22 +9,20 @@
 
   :root {
     --bg: #FFFFFF;
-    --ink: #12161C;
-    --text: #3A4048;
-    --text-dim: #8A93A0;
+    --ink: #3F4650;
+    --text: #5B6470;
+    --text-dim: #96A0AC;
     --accent: #0F766E;
-    --accent-dark: #0B5A54;
-    --line: #E7E9EC;
-    --panel: #F7F8F9;
-    --fu: #0F766E;
-    --c: #2563EB;
-    --s: #B45309;
-    --ai: #7C3AED;
+    --line: #EDEFF2;
+    --panel: #F8F9FA;
+    --fu-bg: #EEF9F6; --fu-ink: #0F766E;
+    --c-bg:  #EFF4FE; --c-ink:  #2563EB;
+    --s-bg:  #FDF6EA; --s-ink:  #B45309;
+    --ai-bg: #F5F2FC; --ai-ink: #7C3AED;
   }
 
   * { box-sizing: border-box; }
-  html { scroll-behavior: smooth; }
-
+  html, body { height: 100%; }
   body {
     margin: 0;
     background: var(--bg);
@@ -36,8 +34,11 @@
   .mono { font-family: 'IBM Plex Mono', monospace; }
   a { color: inherit; }
 
-  .container {
-    max-width: 1100px;
+  .page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 1180px;
     margin: 0 auto;
     padding: 0 28px;
   }
@@ -46,181 +47,126 @@
   nav {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 24px 0;
+    padding: 22px 0 10px;
   }
   .nav-mark {
     font-weight: 700;
-    font-size: 17px;
+    font-size: 16px;
     color: var(--ink);
     letter-spacing: 0.01em;
   }
   .nav-mark span { color: var(--accent); }
-  .nav-links { display: flex; gap: 30px; font-size: 13.5px; color: var(--text-dim); }
-  .nav-links a:hover { color: var(--ink); }
 
-  /* ---------- Hero: clean, centered, minimal ---------- */
+  /* ---------- Hero ---------- */
   .hero {
-    min-height: 82vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     text-align: center;
-    padding: 40px 24px;
+    padding: 28px 12px 8px;
   }
   .hero-eyebrow {
     font-family: 'IBM Plex Mono', monospace;
-    font-size: 11.5px;
-    letter-spacing: 0.14em;
+    font-size: 11px;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
     color: var(--accent);
-    margin-bottom: 22px;
+    margin-bottom: 16px;
   }
   h1.hero-title {
-    font-size: 52px;
-    line-height: 1.12;
+    font-size: 38px;
+    line-height: 1.15;
     font-weight: 700;
     color: var(--ink);
-    margin: 0 0 20px;
-    letter-spacing: -0.015em;
-    max-width: 800px;
+    margin: 0 auto 12px;
+    letter-spacing: -0.01em;
+    max-width: 680px;
   }
   .hero-sub {
-    font-size: 16px;
-    line-height: 1.65;
+    font-size: 14.5px;
+    line-height: 1.6;
     color: var(--text-dim);
-    max-width: 480px;
-    margin: 0 0 4px;
+    max-width: 460px;
+    margin: 0 auto;
   }
-  .scroll-hint {
-    margin-top: 56px;
-    font-size: 11px;
-    color: var(--text-dim);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-  }
-  .scroll-hint .dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: var(--text-dim);
-    animation: bounce 1.6s ease-in-out infinite;
-  }
-  @keyframes bounce { 0%,100%{ transform: translateY(0); opacity:0.4; } 50%{ transform: translateY(6px); opacity:1; } }
 
   @media (max-width: 700px) {
-    h1.hero-title { font-size: 34px; }
+    h1.hero-title { font-size: 28px; }
   }
 
-  /* ---------- Section shared ---------- */
-  section { padding: 68px 0; border-top: 1px solid var(--line); }
-  .section-eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 10px;
-  }
-  h2.section-title {
-    font-size: 27px;
-    font-weight: 700;
-    color: var(--ink);
-    margin: 0 0 14px;
-  }
-  .section-sub {
-    font-size: 14.5px;
-    color: var(--text-dim);
-    max-width: 560px;
-    line-height: 1.6;
-    margin: 0 0 40px;
-  }
-
-  /* ---------- Four disciplines ---------- */
+  /* ---------- Discipline cards ---------- */
   .disc-grid {
+    flex: 1;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1px;
-    background: var(--line);
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    overflow: hidden;
+    gap: 14px;
+    align-items: stretch;
+    padding: 28px 0 20px;
   }
-  .disc-card { background: #FFFFFF; padding: 24px 20px; }
-  .disc-letter { font-weight: 700; font-size: 26px; margin-bottom: 10px; }
-  .disc-fu .disc-letter { color: var(--fu); }
-  .disc-c .disc-letter  { color: var(--c); }
-  .disc-s .disc-letter  { color: var(--s); }
-  .disc-ai .disc-letter { color: var(--ai); }
-  .disc-name { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
-  .disc-standard { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text-dim); margin-bottom: 10px; }
-  .disc-desc { font-size: 12.5px; line-height: 1.55; color: var(--text); margin-bottom: 18px; }
-
-  .disc-grid { gap: 14px; background: transparent; border: none; }
   .disc-card {
-    border: 1px solid var(--line);
     border-radius: 16px;
-    padding: 26px 22px;
-    transition: box-shadow 0.2s ease, transform 0.2s ease;
-  }
-  .disc-card:hover {
-    box-shadow: 0 12px 28px rgba(15,23,42,0.08);
-    transform: translateY(-2px);
-  }
-
-  .disc-actions {
+    padding: 20px 18px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
   }
+  .disc-fu { background: var(--fu-bg); }
+  .disc-c  { background: var(--c-bg); }
+  .disc-s  { background: var(--s-bg); }
+  .disc-ai { background: var(--ai-bg); }
+
+  .disc-letter { font-weight: 700; font-size: 22px; margin-bottom: 6px; }
+  .disc-fu .disc-letter { color: var(--fu-ink); }
+  .disc-c .disc-letter  { color: var(--c-ink); }
+  .disc-s .disc-letter  { color: var(--s-ink); }
+  .disc-ai .disc-letter { color: var(--ai-ink); }
+
+  .disc-name { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .disc-standard { font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: var(--text-dim); margin-bottom: 10px; }
+  .disc-desc { font-size: 12px; line-height: 1.5; color: var(--text); margin-bottom: 16px; flex: 1; }
+
+  .disc-actions { display: flex; flex-direction: column; gap: 7px; }
   .disc-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 9px 14px;
-    border-radius: 999px;
-    font-size: 12.5px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 12px;
     font-weight: 600;
     cursor: pointer;
     border: none;
     font-family: 'IBM Plex Sans', sans-serif;
     transition: opacity 0.15s ease, background 0.15s ease;
   }
-  .disc-btn.primary { background: var(--ink); color: #fff; }
-  .disc-btn.primary:hover { opacity: 0.85; }
-  .disc-btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
-  .disc-btn.secondary:hover { background: var(--panel); }
-  .disc-btn.tertiary { background: transparent; color: var(--text-dim); font-weight: 500; padding: 6px 14px; }
+  .disc-fu .disc-btn.primary { background: #CDECE5; color: var(--fu-ink); }
+  .disc-c  .disc-btn.primary { background: #D6E4FD; color: var(--c-ink); }
+  .disc-s  .disc-btn.primary { background: #FBE9C8; color: var(--s-ink); }
+  .disc-ai .disc-btn.primary { background: #E4DBF9; color: var(--ai-ink); }
+  .disc-btn.primary:hover { opacity: 0.82; }
+
+  .disc-btn.secondary {
+    background: rgba(255,255,255,0.7);
+    color: var(--ink);
+    border: 1px solid rgba(0,0,0,0.06);
+  }
+  .disc-btn.secondary:hover { background: #ffffff; }
+  .disc-btn.tertiary {
+    background: transparent;
+    color: var(--text-dim);
+    font-weight: 500;
+    padding: 6px 12px;
+  }
   .disc-btn.tertiary:hover { color: var(--ink); }
 
-  #fc-toast {
-    position: fixed;
-    bottom: 96px;
-    right: 24px;
-    background: var(--ink);
-    color: #fff;
-    font-size: 12.5px;
-    font-weight: 500;
-    padding: 12px 18px;
-    border-radius: 10px;
-    box-shadow: 0 12px 28px rgba(15,23,42,0.25);
-    opacity: 0;
-    transform: translateY(8px);
-    pointer-events: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-    z-index: 1001;
-    max-width: 280px;
+  @media (max-width: 860px) {
+    .disc-grid { grid-template-columns: 1fr 1fr; }
   }
-  #fc-toast.show { opacity: 1; transform: translateY(0); }
-
-  @media (max-width: 860px) { .disc-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 560px) {
+    .disc-grid { grid-template-columns: 1fr; }
+  }
 
   footer {
     border-top: 1px solid var(--line);
-    padding: 26px 0;
-    font-size: 12px;
+    padding: 16px 0;
+    font-size: 11.5px;
     color: var(--text-dim);
     display: flex;
     justify-content: space-between;
@@ -231,13 +177,13 @@
     position: fixed;
     bottom: 24px;
     right: 24px;
-    width: 58px;
-    height: 58px;
-    border-radius: 50%;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
     background: var(--accent);
     border: none;
     cursor: pointer;
-    box-shadow: 0 8px 22px rgba(15,118,110,0.35);
+    box-shadow: 0 8px 20px rgba(15,118,110,0.28);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -256,8 +202,8 @@
     max-height: calc(100vh - 48px);
     background: #FFFFFF;
     border: 1px solid var(--line);
-    border-radius: 14px;
-    box-shadow: 0 20px 50px rgba(15,23,42,0.18);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15,23,42,0.14);
     display: none;
     flex-direction: column;
     overflow: hidden;
@@ -274,7 +220,7 @@
     gap: 10px;
   }
   #fc-avatar {
-    width: 34px; height: 34px; border-radius: 50%;
+    width: 34px; height: 34px; border-radius: 12px;
     background: rgba(255,255,255,0.18);
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
@@ -282,7 +228,7 @@
   #fc-header-text { flex: 1; }
   #fc-header-name { font-size: 13.5px; font-weight: 600; }
   #fc-header-status { font-size: 10.5px; opacity: 0.85; display:flex; align-items:center; gap:5px; }
-  #fc-header-status .pulse { width:6px; height:6px; border-radius:50%; background:#7CE7C9; }
+  #fc-header-status .pulse { width:6px; height:6px; border-radius:50%; background:#B9EFDE; }
   #fc-close { background: none; border: none; color: #fff; opacity: 0.85; cursor: pointer; padding: 4px; }
 
   #fc-body {
@@ -337,87 +283,90 @@
     text-align: center;
     padding: 0 12px 12px;
   }
+
+  #fc-toast {
+    position: fixed;
+    bottom: 92px;
+    right: 24px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15,23,42,0.22);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1001;
+    max-width: 280px;
+  }
+  #fc-toast.show { opacity: 1; transform: translateY(0); }
 </style>
 </head>
 <body>
 
-  <div class="container">
+  <div class="page">
     <nav>
       <div class="nav-mark">FuC<span>S</span>AI</div>
-      <div class="nav-links">
-        <a href="#disciplines">Disciplines</a>
-      </div>
     </nav>
-  </div>
 
-  <div class="hero">
-    <div class="hero-eyebrow">Functional Safety &middot; Cybersecurity &middot; SOTIF &middot; AI Safety</div>
-    <h1 class="hero-title">World's first online safety analysis tool.</h1>
-    <p class="hero-sub">Meet the Safety Assistant in the corner &mdash; ask a question or say hello.</p>
-    <div class="scroll-hint">
-      <span>Scroll to learn more</span>
-      <span class="dot"></span>
+    <div class="hero">
+      <div class="hero-eyebrow">Functional Safety &middot; Cybersecurity &middot; SOTIF &middot; AI Safety</div>
+      <h1 class="hero-title">World's first online safety analysis tool.</h1>
+      <p class="hero-sub">Meet the Safety Assistant in the corner &mdash; ask a question or say hello.</p>
     </div>
-  </div>
 
-  <section id="disciplines">
-    <div class="container">
-      <div class="section-eyebrow">What FuCSAI covers</div>
-      <h2 class="section-title">Four disciplines, one traceable model</h2>
-      <p class="section-sub">Each layer defends the same item against a different class of failure &mdash; and in FuCSAI they share the same underlying data, so a change in one shows up everywhere it matters.</p>
-
-      <div class="disc-grid">
-        <div class="disc-card disc-fu">
-          <div class="disc-letter">Fu</div>
-          <div class="disc-name">Functional Safety</div>
-          <div class="disc-standard mono">ISO 26262</div>
-          <div class="disc-desc">Item definition, HARA, safety goals, FMEA, FTA, and FMEDA/diagnostic coverage across the full V-model.</div>
-          <div class="disc-actions">
-            <button class="disc-btn primary" onclick="trainMe('fu')">Train me</button>
-            <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
-            <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
-          </div>
+    <div class="disc-grid">
+      <div class="disc-card disc-fu">
+        <div class="disc-letter">Fu</div>
+        <div class="disc-name">Functional Safety</div>
+        <div class="disc-standard mono">ISO 26262</div>
+        <div class="disc-desc">Full lifecycle, Parts 1&ndash;12 &mdash; vocabulary through concept, system, hardware, software, production, and supporting processes.</div>
+        <div class="disc-actions">
+          <button class="disc-btn primary" onclick="trainMe('fu')">Train me</button>
+          <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
+          <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
         </div>
-        <div class="disc-card disc-c">
-          <div class="disc-letter">C</div>
-          <div class="disc-name">Cybersecurity</div>
-          <div class="disc-standard mono">ISO/SAE 21434 &amp; UN ECE Regs</div>
-          <div class="disc-desc">Threat analysis and risk assessment (TARA), cybersecurity goals and concept, aligned to UN R155/R156.</div>
-          <div class="disc-actions">
-            <button class="disc-btn primary" onclick="trainMe('c')">Train me</button>
-            <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
-            <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
-          </div>
+      </div>
+      <div class="disc-card disc-c">
+        <div class="disc-letter">C</div>
+        <div class="disc-name">Cybersecurity</div>
+        <div class="disc-standard mono">ISO/SAE 21434 &amp; UN ECE Regs</div>
+        <div class="disc-desc">Full lifecycle, Clauses 4&ndash;15 &mdash; org management through concept, development, production, operations, and TARA.</div>
+        <div class="disc-actions">
+          <button class="disc-btn primary" onclick="trainMe('c')">Train me</button>
+          <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
+          <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
         </div>
-        <div class="disc-card disc-s">
-          <div class="disc-letter">S</div>
-          <div class="disc-name">SOTIF</div>
-          <div class="disc-standard mono">ISO 21448</div>
-          <div class="disc-desc">Safety of the intended function &mdash; performance limitations and foreseeable misuse beyond fault-based hazards.</div>
-          <div class="disc-actions">
-            <button class="disc-btn primary" onclick="trainMe('s')">Train me</button>
-            <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
-            <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
-          </div>
+      </div>
+      <div class="disc-card disc-s">
+        <div class="disc-letter">S</div>
+        <div class="disc-name">SOTIF</div>
+        <div class="disc-standard mono">ISO 21448</div>
+        <div class="disc-desc">Full lifecycle, Clauses 4&ndash;13 &mdash; specification through triggering conditions, verification, and field monitoring.</div>
+        <div class="disc-actions">
+          <button class="disc-btn primary" onclick="trainMe('s')">Train me</button>
+          <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
+          <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
         </div>
-        <div class="disc-card disc-ai">
-          <div class="disc-letter">AI</div>
-          <div class="disc-name">AI Safety</div>
-          <div class="disc-standard mono">ISO/PAS 8800</div>
-          <div class="disc-desc">Data, model, and behavioral risk for learned components, extending ISO 26262 &amp; ISO 21448.</div>
-          <div class="disc-actions">
-            <button class="disc-btn primary" onclick="trainMe('ai')">Train me</button>
-            <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
-            <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
-          </div>
+      </div>
+      <div class="disc-card disc-ai">
+        <div class="disc-letter">AI</div>
+        <div class="disc-name">AI Safety</div>
+        <div class="disc-standard mono">ISO/PAS 8800</div>
+        <div class="disc-desc">Full lifecycle, Clauses 5&ndash;15 &mdash; AI safety management through data, V&amp;V, safety analysis, and operation.</div>
+        <div class="disc-actions">
+          <button class="disc-btn primary" onclick="trainMe('ai')">Train me</button>
+          <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
+          <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
         </div>
       </div>
     </div>
-  </section>
 
-  <div class="container">
     <footer>
-      <span>FuCSAI &mdash; Functional Safety, Cybersecurity, SOTIF &amp; AI Safety</span>
+      <span>FuCSAI</span>
       <span class="mono">fucsai.com</span>
     </footer>
   </div>
@@ -459,7 +408,7 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>
     </div>
-    <div id="fc-soon">Live Q&amp;A is coming soon &mdash; this preview shows what the assistant will do.</div>
+    <div id="fc-soon">Live Q&amp;A is coming soon.</div>
   </div>
 
   <div id="fc-toast"></div>
@@ -474,19 +423,75 @@
     const TOPICS = {
       fu: {
         label: 'ISO 26262',
-        text: "ISO 26262 covers automotive Functional Safety across the full V-model. I can walk you through it clause by clause: Item Definition (Cl.5), Initiation of the Safety Lifecycle (Cl.6), Hazard Analysis &amp; Risk Assessment with Severity/Exposure/Controllability &rarr; ASIL (Cl.7), and the Functional Safety Concept (Cl.8) &mdash; then on into FMEA, FTA, and FMEDA for the later phases. Ask me about any clause, work product, or ASIL determination."
+        text: "ISO 26262:2018 (2nd edition) has 12 parts, structured as a V-model:" +
+          "<ul>" +
+          "<li><strong>Part 1</strong> Vocabulary</li>" +
+          "<li><strong>Part 2</strong> Management of functional safety</li>" +
+          "<li><strong>Part 3</strong> Concept phase &mdash; item definition, HARA, functional safety concept</li>" +
+          "<li><strong>Part 4</strong> Product development at the system level</li>" +
+          "<li><strong>Part 5</strong> Product development at the hardware level</li>" +
+          "<li><strong>Part 6</strong> Product development at the software level</li>" +
+          "<li><strong>Part 7</strong> Production, operation, service &amp; decommissioning</li>" +
+          "<li><strong>Part 8</strong> Supporting processes</li>" +
+          "<li><strong>Part 9</strong> ASIL-oriented and safety-oriented analyses</li>" +
+          "<li><strong>Part 10</strong> Guidelines on ISO 26262</li>" +
+          "<li><strong>Part 11</strong> Guidelines for semiconductors</li>" +
+          "<li><strong>Part 12</strong> Adaptation for motorcycles</li>" +
+          "</ul>" +
+          "Parts 5 and 6 (hardware and software) run in parallel below Part 4, with Parts 8 and 9 applying across the whole lifecycle. Ask me about any part, clause, or work product."
       },
       c: {
-        label: 'ISO/SAE 21434 &amp; UN ECE Regs',
-        text: "ISO/SAE 21434 covers Cybersecurity Engineering across the vehicle lifecycle &mdash; asset identification, Threat Analysis and Risk Assessment (TARA), attack path analysis, cybersecurity goals and concept, and vulnerability management. It's also the technical backbone behind UN Regulations 155 (Cybersecurity Management System) and 156 (Software Update Management System), which vehicle type-approval increasingly requires. Ask me about TARA methodology, CSMS evidence, or how it interfaces with functional safety."
+        label: 'ISO/SAE 21434',
+        text: "ISO/SAE 21434:2021 is organized in clauses, spanning the full lifecycle:" +
+          "<ul>" +
+          "<li><strong>Cl.4</strong> General considerations</li>" +
+          "<li><strong>Cl.5</strong> Organizational cybersecurity management</li>" +
+          "<li><strong>Cl.6</strong> Project dependent cybersecurity management</li>" +
+          "<li><strong>Cl.7</strong> Distributed cybersecurity activities (supplier/customer)</li>" +
+          "<li><strong>Cl.8</strong> Continual cybersecurity activities (monitoring, vulnerability management)</li>" +
+          "<li><strong>Cl.9</strong> Concept &mdash; item definition, risk assessment, cybersecurity goals &amp; requirements</li>" +
+          "<li><strong>Cl.10</strong> Product development</li>" +
+          "<li><strong>Cl.11</strong> Cybersecurity validation</li>" +
+          "<li><strong>Cl.12</strong> Production</li>" +
+          "<li><strong>Cl.13</strong> Operations and maintenance</li>" +
+          "<li><strong>Cl.14</strong> End of cybersecurity support &amp; decommissioning</li>" +
+          "<li><strong>Cl.15</strong> Threat Analysis and Risk Assessment (TARA) methods</li>" +
+          "</ul>" +
+          "Clauses 5&ndash;15 each define work products (42 total per Annex A). It's also the technical backbone behind UN Regulations 155 (CSMS) and 156 (SUMS)."
       },
       s: {
-        label: 'ISO 21448 (SOTIF)',
-        text: "ISO 21448 covers Safety Of The Intended Function &mdash; risk that comes from performance limitations and foreseeable misuse, not just faults. It's especially relevant for ADAS and automated driving functions. I can walk you through triggering condition identification, scenario categorization (known-safe, known-unsafe, unknown-unsafe, unknown-safe), and verification &amp; validation targets. Ask me anything about SOTIF scenario analysis or how it complements ISO 26262."
+        label: 'ISO 21448',
+        text: "ISO 21448:2022 (SOTIF) is organized as:" +
+          "<ul>" +
+          "<li><strong>Cl.4</strong> Overview and organization of SOTIF activities</li>" +
+          "<li><strong>Cl.5</strong> Specification and description of the item/function</li>" +
+          "<li><strong>Cl.6</strong> Identification &amp; evaluation of hazardous behaviour, and V&amp;V targets (severity/exposure/controllability &mdash; no ASIL here)</li>" +
+          "<li><strong>Cl.7</strong> Identification &amp; evaluation of functional insufficiencies and triggering conditions</li>" +
+          "<li><strong>Cl.8</strong> Functional modification to reduce SOTIF-related risk</li>" +
+          "<li><strong>Cl.9</strong> Definition of the verification and validation strategy</li>" +
+          "<li><strong>Cl.10&ndash;11</strong> Verification &amp; validation &mdash; known-scenario verification, then residual-risk evaluation for unknown scenarios</li>" +
+          "<li><strong>Cl.12</strong> Evaluation of the achievement of SOTIF (release)</li>" +
+          "<li><strong>Cl.13</strong> Operation phase &mdash; field monitoring for emerging SOTIF issues</li>" +
+          "</ul>" +
+          "The core idea: functional insufficiencies (not faults) triggered by specific conditions, reduced until residual risk from unknown scenarios is acceptable."
       },
       ai: {
         label: 'ISO/PAS 8800',
-        text: "ISO/PAS 8800 covers Safety and Artificial Intelligence for road vehicles &mdash; the newest of the four standards. It addresses risks unique to learned components: data quality and management, AI safety requirements, model verification &amp; validation, and assurance arguments, extending both ISO 26262 and ISO 21448 into AI-based functions. Ask me about AI element definition, dataset requirements, or how AI safety analysis differs from classical fault-based analysis."
+        text: "ISO/PAS 8800:2024 is organized as:" +
+          "<ul>" +
+          "<li><strong>Cl.5</strong> Requirements for conformity</li>" +
+          "<li><strong>Cl.6</strong> AI within ISO 26262/ISO 21448 &mdash; basic concepts, cause-and-effect error model</li>" +
+          "<li><strong>Cl.7</strong> AI safety management &mdash; the reference AI safety lifecycle</li>" +
+          "<li><strong>Cl.8</strong> Assurance arguments for AI systems</li>" +
+          "<li><strong>Cl.9</strong> Derivation of AI safety requirements</li>" +
+          "<li><strong>Cl.10</strong> Selection of AI technologies &amp; architectural/development measures</li>" +
+          "<li><strong>Cl.11</strong> Data-related considerations &mdash; the dataset lifecycle</li>" +
+          "<li><strong>Cl.12</strong> Verification and validation of the AI system</li>" +
+          "<li><strong>Cl.13</strong> Safety analysis of AI systems</li>" +
+          "<li><strong>Cl.14</strong> Measures during operation &mdash; field monitoring, re-training/re-validation</li>" +
+          "<li><strong>Cl.15</strong> Confidence in AI development frameworks &amp; tools</li>" +
+          "</ul>" +
+          "It tailors/extends ISO 26262 (malfunctioning AI behaviour) and ISO 21448 (AI functional insufficiencies) rather than replacing either \u2014 hazard analysis itself stays in the ISO 26262/21448 scope."
       }
     };
 
@@ -500,7 +505,7 @@
       userMsg.style.color = '#fff';
       userMsg.style.alignSelf = 'flex-end';
       userMsg.style.marginLeft = 'auto';
-      userMsg.textContent = 'Train me on ' + topic.label.replace(/&rarr;|&mdash;|&amp;/g, m => ({'&rarr;':'→','&mdash;':'—','&amp;':'&'}[m]));
+      userMsg.textContent = 'Train me on ' + topic.label;
 
       const replyMsg = document.createElement('div');
       replyMsg.className = 'fc-msg';
@@ -516,7 +521,7 @@
     let toastTimer;
     function comingSoon(label) {
       const toast = document.getElementById('fc-toast');
-      toast.textContent = label + ' — coming soon. This preview site doesn\'t have the live workspace connected yet.';
+      toast.textContent = label + ' — coming soon.';
       toast.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);

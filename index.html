@@ -3,25 +3,23 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FuCSAI — Functional Safety, Cybersecurity, SOTIF &amp; AI Safety</title>
+<title>FuCSAI — World's first online safety analysis tool</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
   :root {
-    --bg: #FBFAF7;
-    --panel: #FFFFFF;
-    --panel-2: #F2EFE6;
-    --parchment: #ECE4D2;
-    --ink: #201C14;
+    --bg: #FFFFFF;
+    --ink: #12161C;
     --text: #3A4048;
-    --text-dim: #767F8C;
-    --heading: #191C22;
-    --bronze: #9C7A3E;
-    --fu: #3D8478;
-    --c: #3F638C;
-    --s: #A97B2D;
-    --ai: #6C5F94;
-    --line: #E3E0D6;
+    --text-dim: #8A93A0;
+    --accent: #0F766E;
+    --accent-dark: #0B5A54;
+    --line: #E7E9EC;
+    --panel: #F7F8F9;
+    --fu: #0F766E;
+    --c: #2563EB;
+    --s: #B45309;
+    --ai: #7C3AED;
   }
 
   * { box-sizing: border-box; }
@@ -35,9 +33,7 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  .display { font-family: 'Fraunces', serif; }
   .mono { font-family: 'IBM Plex Mono', monospace; }
-
   a { color: inherit; }
 
   .container {
@@ -51,184 +47,74 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 22px 0;
+    padding: 24px 0;
   }
   .nav-mark {
-    font-family: 'Fraunces', serif;
     font-weight: 700;
-    font-size: 20px;
-    color: var(--heading);
+    font-size: 17px;
+    color: var(--ink);
     letter-spacing: 0.01em;
   }
-  .nav-mark span { color: var(--bronze); }
-  .nav-links { display: flex; gap: 28px; font-size: 13.5px; color: var(--text-dim); }
-  .nav-links a:hover { color: var(--text); }
-  .nav-cta {
-    font-size: 13px;
-    font-weight: 600;
-    padding: 8px 16px;
-    border-radius: 6px;
-    background: var(--bronze);
-    color: #1B140B;
-    text-decoration: none;
-  }
+  .nav-mark span { color: var(--accent); }
+  .nav-links { display: flex; gap: 30px; font-size: 13.5px; color: var(--text-dim); }
+  .nav-links a:hover { color: var(--ink); }
 
-  /* ---------- Hero ---------- */
+  /* ---------- Hero: clean, centered, minimal ---------- */
   .hero {
-    display: grid;
-    grid-template-columns: 1.05fr 0.95fr;
-    gap: 40px;
+    min-height: 82vh;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    padding: 56px 0 88px;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 24px;
   }
-  .eyebrow {
+  .hero-eyebrow {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11.5px;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--bronze);
-    margin-bottom: 18px;
+    color: var(--accent);
+    margin-bottom: 22px;
   }
   h1.hero-title {
-    font-size: 46px;
-    line-height: 1.08;
-    font-weight: 600;
-    color: var(--heading);
+    font-size: 52px;
+    line-height: 1.12;
+    font-weight: 700;
+    color: var(--ink);
     margin: 0 0 20px;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
+    max-width: 800px;
   }
   .hero-sub {
     font-size: 16px;
     line-height: 1.65;
-    color: var(--text);
+    color: var(--text-dim);
     max-width: 480px;
-    margin: 0 0 30px;
+    margin: 0 0 4px;
   }
-  .hero-ctas { display: flex; gap: 12px; flex-wrap: wrap; }
-  .hero-list {
-    list-style: none;
-    counter-reset: hl;
-    margin: 0 0 30px;
-    padding: 0;
-    max-width: 500px;
-  }
-  .hero-list li {
-    counter-increment: hl;
-    position: relative;
-    padding: 8px 0 8px 34px;
-    font-size: 14.5px;
-    line-height: 1.5;
-    color: var(--text);
-    border-top: 1px solid var(--line);
-  }
-  .hero-list li:first-child { border-top: none; }
-  .hero-list li::before {
-    content: counter(hl);
-    position: absolute;
-    left: 0;
-    top: 9px;
-    width: 20px;
-    height: 20px;
-    border-radius: 5px;
-    background: var(--panel-2);
-    color: var(--bronze);
-    font-family: 'IBM Plex Mono', monospace;
+  .scroll-hint {
+    margin-top: 56px;
     font-size: 11px;
-    font-weight: 600;
+    color: var(--text-dim);
     display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .hero-list strong { color: var(--heading); font-weight: 600; }
-  .btn-primary {
-    display: inline-block;
-    background: var(--bronze);
-    color: #1B140B;
-    font-weight: 600;
-    font-size: 14.5px;
-    padding: 13px 22px;
-    border-radius: 7px;
-    text-decoration: none;
-  }
-  .btn-secondary {
-    display: inline-block;
-    border: 1px solid var(--line);
-    color: var(--text);
-    font-weight: 500;
-    font-size: 14.5px;
-    padding: 13px 22px;
-    border-radius: 7px;
-    text-decoration: none;
-  }
-  .btn-secondary:hover { border-color: var(--bronze); color: var(--heading); }
-
-  /* ---------- Rings diagram ---------- */
-  .rings-wrap {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    max-width: 420px;
-    margin: 0 auto;
-    container-type: inline-size;
-  }
-  .ring {
-    position: absolute;
-    border-radius: 50%;
-    border: 1.5px solid;
-    display: flex;
-    align-items: flex-start;
-    justify-content: center;
-    transition: transform 0.25s ease, border-color 0.25s ease;
-  }
-  .ring:hover { transform: scale(1.015); }
-  .ring-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    padding: 8px 0 0;
-  }
-  .r-ai   { inset: 0%;    border-color: var(--ai); }
-  .r-s    { inset: 10%;   border-color: var(--s); }
-  .r-c    { inset: 20%;   border-color: var(--c); }
-  .r-fu   { inset: 30%;   border-color: var(--fu); }
-  .r-ai .ring-label   { color: var(--ai); }
-  .r-s .ring-label    { color: var(--s); }
-  .r-c .ring-label    { color: var(--c); }
-  .r-fu .ring-label   { color: var(--fu); }
-
-  .item-core {
-    position: absolute;
-    inset: 38%;
-    border-radius: 50%;
-    background: var(--parchment);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
     flex-direction: column;
-    padding: 6% 8%;
-    overflow: hidden;
+    align-items: center;
+    gap: 6px;
   }
-  .item-core .k1 {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: clamp(7px, 4.2cqw, 10px);
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #8A7B5C;
-    white-space: nowrap;
+  .scroll-hint .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--text-dim);
+    animation: bounce 1.6s ease-in-out infinite;
   }
-  .item-core .k2 {
-    font-family: 'Fraunces', serif;
-    font-weight: 600;
-    font-size: clamp(10px, 6cqw, 15px);
-    color: var(--ink);
-    white-space: nowrap;
-    line-height: 1.2;
+  @keyframes bounce { 0%,100%{ transform: translateY(0); opacity:0.4; } 50%{ transform: translateY(6px); opacity:1; } }
+
+  @media (max-width: 700px) {
+    h1.hero-title { font-size: 34px; }
   }
 
   /* ---------- Section shared ---------- */
-  section { padding: 72px 0; border-top: 1px solid var(--line); }
+  section { padding: 68px 0; border-top: 1px solid var(--line); }
   .section-eyebrow {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 11px;
@@ -238,18 +124,17 @@
     margin-bottom: 10px;
   }
   h2.section-title {
-    font-family: 'Fraunces', serif;
-    font-size: 30px;
-    font-weight: 600;
-    color: var(--heading);
+    font-size: 27px;
+    font-weight: 700;
+    color: var(--ink);
     margin: 0 0 14px;
   }
   .section-sub {
-    font-size: 15px;
+    font-size: 14.5px;
     color: var(--text-dim);
     max-width: 560px;
     line-height: 1.6;
-    margin: 0 0 44px;
+    margin: 0 0 40px;
   }
 
   /* ---------- Four disciplines ---------- */
@@ -262,124 +147,76 @@
     border-radius: 10px;
     overflow: hidden;
   }
-  .disc-card {
-    background: var(--panel);
-    padding: 26px 22px;
-  }
-  .disc-letter {
-    font-family: 'Fraunces', serif;
-    font-weight: 700;
-    font-size: 30px;
-    margin-bottom: 12px;
-  }
+  .disc-card { background: #FFFFFF; padding: 24px 20px; }
+  .disc-letter { font-weight: 700; font-size: 26px; margin-bottom: 10px; }
   .disc-fu .disc-letter { color: var(--fu); }
   .disc-c .disc-letter  { color: var(--c); }
   .disc-s .disc-letter  { color: var(--s); }
   .disc-ai .disc-letter { color: var(--ai); }
-  .disc-name {
-    font-size: 14.5px;
-    font-weight: 600;
-    color: var(--heading);
-    margin-bottom: 6px;
-  }
-  .disc-standard {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    color: var(--text-dim);
-    margin-bottom: 12px;
-  }
-  .disc-desc { font-size: 13px; line-height: 1.6; color: var(--text); margin-bottom: 14px; }
-  .disc-wp-label {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--text-dim);
-    margin-bottom: 8px;
-  }
-  .disc-wp {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-  }
-  .disc-wp li {
-    font-size: 12.5px;
-    line-height: 1.55;
-    color: var(--text);
-    padding-left: 14px;
-    position: relative;
-    margin-bottom: 5px;
-  }
-  .disc-wp li::before {
-    content: "\2013";
-    position: absolute;
-    left: 0;
-    color: var(--text-dim);
-  }
+  .disc-name { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .disc-standard { font-family: 'IBM Plex Mono', monospace; font-size: 10.5px; color: var(--text-dim); margin-bottom: 10px; }
+  .disc-desc { font-size: 12.5px; line-height: 1.55; color: var(--text); margin-bottom: 18px; }
 
-  @media (max-width: 860px) {
-    .disc-grid { grid-template-columns: 1fr 1fr; }
-  }
-
-  /* ---------- Preview ---------- */
-  .preview-frame {
+  .disc-grid { gap: 14px; background: transparent; border: none; }
+  .disc-card {
     border: 1px solid var(--line);
-    border-radius: 10px;
-    overflow: hidden;
-    background: var(--panel);
+    border-radius: 16px;
+    padding: 26px 22px;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
-  .preview-bar {
+  .disc-card:hover {
+    box-shadow: 0 12px 28px rgba(15,23,42,0.08);
+    transform: translateY(-2px);
+  }
+
+  .disc-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .disc-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--line);
-  }
-  .preview-dot { width: 8px; height: 8px; border-radius: 50%; background: #384252; }
-  .preview-body { display: flex; min-height: 300px; }
-  .preview-tree {
-    width: 220px;
-    border-right: 1px solid var(--line);
-    padding: 14px 10px;
-    font-size: 12px;
-    color: var(--text-dim);
-  }
-  .preview-tree .node { padding: 5px 8px; border-radius: 5px; }
-  .preview-tree .node.active { background: #2A3242; color: var(--heading); }
-  .preview-main { flex: 1; padding: 20px; }
-  .preview-table {
+    justify-content: center;
     width: 100%;
-    border-collapse: collapse;
-    font-size: 11.5px;
-  }
-  .preview-table th {
-    text-align: left;
-    color: var(--text-dim);
+    padding: 9px 14px;
+    border-radius: 999px;
+    font-size: 12.5px;
     font-weight: 600;
-    padding: 6px 8px;
-    border-bottom: 1px solid var(--line);
+    cursor: pointer;
+    border: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    transition: opacity 0.15s ease, background 0.15s ease;
   }
-  .preview-table td {
-    padding: 6px 8px;
-    border-bottom: 1px solid #212936;
-    color: var(--text);
-  }
-  .asil-badge {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 10px;
-    font-weight: 700;
-    color: #1B140B;
-    padding: 1px 6px;
-    border-radius: 4px;
-    display: inline-block;
-  }
+  .disc-btn.primary { background: var(--ink); color: #fff; }
+  .disc-btn.primary:hover { opacity: 0.85; }
+  .disc-btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+  .disc-btn.secondary:hover { background: var(--panel); }
+  .disc-btn.tertiary { background: transparent; color: var(--text-dim); font-weight: 500; padding: 6px 14px; }
+  .disc-btn.tertiary:hover { color: var(--ink); }
 
-  /* ---------- Footer CTA ---------- */
-  .footer-cta {
-    text-align: center;
-    padding: 88px 0 40px;
+  #fc-toast {
+    position: fixed;
+    bottom: 96px;
+    right: 24px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 12px 18px;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15,23,42,0.25);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1001;
+    max-width: 280px;
   }
-  .footer-cta h2 { font-size: 30px; }
+  #fc-toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 860px) { .disc-grid { grid-template-columns: 1fr 1fr; } }
+
   footer {
     border-top: 1px solid var(--line);
     padding: 26px 0;
@@ -389,10 +226,116 @@
     justify-content: space-between;
   }
 
-  @media (max-width: 780px) {
-    .hero { grid-template-columns: 1fr; }
-    h1.hero-title { font-size: 34px; }
-    .nav-links { display: none; }
+  /* ---------- Chat widget ---------- */
+  #fc-bubble {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(15,118,110,0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: transform 0.15s ease;
+  }
+  #fc-bubble:hover { transform: scale(1.05); }
+
+  #fc-panel {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 350px;
+    max-width: calc(100vw - 32px);
+    height: 480px;
+    max-height: calc(100vh - 48px);
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(15,23,42,0.18);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+  }
+  #fc-panel.open { display: flex; }
+
+  #fc-header {
+    padding: 16px 16px 14px;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #fc-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  #fc-header-text { flex: 1; }
+  #fc-header-name { font-size: 13.5px; font-weight: 600; }
+  #fc-header-status { font-size: 10.5px; opacity: 0.85; display:flex; align-items:center; gap:5px; }
+  #fc-header-status .pulse { width:6px; height:6px; border-radius:50%; background:#7CE7C9; }
+  #fc-close { background: none; border: none; color: #fff; opacity: 0.85; cursor: pointer; padding: 4px; }
+
+  #fc-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .fc-msg {
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    max-width: 92%;
+  }
+  .fc-msg ul { margin: 8px 0 0; padding-left: 18px; }
+  .fc-msg li { margin-bottom: 4px; }
+
+  #fc-inputbar {
+    padding: 12px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 8px;
+  }
+  #fc-input {
+    flex: 1;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.5px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text-dim);
+  }
+  #fc-input:disabled { cursor: not-allowed; }
+  #fc-send {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: var(--line);
+    color: var(--text-dim);
+    display: flex; align-items: center; justify-content: center;
+    cursor: not-allowed;
+  }
+  #fc-soon {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 0 12px 12px;
   }
 </style>
 </head>
@@ -403,45 +346,24 @@
       <div class="nav-mark">FuC<span>S</span>AI</div>
       <div class="nav-links">
         <a href="#disciplines">Disciplines</a>
-        <a href="#preview">Preview</a>
       </div>
-      <a class="nav-cta" href="#app">Coming Soon</a>
     </nav>
   </div>
 
-  <div class="container hero">
-    <div>
-      <div class="eyebrow">Functional Safety &middot; Cybersecurity &middot; SOTIF &middot; AI Safety</div>
-      <h1 class="hero-title display">One item.<br>Four disciplines of defense.</h1>
-      <p class="hero-sub">FuCSAI is a browser-based workspace covering:</p>
-      <ol class="hero-list">
-        <li><strong>Automotive Functional Safety</strong> as per ISO 26262</li>
-        <li><strong>Automotive Cybersecurity Engineering</strong> according to ISO/SAE 21434 &amp; UN ECE Regulations</li>
-        <li><strong>Safety of the Intended Function (SOTIF)</strong> as per ISO 21448</li>
-        <li><strong>Automotive Safety and Artificial Intelligence</strong> as per ISO/PAS 8800</li>
-      </ol>
-      <div class="hero-ctas">
-        <a class="btn-primary" href="#app">Coming Soon</a>
-        <a class="btn-secondary" href="#disciplines">See how it's organized</a>
-      </div>
-    </div>
-
-    <div class="rings-wrap">
-      <div class="ring r-ai"><div class="ring-label">AI</div></div>
-      <div class="ring r-s"><div class="ring-label">S</div></div>
-      <div class="ring r-c"><div class="ring-label">C</div></div>
-      <div class="ring r-fu"><div class="ring-label">Fu</div></div>
-      <div class="item-core">
-        <div class="k1">Protecting</div>
-        <div class="k2">The Item</div>
-      </div>
+  <div class="hero">
+    <div class="hero-eyebrow">Functional Safety &middot; Cybersecurity &middot; SOTIF &middot; AI Safety</div>
+    <h1 class="hero-title">World's first online safety analysis tool.</h1>
+    <p class="hero-sub">Meet the Safety Assistant in the corner &mdash; ask a question or say hello.</p>
+    <div class="scroll-hint">
+      <span>Scroll to learn more</span>
+      <span class="dot"></span>
     </div>
   </div>
 
   <section id="disciplines">
     <div class="container">
       <div class="section-eyebrow">What FuCSAI covers</div>
-      <h2 class="section-title display">Four disciplines, one traceable model</h2>
+      <h2 class="section-title">Four disciplines, one traceable model</h2>
       <p class="section-sub">Each layer defends the same item against a different class of failure &mdash; and in FuCSAI they share the same underlying data, so a change in one shows up everywhere it matters.</p>
 
       <div class="disc-grid">
@@ -449,114 +371,49 @@
           <div class="disc-letter">Fu</div>
           <div class="disc-name">Functional Safety</div>
           <div class="disc-standard mono">ISO 26262</div>
-          <div class="disc-desc">Fault-based hazard analysis and risk reduction across the full V-model.</div>
-          <div class="disc-wp-label">Work products</div>
-          <ul class="disc-wp">
-            <li>Item Definition</li>
-            <li>Hazard Analysis &amp; Risk Assessment (HARA)</li>
-            <li>Safety Goals &amp; Functional Safety Concept</li>
-            <li>Technical Safety Concept</li>
-            <li>FMEA / FTA</li>
-            <li>FMEDA &amp; Diagnostic Coverage</li>
-            <li>Dependent Failure Analysis</li>
-            <li>Safety Case</li>
-          </ul>
+          <div class="disc-desc">Item definition, HARA, safety goals, FMEA, FTA, and FMEDA/diagnostic coverage across the full V-model.</div>
+          <div class="disc-actions">
+            <button class="disc-btn primary" onclick="trainMe('fu')">Train me</button>
+            <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
+            <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
+          </div>
         </div>
         <div class="disc-card disc-c">
           <div class="disc-letter">C</div>
           <div class="disc-name">Cybersecurity</div>
-          <div class="disc-standard mono">ISO/SAE 21434</div>
-          <div class="disc-desc">Threat-based risk assessment and treatment across the product lifecycle.</div>
-          <div class="disc-wp-label">Work products</div>
-          <ul class="disc-wp">
-            <li>Item Definition &amp; Asset Identification</li>
-            <li>Threat Analysis &amp; Risk Assessment (TARA)</li>
-            <li>Attack Path Analysis &amp; Feasibility Rating</li>
-            <li>Cybersecurity Goals</li>
-            <li>Cybersecurity Concept &amp; Specifications</li>
-            <li>Vulnerability Analysis</li>
-            <li>Cybersecurity Case</li>
-            <li>CSMS evidence (UN R155/R156)</li>
-          </ul>
+          <div class="disc-standard mono">ISO/SAE 21434 &amp; UN ECE Regs</div>
+          <div class="disc-desc">Threat analysis and risk assessment (TARA), cybersecurity goals and concept, aligned to UN R155/R156.</div>
+          <div class="disc-actions">
+            <button class="disc-btn primary" onclick="trainMe('c')">Train me</button>
+            <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
+            <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
+          </div>
         </div>
         <div class="disc-card disc-s">
           <div class="disc-letter">S</div>
           <div class="disc-name">SOTIF</div>
           <div class="disc-standard mono">ISO 21448</div>
-          <div class="disc-desc">Performance-limitation and foreseeable-misuse risk beyond fault-based hazards.</div>
-          <div class="disc-wp-label">Work products</div>
-          <ul class="disc-wp">
-            <li>Functional &amp; Sensor Specification</li>
-            <li>Identification of Triggering Conditions</li>
-            <li>Scenario-Based Hazard Analysis</li>
-            <li>Known/Unknown Scenario Evaluation</li>
-            <li>Verification &amp; Validation Targets</li>
-            <li>SOTIF Evaluation Report</li>
-            <li>Field Monitoring Plan</li>
-          </ul>
+          <div class="disc-desc">Safety of the intended function &mdash; performance limitations and foreseeable misuse beyond fault-based hazards.</div>
+          <div class="disc-actions">
+            <button class="disc-btn primary" onclick="trainMe('s')">Train me</button>
+            <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
+            <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
+          </div>
         </div>
         <div class="disc-card disc-ai">
           <div class="disc-letter">AI</div>
           <div class="disc-name">AI Safety</div>
           <div class="disc-standard mono">ISO/PAS 8800</div>
           <div class="disc-desc">Data, model, and behavioral risk for learned components, extending ISO 26262 &amp; ISO 21448.</div>
-          <div class="disc-wp-label">Work products</div>
-          <ul class="disc-wp">
-            <li>AI Element Definition</li>
-            <li>AI Safety Risk Assessment</li>
-            <li>Dataset Requirements &amp; Data Management</li>
-            <li>AI Safety Requirements</li>
-            <li>AI Model V&amp;V (test, validate)</li>
-            <li>Safety Analysis for AI Elements</li>
-            <li>AI Assurance Argument</li>
-            <li>Post-Deployment Monitoring</li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section id="preview">
-    <div class="container">
-      <div class="section-eyebrow">A real look, not a mockup</div>
-      <h2 class="section-title display">The workspace itself</h2>
-      <p class="section-sub">A model browser on the left, real work products on the right &mdash; seeded here with example HARA data.</p>
-
-      <div class="preview-frame">
-        <div class="preview-bar">
-          <div class="preview-dot"></div><div class="preview-dot"></div><div class="preview-dot"></div>
-        </div>
-        <div class="preview-body">
-          <div class="preview-tree">
-            <div class="node">Item Definition</div>
-            <div class="node active">HARA for LOCK Malfunctions</div>
-            <div class="node">Safety Goals &amp; Requirements</div>
-            <div class="node">FMEA Worksheets</div>
-            <div class="node">FTA Models</div>
-          </div>
-          <div class="preview-main">
-            <table class="preview-table">
-              <thead>
-                <tr><th>Malfunction</th><th>Hazard</th><th>S</th><th>ASIL</th></tr>
-              </thead>
-              <tbody>
-                <tr><td>Unintended lock</td><td>Steering blocked while driving</td><td>3</td><td><span class="asil-badge" style="background:#DC2626">D</span></td></tr>
-                <tr><td>Failure to lock</td><td>Vehicle theft enabled</td><td>1</td><td><span class="asil-badge" style="background:#64748B">QM</span></td></tr>
-                <tr><td>Delayed unlock</td><td>Driver delayed exiting</td><td>2</td><td><span class="asil-badge" style="background:#CA8A04">A</span></td></tr>
-              </tbody>
-            </table>
+          <div class="disc-actions">
+            <button class="disc-btn primary" onclick="trainMe('ai')">Train me</button>
+            <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
+            <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
           </div>
         </div>
       </div>
     </div>
   </section>
-
-  <div class="container footer-cta" id="app">
-    <div class="section-eyebrow">Get started</div>
-    <h2 class="section-title display">Open the FuCSAI workspace</h2>
-    <p class="section-sub" style="margin-left:auto;margin-right:auto;">The live workspace is being connected to this page next. For now, this confirms the site and domain are fully live.</p>
-    <a class="btn-primary" href="/">Coming soon</a>
-  </div>
 
   <div class="container">
     <footer>
@@ -564,6 +421,107 @@
       <span class="mono">fucsai.com</span>
     </footer>
   </div>
+
+  <!-- Chat widget -->
+  <button id="fc-bubble" onclick="fcToggle()" aria-label="Open Safety Assistant">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+  </button>
+
+  <div id="fc-panel">
+    <div id="fc-header">
+      <div id="fc-avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3c0 1.5 1 2 1 3.5S9 12 9 12h6s-1-2-1-3.5 1-2 1-3.5a3 3 0 0 0-3-3z"></path><path d="M12 12v2"></path><path d="M8 22v-4a4 4 0 0 1 8 0v4"></path><path d="M5 22h14"></path></svg>
+      </div>
+      <div id="fc-header-text">
+        <div id="fc-header-name">Safety Assistant</div>
+        <div id="fc-header-status"><span class="pulse"></span> Online</div>
+      </div>
+      <button id="fc-close" onclick="fcToggle()" aria-label="Close">✕</button>
+    </div>
+    <div id="fc-body">
+      <div class="fc-msg">
+        Hi, I'm your <strong>Safety Assistant</strong>. I'll guide you through performing safety analysis and creating work products step by step &mdash; think of me as your encyclopedia for automotive safety standards.
+      </div>
+      <div class="fc-msg">
+        Ask me anything about:
+        <ul>
+          <li>Automotive Functional Safety &mdash; ISO 26262</li>
+          <li>Automotive Cybersecurity Engineering &mdash; ISO/SAE 21434 &amp; UN ECE Regulations</li>
+          <li>Safety of the Intended Function (SOTIF) &mdash; ISO 21448</li>
+          <li>Automotive Safety and Artificial Intelligence &mdash; ISO/PAS 8800</li>
+        </ul>
+      </div>
+      <div class="fc-msg">I can also walk you through creating a HARA, FMEA, FTA, or other work product from scratch, clause by clause.</div>
+    </div>
+    <div id="fc-inputbar">
+      <input id="fc-input" type="text" placeholder="Full assistant launching soon…" disabled />
+      <button id="fc-send" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+    <div id="fc-soon">Live Q&amp;A is coming soon &mdash; this preview shows what the assistant will do.</div>
+  </div>
+
+  <div id="fc-toast"></div>
+
+  <script>
+    function fcToggle(forceOpen) {
+      const panel = document.getElementById('fc-panel');
+      if (forceOpen) { panel.classList.add('open'); return; }
+      panel.classList.toggle('open');
+    }
+
+    const TOPICS = {
+      fu: {
+        label: 'ISO 26262',
+        text: "ISO 26262 covers automotive Functional Safety across the full V-model. I can walk you through it clause by clause: Item Definition (Cl.5), Initiation of the Safety Lifecycle (Cl.6), Hazard Analysis &amp; Risk Assessment with Severity/Exposure/Controllability &rarr; ASIL (Cl.7), and the Functional Safety Concept (Cl.8) &mdash; then on into FMEA, FTA, and FMEDA for the later phases. Ask me about any clause, work product, or ASIL determination."
+      },
+      c: {
+        label: 'ISO/SAE 21434 &amp; UN ECE Regs',
+        text: "ISO/SAE 21434 covers Cybersecurity Engineering across the vehicle lifecycle &mdash; asset identification, Threat Analysis and Risk Assessment (TARA), attack path analysis, cybersecurity goals and concept, and vulnerability management. It's also the technical backbone behind UN Regulations 155 (Cybersecurity Management System) and 156 (Software Update Management System), which vehicle type-approval increasingly requires. Ask me about TARA methodology, CSMS evidence, or how it interfaces with functional safety."
+      },
+      s: {
+        label: 'ISO 21448 (SOTIF)',
+        text: "ISO 21448 covers Safety Of The Intended Function &mdash; risk that comes from performance limitations and foreseeable misuse, not just faults. It's especially relevant for ADAS and automated driving functions. I can walk you through triggering condition identification, scenario categorization (known-safe, known-unsafe, unknown-unsafe, unknown-safe), and verification &amp; validation targets. Ask me anything about SOTIF scenario analysis or how it complements ISO 26262."
+      },
+      ai: {
+        label: 'ISO/PAS 8800',
+        text: "ISO/PAS 8800 covers Safety and Artificial Intelligence for road vehicles &mdash; the newest of the four standards. It addresses risks unique to learned components: data quality and management, AI safety requirements, model verification &amp; validation, and assurance arguments, extending both ISO 26262 and ISO 21448 into AI-based functions. Ask me about AI element definition, dataset requirements, or how AI safety analysis differs from classical fault-based analysis."
+      }
+    };
+
+    function trainMe(key) {
+      const topic = TOPICS[key];
+      const body = document.getElementById('fc-body');
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'fc-msg';
+      userMsg.style.background = '#0F766E';
+      userMsg.style.color = '#fff';
+      userMsg.style.alignSelf = 'flex-end';
+      userMsg.style.marginLeft = 'auto';
+      userMsg.textContent = 'Train me on ' + topic.label.replace(/&rarr;|&mdash;|&amp;/g, m => ({'&rarr;':'→','&mdash;':'—','&amp;':'&'}[m]));
+
+      const replyMsg = document.createElement('div');
+      replyMsg.className = 'fc-msg';
+      replyMsg.innerHTML = topic.text;
+
+      body.appendChild(userMsg);
+      body.appendChild(replyMsg);
+      body.scrollTop = body.scrollHeight;
+
+      fcToggle(true);
+    }
+
+    let toastTimer;
+    function comingSoon(label) {
+      const toast = document.getElementById('fc-toast');
+      toast.textContent = label + ' — coming soon. This preview site doesn\'t have the live workspace connected yet.';
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+  </script>
 
 </body>
 </html>

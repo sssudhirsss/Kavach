@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CASTLE</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    background: #161D29;
+    color: #CBD3DD;
+  }
+
+  .wrap {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 24px;
+  }
+
+  .badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #5EEAD4;
+    border: 1px solid #234238;
+    background: #10241F;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 20px;
+  }
+
+  h1 {
+    font-size: 44px;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin: 0 0 6px;
+    letter-spacing: 0.02em;
+  }
+
+  .tagline {
+    font-size: 13px;
+    color: #5EEAD4;
+    font-family: 'IBM Plex Mono', monospace;
+    margin: 0 0 18px;
+  }
+
+  p {
+    font-size: 14px;
+    color: #8B96A5;
+    margin: 0;
+    max-width: 440px;
+    line-height: 1.6;
+  }
+
+  .footer {
+    position: absolute;
+    bottom: 24px;
+    font-size: 11px;
+    color: #4B5563;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="badge">Deployment check</div>
+    <h1>CASTLE</h1>
+    <div class="tagline">Cybersecurity And Safety Trace &amp; Lifecycle Engine</div>
+    <p>Hello World &mdash; hosting and deployment are working end to end. The real project browser and traceability engine go here next.</p>
+  </div>
+  <div class="footer">served from Vercel &middot; no backend yet</div>
+</body>
+</html>

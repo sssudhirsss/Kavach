@@ -303,6 +303,110 @@
     max-width: 280px;
   }
   #fc-toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ---------- Modal (New Project / Open Project) ---------- */
+  #modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20,22,26,0.32);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    padding: 20px;
+  }
+  #modal-overlay.open { display: flex; }
+
+  .modal-card {
+    background: #fff;
+    border-radius: 16px;
+    width: 380px;
+    max-width: 100%;
+    max-height: 82vh;
+    box-shadow: 0 24px 60px rgba(15,23,42,0.22);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 22px 24px 4px;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .modal-context {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .modal-body { padding: 18px 24px 4px; }
+
+  .modal-input {
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    padding: 11px 13px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    outline: none;
+    color: var(--ink);
+    transition: border-color 0.15s ease;
+  }
+  .modal-input:focus { border-color: var(--accent); }
+
+  .modal-actions {
+    padding: 18px 24px 22px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .modal-btn {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .modal-btn.ghost { background: transparent; color: var(--text-dim); }
+  .modal-btn.ghost:hover { color: var(--ink); }
+  .modal-btn.solid { background: var(--ink); color: #fff; }
+  .modal-btn.solid:hover { opacity: 0.85; }
+  .modal-btn.solid:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none; border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .proj-list { padding: 6px 12px 12px; overflow-y: auto; }
+  .proj-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .proj-row:hover { background: var(--panel); }
+  .proj-row-name { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+  .proj-row-meta { font-size: 10.5px; color: var(--text-dim); margin-top: 2px; }
+  .proj-row-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+  .proj-empty { padding: 30px 24px 22px; text-align: center; font-size: 12.5px; color: var(--text-dim); }
 </style>
 </head>
 <body>
@@ -326,8 +430,8 @@
         <div class="disc-desc">Full lifecycle, Parts 1&ndash;12 &mdash; vocabulary through concept, system, hardware, software, production, and supporting processes.</div>
         <div class="disc-actions">
           <button class="disc-btn primary" onclick="trainMe('fu')">Train me</button>
-          <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
-          <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
+          <button class="disc-btn secondary" onclick="openNewProjectModal('fu')">New Project</button>
+          <button class="disc-btn tertiary" onclick="openOpenProjectModal('fu')">Open project</button>
         </div>
       </div>
       <div class="disc-card disc-c">
@@ -337,8 +441,8 @@
         <div class="disc-desc">Full lifecycle, Clauses 4&ndash;15 &mdash; org management through concept, development, production, operations, and TARA.</div>
         <div class="disc-actions">
           <button class="disc-btn primary" onclick="trainMe('c')">Train me</button>
-          <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
-          <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
+          <button class="disc-btn secondary" onclick="openNewProjectModal('c')">New Project</button>
+          <button class="disc-btn tertiary" onclick="openOpenProjectModal('c')">Open project</button>
         </div>
       </div>
       <div class="disc-card disc-s">
@@ -348,8 +452,8 @@
         <div class="disc-desc">Full lifecycle, Clauses 4&ndash;13 &mdash; specification through triggering conditions, verification, and field monitoring.</div>
         <div class="disc-actions">
           <button class="disc-btn primary" onclick="trainMe('s')">Train me</button>
-          <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
-          <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
+          <button class="disc-btn secondary" onclick="openNewProjectModal('s')">New Project</button>
+          <button class="disc-btn tertiary" onclick="openOpenProjectModal('s')">Open project</button>
         </div>
       </div>
       <div class="disc-card disc-ai">
@@ -359,8 +463,8 @@
         <div class="disc-desc">Full lifecycle, Clauses 5&ndash;15 &mdash; AI safety management through data, V&amp;V, safety analysis, and operation.</div>
         <div class="disc-actions">
           <button class="disc-btn primary" onclick="trainMe('ai')">Train me</button>
-          <button class="disc-btn secondary" onclick="comingSoon('New Project')">New Project</button>
-          <button class="disc-btn tertiary" onclick="comingSoon('Open Project')">Open project</button>
+          <button class="disc-btn secondary" onclick="openNewProjectModal('ai')">New Project</button>
+          <button class="disc-btn tertiary" onclick="openOpenProjectModal('ai')">Open project</button>
         </div>
       </div>
     </div>
@@ -409,6 +513,18 @@
       </button>
     </div>
     <div id="fc-soon">Live Q&amp;A is coming soon.</div>
+  </div>
+
+  <div id="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-head">
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-context" id="modal-context"></div>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-actions" id="modal-actions"></div>
+    </div>
   </div>
 
   <div id="fc-toast"></div>
@@ -525,6 +641,113 @@
       toast.classList.add('show');
       clearTimeout(toastTimer);
       toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    // ---------- New Project / Open Project (demo, saved locally in this browser) ----------
+
+    const STANDARD_META = {
+      fu: { label: 'Functional Safety — ISO 26262', ink: '#0F766E', bg: '#CDECE5' },
+      c:  { label: 'Cybersecurity — ISO/SAE 21434',  ink: '#2563EB', bg: '#D6E4FD' },
+      s:  { label: 'SOTIF — ISO 21448',              ink: '#B45309', bg: '#FBE9C8' },
+      ai: { label: 'AI Safety — ISO/PAS 8800',       ink: '#7C3AED', bg: '#E4DBF9' },
+    };
+    const PROJECTS_KEY = 'fucsai_demo_projects';
+
+    function getProjects() {
+      try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; }
+      catch (e) { return []; }
+    }
+    function saveProjects(list) {
+      localStorage.setItem(PROJECTS_KEY, JSON.stringify(list));
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+
+    function openNewProjectModal(key) {
+      const meta = STANDARD_META[key];
+      document.getElementById('modal-title').textContent = 'New Project';
+      document.getElementById('modal-context').textContent = meta.label;
+
+      document.getElementById('modal-body').innerHTML =
+        '<input id="new-proj-name" class="modal-input" type="text" placeholder="Project name" autocomplete="off" />';
+
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>' +
+        '<button class="modal-btn solid" id="new-proj-create" disabled onclick="createProject(\'' + key + '\')">Create</button>';
+
+      document.getElementById('modal-overlay').classList.add('open');
+
+      const input = document.getElementById('new-proj-name');
+      const createBtn = document.getElementById('new-proj-create');
+      input.addEventListener('input', () => { createBtn.disabled = input.value.trim().length === 0; });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !createBtn.disabled) createProject(key); });
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function createProject(key) {
+      const input = document.getElementById('new-proj-name');
+      const name = input.value.trim();
+      if (!name) return;
+
+      const projects = getProjects();
+      projects.unshift({ id: Date.now().toString(36), name, standard: key, createdAt: new Date().toISOString() });
+      saveProjects(projects);
+
+      closeModal();
+      const toast = document.getElementById('fc-toast');
+      toast.textContent = '"' + name + '" created — saved locally for this demo.';
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    function openOpenProjectModal(key) {
+      const meta = STANDARD_META[key];
+      document.getElementById('modal-title').textContent = 'Open Project';
+      document.getElementById('modal-context').textContent = meta.label;
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Close</button>' +
+        '<button class="modal-btn solid" onclick="openNewProjectModal(\'' + key + '\')">New Project</button>';
+      renderProjectList(key);
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    function renderProjectList(key) {
+      const projects = getProjects().filter(p => p.standard === key);
+      const body = document.getElementById('modal-body');
+
+      if (projects.length === 0) {
+        body.innerHTML = '<div class="proj-empty">No projects yet for this standard.<br>Create one to see it here.</div>';
+        return;
+      }
+
+      body.innerHTML = '<div class="proj-list">' + projects.map(p => {
+        const meta = STANDARD_META[p.standard];
+        const date = new Date(p.createdAt).toLocaleDateString();
+        return '<div class="proj-row" onclick="openProject(\'' + p.id + '\')">' +
+          '<div><div class="proj-row-name">' + escapeHtml(p.name) + '</div>' +
+          '<div class="proj-row-meta">Created ' + date + '</div></div>' +
+          '<span class="proj-row-tag" style="background:' + meta.bg + ';color:' + meta.ink + '">' + meta.label.split(' — ')[1] + '</span>' +
+          '</div>';
+      }).join('') + '</div>';
+    }
+
+    function openProject(id) {
+      const p = getProjects().find(p => p.id === id);
+      closeModal();
+      const toast = document.getElementById('fc-toast');
+      toast.textContent = 'Opening "' + (p ? p.name : '') + '" — full workspace coming soon.';
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
     }
   </script>
 

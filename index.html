@@ -124,6 +124,21 @@
   }
   .mic-btn:hover { background: #EAECEF; }
   .mic-btn.listening { color: #EA4335; background: #FCE7E5; }
+  .go-btn {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 6px;
+  }
+  .go-btn:hover { background: var(--accent-dark); }
 
   .disc-grid {
     display: grid;
@@ -542,6 +557,7 @@
         <button class="mic-btn" onclick="startVoiceInput()" aria-label="Voice input">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
         </button>
+        <button class="go-btn" onclick="handleSearchSubmit()" aria-label="Go">Go</button>
       </div>
     </div>
 
@@ -850,15 +866,21 @@
 
     // Speaks a short prompt aloud using the browser's built-in text-to-speech.
     // Silently does nothing if unsupported \u2014 speech is a bonus, never required.
+    // onEnd (optional) fires after speech finishes, so callers can chain the
+    // next step (e.g. start listening again) once the assistant stops talking.
     let voiceMuted = false;
     let voiceUnsupportedWarned = false;
-    function speak(text) {
-      if (voiceMuted) return;
+    function speak(text, onEnd) {
+      if (voiceMuted) {
+        if (onEnd) onEnd();
+        return;
+      }
       if (!window.speechSynthesis) {
         if (!voiceUnsupportedWarned) {
           voiceUnsupportedWarned = true;
           comingSoon("Voice responses aren't supported in this browser");
         }
+        if (onEnd) onEnd();
         return;
       }
       try {
@@ -873,28 +895,49 @@
           utter.rate = 1.0;
           utter.pitch = 1.0;
           utter.volume = 1.0;
+          if (onEnd) { utter.onend = onEnd; utter.onerror = onEnd; }
           window.speechSynthesis.speak(utter);
         }, 60);
       } catch (e) {
-        // no-op
+        if (onEnd) onEnd();
       }
     }
 
+    // Voice commands are confirmed before acting: capture speech, ask the
+    // user to confirm out loud, then either proceed (on "yes") or drop it
+    // and wait for the next command (on anything else).
     function startVoiceInput() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      const micBtn = document.querySelector('.mic-btn');
-      const input = document.getElementById('search-input');
       if (!SpeechRecognition) {
         comingSoon("Voice input isn't supported in this browser");
         return;
       }
+      listenOnce(SpeechRecognition, (transcript) => {
+        const input = document.getElementById('search-input');
+        input.value = transcript;
+        speak('Did you want to ' + transcript + '? Say yes to proceed.', () => {
+          listenOnce(SpeechRecognition, (answer) => {
+            if (answer.toLowerCase().includes('yes')) {
+              handleSearchSubmit();
+            } else {
+              speak('OK, waiting for your next command.');
+            }
+          });
+        });
+      });
+    }
+
+    // Runs a single speech-recognition pass and calls onHeard(transcript).
+    // Shared by the initial command capture and the yes/no confirmation.
+    function listenOnce(SpeechRecognition, onHeard) {
+      const micBtn = document.querySelector('.mic-btn');
       const recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
       recognition.interimResults = false;
       micBtn.classList.add('listening');
       recognition.start();
       recognition.onresult = (e) => {
-        input.value = e.results[0][0].transcript;
+        onHeard(e.results[0][0].transcript);
       };
       recognition.onend = () => micBtn.classList.remove('listening');
       recognition.onerror = () => { micBtn.classList.remove('listening'); comingSoon('Couldn\u2019t hear that — try typing instead'); };

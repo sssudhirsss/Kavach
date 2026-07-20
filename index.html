@@ -436,6 +436,87 @@
     border-radius: 999px;
   }
   .proj-empty { padding: 30px 24px 22px; text-align: center; font-size: 12.5px; color: var(--text-dim); }
+
+  .type-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .type-pick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .type-pick-btn:hover { background: var(--panel); }
+  .type-pick-letter { font-weight: 700; font-size: 18px; }
+  .type-pick-name { font-size: 12px; color: var(--ink); font-weight: 500; }
+
+  .project-view {
+    display: none;
+    min-height: 100vh;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px;
+    position: relative;
+  }
+  .back-link {
+    position: absolute;
+    top: 26px;
+    left: 28px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 13.5px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .back-link:hover { color: var(--ink); }
+  .pv-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 22px;
+    margin-bottom: 18px;
+  }
+  .pv-name { font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .pv-type { font-size: 13px; color: var(--text-dim); margin-bottom: 22px; }
+  .pv-status {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--panel);
+    padding: 8px 16px;
+    border-radius: 999px;
+    margin-bottom: 14px;
+  }
+  .pv-spinner {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    animation: pv-spin 0.8s linear infinite;
+  }
+  @keyframes pv-spin { to { transform: rotate(360deg); } }
+  .pv-note { font-size: 12.5px; color: var(--text-dim); max-width: 320px; }
 </style>
 </head>
 <body>
@@ -521,6 +602,15 @@
         <a href="#">Do not share my personal information</a>
       </div>
     </footer>
+  </div>
+
+  <div id="project-view" class="project-view">
+    <button class="back-link" onclick="backToHome()">&larr; Back</button>
+    <div class="pv-icon" id="pv-icon"></div>
+    <div class="pv-name" id="pv-name"></div>
+    <div class="pv-type" id="pv-type"></div>
+    <div class="pv-status"><span class="pv-spinner"></span> In Progress</div>
+    <p class="pv-note">This project's workspace is being built &mdash; check back soon.</p>
   </div>
 
   <!-- Chat widget -->
@@ -699,6 +789,7 @@
       s:  { label: 'SOTIF — ISO 21448',               ink: '#B08200', bg: '#FEF6DA' },
       ai: { label: 'Artificial Intelligence — ISO/PAS 8800', ink: '#34A853', bg: '#E3F3E8' },
     };
+    const STANDARD_ORDER = ['fu', 'c', 's', 'ai'];
 
     const STANDARD_KEYWORDS = {
       fu: ['fusa', 'functional safety', '26262'],
@@ -728,7 +819,7 @@
       if (lower.includes('start')) {
         openNewProjectModal(matches);
       } else if (lower.includes('open')) {
-        openOpenProjectModal();
+        openOpenProjectModal(matches);
       } else if (matches.length > 0) {
         matches.forEach(k => trainMe(k));
       } else {
@@ -787,24 +878,60 @@
       document.getElementById('modal-overlay').classList.remove('open');
     }
 
+    function renderTypePicker(onPickFn, includeAll) {
+      let html = '<div class="type-picker">';
+      STANDARD_ORDER.forEach(k => {
+        const meta = STANDARD_META[k];
+        const letter = k === 'ai' ? 'AI' : (k === 'fu' ? 'Fu' : k.toUpperCase());
+        html += '<button class="type-pick-btn" onclick="' + onPickFn + '(\'' + k + '\')">' +
+          '<span class="type-pick-letter" style="color:' + meta.ink + '">' + letter + '</span>' +
+          '<span class="type-pick-name">' + meta.label.split(' — ')[0] + '</span>' +
+          '</button>';
+      });
+      if (includeAll) {
+        html += '<button class="type-pick-btn" onclick="' + onPickFn + '(\'all\')">' +
+          '<span class="type-pick-letter" style="color:var(--text-dim)">&middot;&middot;&middot;</span>' +
+          '<span class="type-pick-name">All types</span>' +
+          '</button>';
+      }
+      html += '</div>';
+      return html;
+    }
+
     function openNewProjectModal(keys) {
       const chosenKeys = keys || [];
       document.getElementById('modal-title').textContent = 'New Project';
-      document.getElementById('modal-context').textContent = selectedLabel(chosenKeys);
+
+      if (chosenKeys.length === 0) {
+        document.getElementById('modal-context').textContent = 'What type of project is this?';
+        document.getElementById('modal-body').innerHTML = renderTypePicker('pickNewProjectType', false);
+        document.getElementById('modal-actions').innerHTML =
+          '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
+        document.getElementById('modal-overlay').classList.add('open');
+        return;
+      }
+      showNewProjectNameStep(chosenKeys);
+    }
+
+    function pickNewProjectType(key) {
+      showNewProjectNameStep([key]);
+    }
+
+    function showNewProjectNameStep(keys) {
+      document.getElementById('modal-title').textContent = 'New Project';
+      document.getElementById('modal-context').textContent = selectedLabel(keys);
 
       document.getElementById('modal-body').innerHTML =
         '<input id="new-proj-name" class="modal-input" type="text" placeholder="Project name" autocomplete="off" />';
 
       document.getElementById('modal-actions').innerHTML =
         '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>' +
-        '<button class="modal-btn solid" id="new-proj-create" disabled onclick="createProject(' + JSON.stringify(chosenKeys) + ')">Create</button>';
-
-      document.getElementById('modal-overlay').classList.add('open');
+        '<button class="modal-btn solid" id="new-proj-create" disabled onclick="createProject(' + JSON.stringify(keys) + ')">Create</button>';
 
       const input = document.getElementById('new-proj-name');
       const createBtn = document.getElementById('new-proj-create');
       input.addEventListener('input', () => { createBtn.disabled = input.value.trim().length === 0; });
-      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !createBtn.disabled) createProject(chosenKeys); });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !createBtn.disabled) createProject(keys); });
       setTimeout(() => input.focus(), 50);
     }
 
@@ -814,34 +941,53 @@
       if (!name) return;
 
       const standards = (keys && keys.length > 0) ? keys : ['fu', 'c', 's', 'ai'];
+      const project = { id: Date.now().toString(36), name, standards, createdAt: new Date().toISOString() };
       const projects = getProjects();
-      projects.unshift({ id: Date.now().toString(36), name, standards, createdAt: new Date().toISOString() });
+      projects.unshift(project);
       saveProjects(projects);
 
-      closeModal();
-      const toast = document.getElementById('fc-toast');
-      toast.textContent = '"' + name + '" created — saved locally for this demo.';
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+      showProjectView(project);
     }
 
-    function openOpenProjectModal() {
+    function openOpenProjectModal(keys) {
+      const chosenKeys = keys || [];
       document.getElementById('modal-title').textContent = 'Open Project';
-      document.getElementById('modal-context').textContent = 'All saved projects';
+
+      if (chosenKeys.length === 0) {
+        document.getElementById('modal-context').textContent = 'Which type of project?';
+        document.getElementById('modal-body').innerHTML = renderTypePicker('pickOpenProjectType', true);
+        document.getElementById('modal-actions').innerHTML =
+          '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
+        document.getElementById('modal-overlay').classList.add('open');
+        return;
+      }
+      showProjectListStep(chosenKeys);
+    }
+
+    function pickOpenProjectType(key) {
+      showProjectListStep(key === 'all' ? [] : [key]);
+    }
+
+    function showProjectListStep(keys) {
+      document.getElementById('modal-title').textContent = 'Open Project';
+      document.getElementById('modal-context').textContent = keys.length > 0 ? selectedLabel(keys) : 'All saved projects';
       document.getElementById('modal-actions').innerHTML =
         '<button class="modal-btn ghost" onclick="closeModal()">Close</button>' +
-        '<button class="modal-btn solid" onclick="openNewProjectModal()">New Project</button>';
-      renderProjectList();
+        '<button class="modal-btn solid" onclick="openNewProjectModal(' + JSON.stringify(keys) + ')">New Project</button>';
+      renderProjectList(keys);
       document.getElementById('modal-overlay').classList.add('open');
     }
 
-    function renderProjectList() {
-      const projects = getProjects();
+    function renderProjectList(keys) {
+      const filterKeys = keys || [];
+      let projects = getProjects();
+      if (filterKeys.length > 0) {
+        projects = projects.filter(p => (p.standards || []).some(s => filterKeys.includes(s)));
+      }
       const body = document.getElementById('modal-body');
 
       if (projects.length === 0) {
-        body.innerHTML = '<div class="proj-empty">No projects yet.<br>Create one to see it here.</div>';
+        body.innerHTML = '<div class="proj-empty">No projects yet' + (filterKeys.length ? ' for this type' : '') + '.<br>Create one to see it here.</div>';
         return;
       }
 
@@ -861,12 +1007,30 @@
 
     function openProject(id) {
       const p = getProjects().find(p => p.id === id);
+      if (p) showProjectView(p);
+    }
+
+    // ---------- Dedicated project page (in-progress placeholder) ----------
+
+    function showProjectView(project) {
       closeModal();
-      const toast = document.getElementById('fc-toast');
-      toast.textContent = 'Opening "' + (p ? p.name : '') + '" — full workspace coming soon.';
-      toast.classList.add('show');
-      clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+      const keys = (project.standards && project.standards.length > 0) ? project.standards : ['fu', 'c', 's', 'ai'];
+      const primary = STANDARD_META[keys[0]];
+      const letter = keys[0] === 'ai' ? 'AI' : (keys[0] === 'fu' ? 'Fu' : keys[0].toUpperCase());
+
+      document.getElementById('pv-icon').textContent = letter;
+      document.getElementById('pv-icon').style.color = primary.ink;
+      document.getElementById('pv-icon').style.background = primary.bg;
+      document.getElementById('pv-name').textContent = project.name;
+      document.getElementById('pv-type').textContent = keys.map(k => STANDARD_META[k].label.split(' — ')[0]).join(' \u00b7 ');
+
+      document.querySelector('.page').style.display = 'none';
+      document.getElementById('project-view').style.display = 'flex';
+    }
+
+    function backToHome() {
+      document.getElementById('project-view').style.display = 'none';
+      document.querySelector('.page').style.display = 'flex';
     }
 
     function escapeHtml(str) {

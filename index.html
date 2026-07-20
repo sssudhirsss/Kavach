@@ -851,14 +851,30 @@
     // Speaks a short prompt aloud using the browser's built-in text-to-speech.
     // Silently does nothing if unsupported \u2014 speech is a bonus, never required.
     let voiceMuted = false;
+    let voiceUnsupportedWarned = false;
     function speak(text) {
-      if (voiceMuted || !window.speechSynthesis) return;
+      if (voiceMuted) return;
+      if (!window.speechSynthesis) {
+        if (!voiceUnsupportedWarned) {
+          voiceUnsupportedWarned = true;
+          comingSoon("Voice responses aren't supported in this browser");
+        }
+        return;
+      }
       try {
         window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.rate = 1.0;
-        utter.pitch = 1.0;
-        window.speechSynthesis.speak(utter);
+        // Chrome has a known race condition where speak() called immediately
+        // after cancel() in the same tick can be silently dropped \u2014 a short
+        // delay avoids it. Also nudge getVoices() in case voices haven't
+        // loaded yet on first use.
+        window.speechSynthesis.getVoices();
+        setTimeout(() => {
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.rate = 1.0;
+          utter.pitch = 1.0;
+          utter.volume = 1.0;
+          window.speechSynthesis.speak(utter);
+        }, 60);
       } catch (e) {
         // no-op
       }

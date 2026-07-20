@@ -373,6 +373,12 @@
   }
   .modal-body { padding: 18px 24px 4px; }
 
+  .modal-prompt {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
   .modal-input {
     width: 100%;
     font-family: 'IBM Plex Sans', sans-serif;
@@ -842,6 +848,22 @@
       input.value = '';
     }
 
+    // Speaks a short prompt aloud using the browser's built-in text-to-speech.
+    // Silently does nothing if unsupported \u2014 speech is a bonus, never required.
+    let voiceMuted = false;
+    function speak(text) {
+      if (voiceMuted || !window.speechSynthesis) return;
+      try {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.rate = 1.0;
+        utter.pitch = 1.0;
+        window.speechSynthesis.speak(utter);
+      } catch (e) {
+        // no-op
+      }
+    }
+
     function startVoiceInput() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const micBtn = document.querySelector('.mic-btn');
@@ -908,6 +930,7 @@
         document.getElementById('modal-actions').innerHTML =
           '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
         document.getElementById('modal-overlay').classList.add('open');
+        speak('What type of project is this? Functional Safety, Cyber Security, SOTIF, or Artificial Intelligence?');
         return;
       }
       showNewProjectNameStep(chosenKeys);
@@ -922,11 +945,14 @@
       document.getElementById('modal-context').textContent = selectedLabel(keys);
 
       document.getElementById('modal-body').innerHTML =
+        '<div class="modal-prompt">What would you like to name this project?</div>' +
         '<input id="new-proj-name" class="modal-input" type="text" placeholder="Project name" autocomplete="off" />';
 
       document.getElementById('modal-actions').innerHTML =
         '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>' +
-        '<button class="modal-btn solid" id="new-proj-create" disabled onclick="createProject(' + JSON.stringify(keys) + ')">Create</button>';
+        '<button class="modal-btn solid" id="new-proj-create" disabled onclick="createProject(JSON.parse(this.dataset.keys))" data-keys=\'' + JSON.stringify(keys) + '\'>Create</button>';
+
+      speak('What would you like to name this project?');
 
       const input = document.getElementById('new-proj-name');
       const createBtn = document.getElementById('new-proj-create');
@@ -959,6 +985,7 @@
         document.getElementById('modal-actions').innerHTML =
           '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
         document.getElementById('modal-overlay').classList.add('open');
+        speak('Which type of project would you like to open?');
         return;
       }
       showProjectListStep(chosenKeys);
@@ -973,7 +1000,7 @@
       document.getElementById('modal-context').textContent = keys.length > 0 ? selectedLabel(keys) : 'All saved projects';
       document.getElementById('modal-actions').innerHTML =
         '<button class="modal-btn ghost" onclick="closeModal()">Close</button>' +
-        '<button class="modal-btn solid" onclick="openNewProjectModal(' + JSON.stringify(keys) + ')">New Project</button>';
+        '<button class="modal-btn solid" onclick="openNewProjectModal(JSON.parse(this.dataset.keys))" data-keys=\'' + JSON.stringify(keys) + '\'>New Project</button>';
       renderProjectList(keys);
       document.getElementById('modal-overlay').classList.add('open');
     }

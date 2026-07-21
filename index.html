@@ -780,8 +780,8 @@
         <button class="mute-btn" id="mute-btn" onclick="toggleVoiceMute()" aria-label="Mute voice commands and responses" title="Mute voice commands &amp; responses">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
         </button>
-        <button class="mic-btn" onclick="startVoiceInput()" aria-label="Voice input">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+        <button class="mic-btn" id="mic-btn" onclick="startVoiceInput()" aria-label="Voice input">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
         </button>
         <button class="go-btn" onclick="handleSearchSubmit()" aria-label="Go">Go</button>
       </div>
@@ -1388,20 +1388,26 @@
       fcShowToast(voiceMuted ? 'Voice muted' : 'Voice unmuted');
     }
 
+    // Two icon states for the mic button: off (default — crossed-out mic, per
+    // the reference image) and on (plain mic, shown only while actively listening).
+    const MIC_ICON_OFF = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+    const MIC_ICON_ON = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+
     // Runs a single speech-recognition pass and calls onHeard(transcript).
     // Shared by the initial command capture and the yes/no confirmation.
     function listenOnce(SpeechRecognition, onHeard) {
-      const micBtn = document.querySelector('.mic-btn');
+      const micBtn = document.getElementById('mic-btn');
       const recognition = new SpeechRecognition();
       recognition.lang = 'en-US';
       recognition.interimResults = false;
       micBtn.classList.add('listening');
+      micBtn.innerHTML = MIC_ICON_ON;
       recognition.start();
       recognition.onresult = (e) => {
         onHeard(e.results[0][0].transcript);
       };
-      recognition.onend = () => micBtn.classList.remove('listening');
-      recognition.onerror = () => { micBtn.classList.remove('listening'); comingSoon('Couldn\u2019t hear that — try typing instead'); };
+      recognition.onend = () => { micBtn.classList.remove('listening'); micBtn.innerHTML = MIC_ICON_OFF; };
+      recognition.onerror = () => { micBtn.classList.remove('listening'); micBtn.innerHTML = MIC_ICON_OFF; comingSoon('Couldn\u2019t hear that — try typing instead'); };
     }
 
     // ---------- New Project / Open Project (demo, saved locally in this browser) ----------

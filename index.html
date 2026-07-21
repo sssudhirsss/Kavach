@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FuCSAI — World's first online safety analysis tool</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
@@ -48,6 +49,7 @@
     display: flex;
     align-items: center;
     padding: 22px 0 10px;
+    position: relative;
   }
   .nav-mark {
     font-weight: 700;
@@ -178,8 +180,37 @@
     text-decoration: none;
   }
   .nav-link:hover { color: var(--ink); }
-  .nav-avatar {
+  .nav-avatar-btn {
     margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 999px;
+  }
+  .nav-avatar-btn:hover { background: var(--panel); }
+  .nav-user-email { font-size: 12.5px; color: var(--text); }
+  .nav-user-menu {
+    position: absolute;
+    top: 56px;
+    right: 0;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 28px rgba(20,30,40,0.16);
+    padding: 6px;
+    min-width: 190px;
+    display: none;
+    z-index: 400;
+  }
+  .nav-user-menu.open { display: block; }
+  .nav-user-menu-email { font-size: 12px; color: var(--text-dim); padding: 6px 10px 8px; border-bottom: 1px solid var(--line); margin-bottom: 4px; word-break: break-all; }
+  .nav-user-menu-item { padding: 8px 10px; border-radius: 6px; font-size: 12.5px; cursor: pointer; color: var(--text); }
+  .nav-user-menu-item:hover { background: var(--panel); color: var(--ink); }
+  .nav-avatar {
     display: flex;
   }
   .nav-avatar svg {
@@ -538,6 +569,164 @@
   }
   @keyframes pv-spin { to { transform: rotate(360deg); } }
   .pv-note { font-size: 12.5px; color: var(--text-dim); max-width: 320px; }
+
+  /* ---------- Workbench (Functional Safety workspace) ---------- */
+  .wb-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+  .wb-header .pv-icon-sm {
+    width: 30px; height: 30px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; flex-shrink: 0;
+  }
+  .wb-header-name { font-size: 14.5px; font-weight: 600; color: var(--ink); }
+  .wb-header-sub { font-size: 11.5px; color: var(--text-dim); }
+  .wb-header-spacer { flex: 1; }
+  .wb-header-btn {
+    background: none; border: 1px solid var(--line); border-radius: 7px;
+    color: var(--text); font-size: 12px; font-family: inherit;
+    padding: 6px 11px; cursor: pointer; display: flex; align-items: center; gap: 6px;
+  }
+  .wb-header-btn:hover { background: var(--panel); color: var(--ink); }
+
+  .wb-shell {
+    display: none;
+    width: 100%;
+    height: calc(100vh - 60px);
+    text-align: left;
+  }
+  .wb-body { display: flex; flex: 1; min-height: 0; }
+
+  .wb-sidebar {
+    width: 268px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--line);
+    background: var(--panel);
+    min-height: 0;
+  }
+  .wb-sidebar-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .wb-filter {
+    flex: 1;
+    font-family: inherit;
+    font-size: 12px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 5px 8px;
+    background: var(--bg);
+    color: var(--ink);
+    outline: none;
+  }
+  .wb-filter:focus { border-color: var(--accent); }
+  .wb-icon-btn {
+    width: 24px; height: 24px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none; border-radius: 5px; cursor: pointer;
+    color: var(--text-dim);
+  }
+  .wb-icon-btn:hover { background: var(--line); color: var(--ink); }
+  .wb-tree-scroll { flex: 1; overflow-y: auto; padding: 6px 4px; }
+
+  .wb-node { user-select: none; }
+  .wb-node-row {
+    display: flex; align-items: center; gap: 5px;
+    padding: 4px 6px; border-radius: 5px; cursor: pointer;
+    font-size: 12.5px; color: var(--text); white-space: nowrap;
+  }
+  .wb-node-row:hover { background: rgba(15,118,110,0.06); }
+  .wb-node-row.selected { background: var(--fu-bg); color: var(--fu-ink); font-weight: 500; }
+  .wb-chevron {
+    width: 12px; height: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--text-dim); transition: transform 0.12s;
+  }
+  .wb-node.expanded > .wb-node-row .wb-chevron { transform: rotate(90deg); }
+  .wb-node-row.leaf .wb-chevron { visibility: hidden; }
+  .wb-glyph { width: 14px; height: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+  .wb-children { display: none; padding-left: 16px; }
+  .wb-node.expanded > .wb-children { display: block; }
+  .wb-node-label { overflow: hidden; text-overflow: ellipsis; }
+  .wb-node-badge {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px; color: var(--text-dim); margin-left: auto; padding-left: 6px; flex-shrink: 0;
+  }
+
+  .wb-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+  .wb-editor {
+    flex: 1;
+    overflow: auto;
+    padding: 28px 32px;
+    min-height: 0;
+  }
+  .wb-editor-empty {
+    height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--text-dim); font-size: 13px; gap: 8px; text-align: center;
+  }
+  .wb-editor-empty svg { opacity: 0.35; margin-bottom: 4px; }
+  .wb-editor-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .wb-editor-kind { font-size: 11.5px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; margin-bottom: 20px; }
+  .wb-editor-desc { font-size: 13px; color: var(--text); line-height: 1.6; max-width: 640px; }
+
+  .wb-panelstack {
+    height: 190px;
+    flex-shrink: 0;
+    border-top: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    background: var(--bg);
+  }
+  .wb-tabs { display: flex; border-bottom: 1px solid var(--line); flex-shrink: 0; }
+  .wb-tab {
+    padding: 8px 16px; font-size: 12px; color: var(--text-dim); cursor: pointer;
+    border-bottom: 2px solid transparent; font-weight: 500;
+  }
+  .wb-tab.active { color: var(--fu-ink); border-bottom-color: var(--fu-ink); }
+  .wb-panel-body { flex: 1; overflow: auto; padding: 14px 18px; font-size: 12.5px; }
+  .wb-prop-row { display: flex; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .wb-prop-key { width: 140px; flex-shrink: 0; color: var(--text-dim); }
+  .wb-prop-val { color: var(--ink); }
+  .wb-empty-note { color: var(--text-dim); font-style: italic; }
+
+  /* Context menu */
+  .wb-ctxmenu {
+    position: fixed; z-index: 500; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: 0 8px 28px rgba(20,30,40,0.16);
+    padding: 5px; min-width: 200px; font-size: 12.5px; display: none;
+  }
+  .wb-ctxmenu.open { display: block; }
+  .wb-ctx-item {
+    padding: 7px 10px; border-radius: 5px; cursor: pointer; color: var(--text);
+    display: flex; align-items: center; justify-content: space-between; position: relative;
+  }
+  .wb-ctx-item:hover { background: var(--fu-bg); color: var(--fu-ink); }
+  .wb-ctx-item.disabled { color: var(--text-dim); cursor: default; }
+  .wb-ctx-item.disabled:hover { background: none; color: var(--text-dim); }
+  .wb-ctx-sep { height: 1px; background: var(--line); margin: 4px 6px; }
+  .wb-ctx-arrow { font-size: 10px; color: var(--text-dim); }
+  .wb-submenu {
+    position: absolute; left: 100%; top: -5px; background: var(--bg);
+    border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: 0 8px 28px rgba(20,30,40,0.16); padding: 5px; min-width: 190px; display: none;
+  }
+  .wb-ctx-item:hover > .wb-submenu { display: block; }
+
+  /* Legend modal reuse */
+  .wb-legend-section { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-dim); margin: 14px 0 6px; }
+  .wb-legend-section:first-child { margin-top: 0; }
+  .wb-legend-row { display: flex; align-items: center; gap: 10px; padding: 4px 0; font-size: 13px; color: var(--ink); }
+  .wb-legend-glyph { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body>
@@ -545,7 +734,14 @@
   <div class="page">
     <nav>
       <a class="nav-link" href="#">About</a>
-      <span class="nav-avatar"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_User" overflow="hidden"><g><circle cx="48" cy="30" r="16" fill="#7030A0"/><path d="M80 82 80 66C80 63.6 78.8 61.2 76.8 59.6 72.4 56 66.8 53.6 61.2 52 57.2 50.8 52.8 50 48 50 43.6 50 39.2 50.8 34.8 52 29.2 53.6 23.6 56.4 19.2 59.6 17.2 61.2 16 63.6 16 66L16 82 80 82Z" fill="#7030A0"/></g></svg></span>
+      <button class="nav-avatar-btn" id="nav-auth-btn" onclick="onNavAuthClick()">
+        <span class="nav-user-email" id="nav-user-email"></span>
+        <span class="nav-avatar"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_User" overflow="hidden"><g><circle cx="48" cy="30" r="16" fill="#7030A0"/><path d="M80 82 80 66C80 63.6 78.8 61.2 76.8 59.6 72.4 56 66.8 53.6 61.2 52 57.2 50.8 52.8 50 48 50 43.6 50 39.2 50.8 34.8 52 29.2 53.6 23.6 56.4 19.2 59.6 17.2 61.2 16 63.6 16 66L16 82 80 82Z" fill="#7030A0"/></g></svg></span>
+      </button>
+      <div id="nav-user-menu" class="nav-user-menu">
+        <div class="nav-user-menu-email" id="nav-user-menu-email"></div>
+        <div class="nav-user-menu-item" onclick="signOut()">Sign out</div>
+      </div>
     </nav>
 
     <div class="hero">
@@ -635,6 +831,57 @@
     <p class="pv-note">This project's workspace is being built &mdash; check back soon.</p>
   </div>
 
+  <!-- Functional Safety workbench -->
+  <div id="wb-shell" class="wb-shell">
+    <div class="wb-header">
+      <button class="back-link" style="position:static;" onclick="backToHome()">&larr; Back</button>
+      <div class="pv-icon-sm" id="wb-icon"></div>
+      <div>
+        <div class="wb-header-name" id="wb-name"></div>
+        <div class="wb-header-sub">Functional Safety &middot; ISO 26262</div>
+      </div>
+      <div class="wb-header-spacer"></div>
+      <button class="wb-header-btn" onclick="wbShowLegend()" title="F10">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        Legend
+      </button>
+      <button class="wb-header-btn" onclick="wbSave()" title="Ctrl+S">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Save
+      </button>
+    </div>
+    <div class="wb-body">
+      <div class="wb-sidebar">
+        <div class="wb-sidebar-toolbar">
+          <input class="wb-filter" id="wb-filter" placeholder="type filter text" oninput="wbFilterTree(this.value)" />
+          <button class="wb-icon-btn" title="Expand all" onclick="wbExpandAll(true)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+          <button class="wb-icon-btn" title="Collapse all" onclick="wbExpandAll(false)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"/></svg>
+          </button>
+          <button class="wb-icon-btn" title="Refresh (F5)" onclick="wbSave(true)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+        </div>
+        <div class="wb-tree-scroll" id="wb-tree" oncontextmenu="return false;"></div>
+      </div>
+      <div class="wb-main">
+        <div class="wb-editor" id="wb-editor"></div>
+        <div class="wb-panelstack">
+          <div class="wb-tabs">
+            <div class="wb-tab active" data-tab="props" onclick="wbSwitchTab('props')">Properties</div>
+            <div class="wb-tab" data-tab="tasks" onclick="wbSwitchTab('tasks')">Tasks</div>
+            <div class="wb-tab" data-tab="notes" onclick="wbSwitchTab('notes')">Notes</div>
+          </div>
+          <div class="wb-panel-body" id="wb-panel-body"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="wb-ctxmenu" class="wb-ctxmenu"></div>
+
   <!-- Chat widget -->
   <button id="fc-bubble" onclick="fcToggle()" aria-label="Open Safety Assistant">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
@@ -690,6 +937,103 @@
   <div id="fc-toast"></div>
 
   <script>
+    // ---------- Supabase ----------
+    // Fill these in from your Supabase project: Project Settings > API
+    const SUPABASE_URL = 'https://supabase.com/dashboard/project/izxgzpwsrzykrxljgdzi/settings/general';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6eGd6cHdzcnp5a3J4bGpnZHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NjM5NzEsImV4cCI6MjEwMDIzOTk3MX0.UNs9PWpmy7NE5mG3gX2jFavBh8Xp1-QRmV4cWHK6YzE';
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentUser = null;
+
+    async function initAuth() {
+      const { data: { session } } = await sb.auth.getSession();
+      currentUser = session ? session.user : null;
+      renderAuthUI();
+      sb.auth.onAuthStateChange((event, session) => {
+        currentUser = session ? session.user : null;
+        renderAuthUI();
+      });
+    }
+
+    function renderAuthUI() {
+      document.getElementById('nav-user-email').textContent = currentUser ? currentUser.email : '';
+      document.getElementById('nav-user-menu-email').textContent = currentUser ? currentUser.email : '';
+    }
+
+    function onNavAuthClick() {
+      if (currentUser) {
+        document.getElementById('nav-user-menu').classList.toggle('open');
+      } else {
+        openAuthModal('signin');
+      }
+    }
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#nav-auth-btn') && !e.target.closest('#nav-user-menu')) {
+        const menu = document.getElementById('nav-user-menu');
+        if (menu) menu.classList.remove('open');
+      }
+    });
+
+    function openAuthModal(mode) {
+      mode = mode || 'signin';
+      document.getElementById('modal-title').textContent = mode === 'signup' ? 'Create account' : 'Sign in';
+      document.getElementById('modal-context').textContent = 'FuCSAI workspace access';
+      document.getElementById('modal-body').innerHTML =
+        '<div class="modal-prompt">Email</div>' +
+        '<input id="auth-email" class="modal-input" type="email" placeholder="you@example.com" autocomplete="email" />' +
+        '<div class="modal-prompt" style="margin-top:10px;">Password</div>' +
+        '<input id="auth-password" class="modal-input" type="password" placeholder="\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022" autocomplete="' + (mode === 'signup' ? 'new-password' : 'current-password') + '" />' +
+        '<div id="auth-error" style="font-size:12px;margin-top:8px;min-height:14px;"></div>' +
+        '<div style="margin-top:6px;font-size:12.5px;color:var(--text-dim);">' +
+        (mode === 'signup'
+          ? 'Already have an account? <a href="#" onclick="openAuthModal(\'signin\');return false;" style="color:var(--accent);">Sign in</a>'
+          : 'No account yet? <a href="#" onclick="openAuthModal(\'signup\');return false;" style="color:var(--accent);">Create one</a>') +
+        '</div>';
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>' +
+        '<button class="modal-btn solid" onclick="submitAuth(\'' + mode + '\')">' + (mode === 'signup' ? 'Create account' : 'Sign in') + '</button>';
+      document.getElementById('modal-overlay').classList.add('open');
+      setTimeout(() => { const el = document.getElementById('auth-email'); if (el) el.focus(); }, 50);
+
+      const pwInput = document.getElementById('auth-password');
+      if (pwInput) pwInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') submitAuth(mode); });
+    }
+
+    async function submitAuth(mode) {
+      const email = document.getElementById('auth-email').value.trim();
+      const password = document.getElementById('auth-password').value;
+      const errEl = document.getElementById('auth-error');
+      errEl.style.color = '#DC2626';
+      errEl.textContent = '';
+      if (!email || !password) { errEl.textContent = 'Enter both email and password.'; return; }
+
+      const { data, error } = mode === 'signup'
+        ? await sb.auth.signUp({ email, password })
+        : await sb.auth.signInWithPassword({ email, password });
+
+      if (error) { errEl.textContent = error.message; return; }
+
+      if (mode === 'signup' && data.user && !data.session) {
+        errEl.style.color = 'var(--accent)';
+        errEl.textContent = 'Check your email to confirm your account, then sign in.';
+        return;
+      }
+
+      closeModal();
+      fcShowToast('Signed in as ' + email);
+    }
+
+    async function signOut() {
+      await sb.auth.signOut();
+      const menu = document.getElementById('nav-user-menu');
+      if (menu) menu.classList.remove('open');
+      fcShowToast('Signed out');
+      backToHome();
+    }
+
+    initAuth();
+
     function fcToggle(forceOpen) {
       const panel = document.getElementById('fc-panel');
       if (forceOpen) { panel.classList.add('open'); return; }
@@ -945,14 +1289,11 @@
 
     // ---------- New Project / Open Project (demo, saved locally in this browser) ----------
 
-    const PROJECTS_KEY = 'fucsai_demo_projects';
-
-    function getProjects() {
-      try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; }
-      catch (e) { return []; }
-    }
-    function saveProjects(list) {
-      localStorage.setItem(PROJECTS_KEY, JSON.stringify(list));
+    async function fetchProjects() {
+      if (!currentUser) return [];
+      const { data, error } = await sb.from('projects').select('*').order('created_at', { ascending: false });
+      if (error) { console.error(error); fcShowToast('Could not load projects'); return []; }
+      return data.map(p => ({ id: p.id, name: p.name, standards: p.standards, createdAt: p.created_at }));
     }
 
     function closeModal() {
@@ -1020,17 +1361,21 @@
       setTimeout(() => input.focus(), 50);
     }
 
-    function createProject(keys) {
+    async function createProject(keys) {
+      if (!currentUser) { closeModal(); openAuthModal('signin'); return; }
+
       const input = document.getElementById('new-proj-name');
       const name = input.value.trim();
       if (!name) return;
 
       const standards = (keys && keys.length > 0) ? keys : ['fu', 'c', 's', 'ai'];
-      const project = { id: Date.now().toString(36), name, standards, createdAt: new Date().toISOString() };
-      const projects = getProjects();
-      projects.unshift(project);
-      saveProjects(projects);
+      const { data, error } = await sb.from('projects')
+        .insert({ owner_id: currentUser.id, name, standards })
+        .select().single();
 
+      if (error) { console.error(error); fcShowToast('Could not create project'); return; }
+
+      const project = { id: data.id, name: data.name, standards: data.standards, createdAt: data.created_at };
       showProjectView(project);
     }
 
@@ -1064,13 +1409,21 @@
       document.getElementById('modal-overlay').classList.add('open');
     }
 
-    function renderProjectList(keys) {
+    async function renderProjectList(keys) {
       const filterKeys = keys || [];
-      let projects = getProjects();
+      const body = document.getElementById('modal-body');
+      body.innerHTML = '<div class="proj-empty">Loading&hellip;</div>';
+
+      if (!currentUser) {
+        body.innerHTML = '<div class="proj-empty">Sign in to see your projects.<br>' +
+          '<button class="modal-btn solid" style="margin-top:12px;" onclick="openAuthModal(\'signin\')">Sign in</button></div>';
+        return;
+      }
+
+      let projects = await fetchProjects();
       if (filterKeys.length > 0) {
         projects = projects.filter(p => (p.standards || []).some(s => filterKeys.includes(s)));
       }
-      const body = document.getElementById('modal-body');
 
       if (projects.length === 0) {
         body.innerHTML = '<div class="proj-empty">No projects yet' + (filterKeys.length ? ' for this type' : '') + '.<br>Create one to see it here.</div>';
@@ -1091,9 +1444,11 @@
       }).join('') + '</div>';
     }
 
-    function openProject(id) {
-      const p = getProjects().find(p => p.id === id);
-      if (p) showProjectView(p);
+    async function openProject(id) {
+      const { data, error } = await sb.from('projects').select('*').eq('id', id).single();
+      if (error) { console.error(error); fcShowToast('Could not open project'); return; }
+      const project = { id: data.id, name: data.name, standards: data.standards, createdAt: data.created_at };
+      showProjectView(project);
     }
 
     // ---------- Dedicated project page (in-progress placeholder) ----------
@@ -1101,6 +1456,16 @@
     function showProjectView(project) {
       closeModal();
       const keys = (project.standards && project.standards.length > 0) ? project.standards : ['fu', 'c', 's', 'ai'];
+
+      // Functional Safety projects (and only FuSa, for now) get the real workbench.
+      // Other disciplines still show the "in progress" placeholder until their turn comes.
+      if (keys.length === 1 && keys[0] === 'fu') {
+        document.querySelector('.page').style.display = 'none';
+        document.getElementById('project-view').style.display = 'none';
+        wbOpen(project);
+        return;
+      }
+
       const primary = STANDARD_META[keys[0]];
       const letter = keys[0] === 'ai' ? 'AI' : (keys[0] === 'fu' ? 'Fu' : keys[0].toUpperCase());
 
@@ -1116,7 +1481,441 @@
 
     function backToHome() {
       document.getElementById('project-view').style.display = 'none';
+      document.getElementById('wb-shell').style.display = 'none';
+      document.removeEventListener('keydown', wbKeyHandler);
       document.querySelector('.page').style.display = 'flex';
+    }
+
+    /* =====================================================================
+       FuSa Workbench — medini-analyze-inspired workspace
+       Model Browser (sidebar tree) + Editor Area + tabbed panel stack,
+       with a right-click New/Derive/Open-With/Related-Elements menu,
+       following ANSYS medini analyze's interaction model (see M01 deck)
+       but with our own visual language and folder/element set.
+       ===================================================================== */
+
+    let wbProject = null;
+    let wbSelectedId = null;   // 'root' or a real element uuid
+    let wbElements = [];       // flat array of element rows from Supabase — parent_id links them into a tree
+    let wbExpandedIds = new Set(['root']);
+    const ROOT = { id: 'root', label: '', kind: 'folder', locked: true };
+
+    // Glyph set — deliberately distinct shapes/colors from medini's own icon set,
+    // but carrying the same meaning (Failure Mode / Malfunction / Hazard / Error / Function / folders).
+    const WB_GLYPHS = {
+      folder:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.4a1.5 1.5 0 0 1 1.2.6l.9 1.2a.5.5 0 0 0 .4.2H13.5A1.5 1.5 0 0 1 15 5.5v7A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" fill="#B9C2CC"/></svg>',
+      item:        '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#4285F4" stroke-width="1.3"/><line x1="5.2" y1="5" x2="10.8" y2="5" stroke="#4285F4" stroke-width="1.1"/><line x1="5.2" y1="7.4" x2="10.8" y2="7.4" stroke="#4285F4" stroke-width="1.1"/><line x1="5.2" y1="9.8" x2="8.5" y2="9.8" stroke="#4285F4" stroke-width="1.1"/></svg>',
+      hazard:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1l7 7-7 7-7-7z" fill="#7C3AED"/></svg>',
+      malfunction: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="2.5" fill="#EA8C00"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">M</text></svg>',
+      failuremode: '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="#DC2626"/></svg>',
+      function:    '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#2563EB" stroke-width="1.4"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#2563EB">F</text></svg>',
+      goal:        '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#0F766E" stroke-width="1.4"/><circle cx="8" cy="8" r="2.6" fill="#0F766E"/></svg>',
+      requirement: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="2" width="11" height="12" rx="1.2" fill="none" stroke="#0F766E" stroke-width="1.3"/><line x1="4.7" y1="5.2" x2="11.3" y2="5.2" stroke="#0F766E" stroke-width="1.1"/><line x1="4.7" y1="7.6" x2="11.3" y2="7.6" stroke="#0F766E" stroke-width="1.1"/><line x1="4.7" y1="10" x2="9" y2="10" stroke="#0F766E" stroke-width="1.1"/></svg>',
+      worksheet:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2" width="13" height="12" rx="1.2" fill="none" stroke="#B08200" stroke-width="1.3"/><line x1="1.5" y1="6" x2="14.5" y2="6" stroke="#B08200" stroke-width="1"/><line x1="6" y1="6" x2="6" y2="14" stroke="#B08200" stroke-width="1"/><line x1="10.3" y1="6" x2="10.3" y2="14" stroke="#B08200" stroke-width="1"/></svg>',
+      diagram:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2.5" width="5.5" height="4.5" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1.2"/><rect x="9" y="9" width="5.5" height="4.5" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1.2"/><path d="M7 4.7h2.3M9.3 4.7v6.6M4.2 7v4" fill="none" stroke="#4285F4" stroke-width="1"/></svg>',
+      element:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2"/></svg>',
+    };
+
+    function wbGlyph(kind) { return '<span class="wb-glyph">' + (WB_GLYPHS[kind] || WB_GLYPHS.element) + '</span>'; }
+
+    // Human-facing ID prefixes, medini-style (F-001, M-002, H-001…). The database assigns
+    // these atomically via the next_display_id() function — see schema.sql. Folders don't get one.
+    const WB_ID_PREFIX = {
+      item: 'IT', diagram: 'DIA', function: 'F', malfunction: 'M',
+      hazard: 'H', goal: 'SG', requirement: 'FSR', worksheet: 'WS', element: 'EL'
+    };
+
+    // Seed definitions — follows the standard ISO 26262-3 work-product breakdown
+    // (Item Definition / HARA / Safety Goals & Requirements / System Design / Safety Analysis),
+    // mirroring the folder layout medini ships with, populated with representative
+    // placeholder content rather than any proprietary example project data.
+    // tempId/parentTempId are only used to wire up parent_id during the one-time seed insert.
+    function wbSeedDefinitions() {
+      return [
+        { tempId: 'item-def', parentTempId: null, kind: 'folder', label: 'Item Definition' },
+        { tempId: 'item-desc', parentTempId: 'item-def', kind: 'item', label: 'Item Description', props: { Status: 'Draft' } },
+        { tempId: 'item-arch', parentTempId: 'item-def', kind: 'diagram', label: 'Item Architecture', props: { Editor: 'Diagram Editor' } },
+        { tempId: 'fn-vehicle', parentTempId: 'item-def', kind: 'folder', label: 'Vehicle Level Functions' },
+        { tempId: 'f-001', parentTempId: 'fn-vehicle', kind: 'function', label: 'Lock Vehicle', props: { Type: 'Vehicle Level Function' } },
+        { tempId: 'f-002', parentTempId: 'fn-vehicle', kind: 'function', label: 'Unlock Vehicle', props: { Type: 'Vehicle Level Function' } },
+
+        { tempId: 'hara', parentTempId: null, kind: 'folder', label: 'Hazard Analysis and Risk Assessment' },
+        { tempId: 'mal-lock', parentTempId: 'hara', kind: 'malfunction', label: 'Unintended Lock', props: {} },
+        { tempId: 'mal-unlock', parentTempId: 'hara', kind: 'malfunction', label: 'Unintended Unlock', props: {} },
+        { tempId: 'haz-001', parentTempId: 'hara', kind: 'hazard', label: 'Loss of Steering Control', props: { ASIL: 'C' } },
+
+        { tempId: 'goals', parentTempId: null, kind: 'folder', label: 'Safety Goals and Requirements' },
+        { tempId: 'sg-001', parentTempId: 'goals', kind: 'goal', label: 'Prevent Unintended Lock', props: { ASIL: 'C' } },
+        { tempId: 'fsr-001', parentTempId: 'goals', kind: 'requirement', label: 'Detect Lock Actuator Fault', props: { 'Derived from': 'SG-001' } },
+
+        { tempId: 'sysdesign', parentTempId: null, kind: 'folder', label: 'System Design' },
+        { tempId: 'hw-models', parentTempId: 'sysdesign', kind: 'folder', label: 'Hardware Models' },
+        { tempId: 'sw-models', parentTempId: 'sysdesign', kind: 'folder', label: 'Software Models' },
+
+        { tempId: 'safety-analysis', parentTempId: null, kind: 'folder', label: 'Safety Analysis' },
+        { tempId: 'fmea', parentTempId: 'safety-analysis', kind: 'folder', label: 'FMEA Worksheets' },
+        { tempId: 'fta', parentTempId: 'safety-analysis', kind: 'folder', label: 'FTA Models' },
+        { tempId: 'dc', parentTempId: 'safety-analysis', kind: 'folder', label: 'Diagnostic Coverage' },
+      ];
+    }
+
+    async function wbNextDisplayId(kind) {
+      const prefix = WB_ID_PREFIX[kind];
+      if (!prefix) return null;
+      const { data, error } = await sb.rpc('next_display_id', { p_project_id: wbProject.id, p_kind: kind, p_prefix: prefix });
+      if (error) { console.error(error); return null; }
+      return data;
+    }
+
+    async function wbSeedElements() {
+      const defs = wbSeedDefinitions();
+      const idMap = {};
+      for (const def of defs) {
+        const parent_id = def.parentTempId ? idMap[def.parentTempId] : null;
+        const display_id = await wbNextDisplayId(def.kind);
+        const { data, error } = await sb.from('elements').insert({
+          project_id: wbProject.id, parent_id, kind: def.kind, label: def.label,
+          display_id, props: def.props || {}
+        }).select().single();
+        if (error) { console.error(error); continue; }
+        idMap[def.tempId] = data.id;
+      }
+    }
+
+    async function wbLoadElements() {
+      const { data, error } = await sb.from('elements').select('*').eq('project_id', wbProject.id).order('created_at');
+      if (error) { console.error(error); fcShowToast('Could not load workspace'); wbElements = []; return; }
+      if (!data || data.length === 0) {
+        await wbSeedElements();
+        const retry = await sb.from('elements').select('*').eq('project_id', wbProject.id).order('created_at');
+        wbElements = retry.data || [];
+      } else {
+        wbElements = data;
+      }
+    }
+
+    async function wbOpen(project) {
+      wbProject = project;
+      ROOT.label = project.name;
+
+      const meta = STANDARD_META.fu;
+      document.getElementById('wb-icon').textContent = 'Fu';
+      document.getElementById('wb-icon').style.color = meta.ink;
+      document.getElementById('wb-icon').style.background = meta.bg;
+      document.getElementById('wb-name').textContent = project.name;
+
+      document.getElementById('wb-shell').style.display = 'flex';
+      document.getElementById('wb-shell').style.flexDirection = 'column';
+      document.getElementById('wb-tree').innerHTML = '<div class="wb-empty-note" style="padding:10px;">Loading workspace&hellip;</div>';
+
+      await wbLoadElements();
+      wbExpandedIds = new Set(['root', ...wbElements.filter(e => e.kind === 'folder' && e.parent_id === null).map(e => e.id)]);
+
+      wbRenderTree();
+      wbSelectNode(null);
+      wbSwitchTab('props');
+      document.addEventListener('keydown', wbKeyHandler);
+    }
+
+    function wbFindNode(id) {
+      if (!id || id === 'root') return ROOT;
+      return wbElements.find(e => e.id === id) || null;
+    }
+
+    function wbChildrenOf(id) {
+      const parentId = (id === 'root' || id === null) ? null : id;
+      return wbElements.filter(e => e.parent_id === parentId);
+    }
+
+    function wbRenderTree() {
+      document.getElementById('wb-tree').innerHTML = wbRenderNode(ROOT);
+    }
+
+    function wbRenderNode(node) {
+      const children = wbChildrenOf(node.id);
+      const hasChildren = children.length > 0;
+      const isFolderLike = node.kind === 'folder';
+      const leafClass = (hasChildren || isFolderLike) ? '' : ' leaf';
+      const expanded = wbExpandedIds.has(node.id) ? ' expanded' : '';
+      const selected = node.id === wbSelectedId ? ' selected' : '';
+      let html = '<div class="wb-node' + expanded + '" data-id="' + node.id + '">';
+      html += '<div class="wb-node-row' + leafClass + selected + '" onclick="wbNodeClick(\'' + node.id + '\', event)" oncontextmenu="wbContextMenu(event, \'' + node.id + '\'); return false;">';
+      html += '<span class="wb-chevron"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 6 15 12 9 18"/></svg></span>';
+      html += wbGlyph(node.kind);
+      html += '<span class="wb-node-label">' + escapeHtml(node.label) + '</span>';
+      if (node.display_id) html += '<span class="wb-node-badge">' + node.display_id + '</span>';
+      html += '</div>';
+      if (hasChildren) {
+        html += '<div class="wb-children">';
+        children.forEach(c => { html += wbRenderNode(c); });
+        html += '</div>';
+      } else if (isFolderLike) {
+        html += '<div class="wb-children"><div class="wb-empty-note" style="padding:6px 10px;">Empty &mdash; right-click to add a work product.</div></div>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function wbNodeClick(id, ev) {
+      ev.stopPropagation();
+      const node = wbFindNode(id);
+      if (!node) return;
+      if (node.kind === 'folder') {
+        if (wbExpandedIds.has(id)) wbExpandedIds.delete(id); else wbExpandedIds.add(id);
+      }
+      wbSelectNode(id);
+      wbRenderTree();
+    }
+
+    function wbSelectNode(id) {
+      wbSelectedId = id;
+      const node = id ? wbFindNode(id) : null;
+      wbRenderEditor(node);
+      wbRenderProps(node);
+    }
+
+    function wbRenderEditor(node) {
+      const el = document.getElementById('wb-editor');
+      if (!node) {
+        el.innerHTML = '<div class="wb-editor-empty">' +
+          '<svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 3H5a2 2 0 0 0-2 2v4m18 0V5a2 2 0 0 0-2-2h-4m0 18h4a2 2 0 0 0 2-2v-4M3 15v4a2 2 0 0 0 2 2h4"/></svg>' +
+          '<div>Select an item in the Model Browser to open it here.</div>' +
+          '</div>';
+        return;
+      }
+      const kindLabels = {
+        folder: 'Folder', item: 'Item Description', diagram: 'System Diagram', function: 'Function',
+        malfunction: 'Malfunction', hazard: 'Hazard', goal: 'Safety Goal', requirement: 'Functional Safety Requirement',
+        worksheet: 'Worksheet', element: 'Element'
+      };
+      el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + (node.display_id ? ' <span class="wb-editor-kind" style="margin-left:6px;">' + node.display_id + '</span>' : '') + '</div>' +
+        '<div class="wb-editor-kind">' + (kindLabels[node.kind] || node.kind) + '</div>' +
+        '<div class="wb-editor-desc">' + (node.kind === 'folder'
+          ? 'This folder groups related work products. Right-click it to create a new one, or expand it in the Model Browser on the left.'
+          : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.') + '</div>';
+    }
+
+    function wbRenderProps(node) {
+      const body = document.getElementById('wb-panel-body');
+      const activeTab = document.querySelector('.wb-tab.active').dataset.tab;
+      if (activeTab !== 'props') return;
+      if (!node) {
+        body.innerHTML = '<div class="wb-empty-note">Properties are not available.</div>';
+        return;
+      }
+      let rows = '<div class="wb-prop-row"><div class="wb-prop-key">Name</div><div class="wb-prop-val">' + escapeHtml(node.label) + '</div></div>';
+      rows += '<div class="wb-prop-row"><div class="wb-prop-key">Kind</div><div class="wb-prop-val">' + node.kind + '</div></div>';
+      if (node.display_id) rows += '<div class="wb-prop-row"><div class="wb-prop-key">Display ID</div><div class="wb-prop-val">' + node.display_id + '</div></div>';
+      if (node.id !== 'root') rows += '<div class="wb-prop-row"><div class="wb-prop-key">Internal ID</div><div class="wb-prop-val" style="font-family:\'IBM Plex Mono\',monospace;font-size:11px;color:var(--text-dim);">' + node.id + '</div></div>';
+      if (node.props) {
+        Object.keys(node.props).forEach(k => {
+          rows += '<div class="wb-prop-row"><div class="wb-prop-key">' + escapeHtml(k) + '</div><div class="wb-prop-val">' + escapeHtml(String(node.props[k])) + '</div></div>';
+        });
+      }
+      body.innerHTML = rows;
+    }
+
+    function wbSwitchTab(tab) {
+      document.querySelectorAll('.wb-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+      const body = document.getElementById('wb-panel-body');
+      if (tab === 'props') {
+        wbRenderProps(wbSelectedId ? wbFindNode(wbSelectedId) : null);
+      } else if (tab === 'tasks') {
+        body.innerHTML = '<div class="wb-empty-note">No tasks assigned to this element.</div>';
+      } else {
+        body.innerHTML = '<div class="wb-empty-note">No notes yet.</div>';
+      }
+    }
+
+    function wbExpandAll(state) {
+      if (state) {
+        wbExpandedIds = new Set(['root', ...wbElements.filter(e => e.kind === 'folder').map(e => e.id)]);
+      } else {
+        wbExpandedIds = new Set();
+      }
+      wbRenderTree();
+    }
+
+    function wbFilterTree(text) {
+      // simple visibility filter — expands matches into view
+      const rows = document.querySelectorAll('#wb-tree .wb-node-row');
+      const q = text.trim().toLowerCase();
+      rows.forEach(row => {
+        const label = row.querySelector('.wb-node-label').textContent.toLowerCase();
+        row.closest('.wb-node').style.opacity = (q === '' || label.includes(q)) ? '1' : '0.3';
+      });
+      if (q !== '') wbExpandAll(true);
+    }
+
+    function wbSave(isRefresh) {
+      if (isRefresh) {
+        wbLoadElements().then(() => { wbRenderTree(); fcShowToast('Refreshed'); });
+      } else {
+        fcShowToast('All changes are saved automatically');
+      }
+    }
+
+    function fcShowToast(msg) {
+      const t = document.getElementById('fc-toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      clearTimeout(window._wbToastTimer);
+      window._wbToastTimer = setTimeout(() => t.classList.remove('show'), 1600);
+    }
+
+    function wbKeyHandler(e) {
+      const active = document.activeElement;
+      const typing = active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA');
+      if (e.key === 'F10') { e.preventDefault(); wbShowLegend(); }
+      else if (e.key === 'F5') { e.preventDefault(); wbSave(true); }
+      else if (e.key === 'F2' && !typing && wbSelectedId) { e.preventDefault(); wbRenameNode(wbSelectedId); }
+      else if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); wbSave(false); }
+      else if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'y')) { e.preventDefault(); fcShowToast(e.key === 'z' ? 'Undo' : 'Redo'); }
+    }
+
+    async function wbRenameNode(id) {
+      const node = wbFindNode(id);
+      if (!node || node.locked) return;
+      const name = prompt('Rename to:', node.label);
+      if (!name || !name.trim()) return;
+      const { error } = await sb.from('elements').update({ label: name.trim() }).eq('id', id);
+      if (error) { console.error(error); fcShowToast('Could not rename'); return; }
+      node.label = name.trim();
+      wbRenderTree();
+      wbRenderProps(wbFindNode(wbSelectedId));
+    }
+
+    // ---------- Context menu (New / Derive / Open With / Related Elements) ----------
+
+    const WB_NEW_OPTIONS = {
+      'item-def':        [['item', 'Item Description'], ['diagram', 'Item Architecture'], ['function', 'Function']],
+      'hara':            [['malfunction', 'Malfunction'], ['hazard', 'Hazard']],
+      'goals':           [['goal', 'Safety Goal'], ['requirement', 'Functional Safety Requirement']],
+      'sysdesign':       [['diagram', 'System Diagram'], ['element', 'Hardware Element'], ['element', 'Software Element']],
+      'hw-models':       [['element', 'Hardware Element']],
+      'sw-models':       [['element', 'Software Element']],
+      'safety-analysis': [['worksheet', 'FMEA Worksheet'], ['worksheet', 'FTA Model'], ['worksheet', 'Diagnostic Coverage Worksheet']],
+      'fmea':            [['worksheet', 'FMEA Worksheet']],
+      'fta':             [['worksheet', 'FTA Model']],
+      'dc':              [['worksheet', 'Diagnostic Coverage Worksheet']],
+    };
+    const WB_DERIVE_OPTIONS = ['FTA Event(s)…', 'Diagnostic Coverage Worksheet…', 'FMEA Worksheet…'];
+
+    function wbContextMenu(ev, id) {
+      wbSelectNode(id);
+      wbRenderTree();
+      const node = wbFindNode(id);
+      const menu = document.getElementById('wb-ctxmenu');
+      // Seed folders keep their readable ids (item-def, hara, …); user-created folders get uuids
+      // and simply fall back to the generic "New Package" option below via newOpts being undefined.
+      const newOpts = WB_NEW_OPTIONS[id] || (node.kind === 'folder' ? [['element', 'Element'], ['worksheet', 'Worksheet']] : null);
+      const canDerive = node.kind !== 'folder' && node.id !== 'root';
+
+      let html = '';
+      if (newOpts) {
+        html += '<div class="wb-ctx-item">New <span class="wb-ctx-arrow">&#9656;</span>' +
+          '<div class="wb-submenu">' + newOpts.map(o =>
+            '<div class="wb-ctx-item" onclick="wbCreateChild(\'' + id + '\',\'' + o[0] + '\',\'' + o[1].replace(/'/g, "\\'") + '\')">' + o[1] + '</div>'
+          ).join('') + '</div></div>';
+      } else {
+        html += '<div class="wb-ctx-item disabled">New <span class="wb-ctx-arrow">&#9656;</span></div>';
+      }
+      html += '<div class="wb-ctx-item' + (canDerive ? '' : ' disabled') + '">Derive <span class="wb-ctx-arrow">&#9656;</span>' +
+        (canDerive ? '<div class="wb-submenu">' + WB_DERIVE_OPTIONS.map(o =>
+          '<div class="wb-ctx-item" onclick="wbStub(\'Derive: ' + o.replace(/'/g, "\\'") + '\')">' + o + '</div>'
+        ).join('') + '</div>' : '') + '</div>';
+      html += '<div class="wb-ctx-sep"></div>';
+      html += '<div class="wb-ctx-item" onclick="wbStub(\'Open Editor\')">Open Editor</div>';
+      html += '<div class="wb-ctx-item">Open With <span class="wb-ctx-arrow">&#9656;</span>' +
+        '<div class="wb-submenu">' +
+        '<div class="wb-ctx-item" onclick="wbStub(\'Diagram Editor\')">Diagram Editor</div>' +
+        '<div class="wb-ctx-item" onclick="wbStub(\'Table Editor\')">Table Editor</div>' +
+        '<div class="wb-ctx-item" onclick="wbStub(\'System Element Editor\')">System Element Editor</div>' +
+        '</div></div>';
+      html += '<div class="wb-ctx-item" onclick="wbStub(\'Related Elements\')">Related Elements</div>';
+      html += '<div class="wb-ctx-item" onclick="wbStub(\'Open Trace Matrix\')">Open Trace Matrix</div>';
+      html += '<div class="wb-ctx-item" onclick="wbStub(\'Allocate Elements\')">Allocate Elements</div>';
+      html += '<div class="wb-ctx-sep"></div>';
+      html += '<div class="wb-ctx-item' + (node.locked ? ' disabled' : '') + '" onclick="' + (node.locked ? '' : 'wbRenameNode(\'' + id + '\'); wbCloseCtx();') + '">Rename <span style="color:var(--text-dim);font-size:11px;">F2</span></div>';
+      html += '<div class="wb-ctx-item' + (node.locked ? ' disabled' : '') + '" onclick="' + (node.locked ? '' : 'wbDeleteNode(\'' + id + '\'); wbCloseCtx();') + '">Delete</div>';
+
+      menu.innerHTML = html;
+      const x = Math.min(ev.clientX, window.innerWidth - 230);
+      const y = Math.min(ev.clientY, window.innerHeight - 300);
+      menu.style.left = x + 'px';
+      menu.style.top = y + 'px';
+      menu.classList.add('open');
+    }
+
+    function wbCloseCtx() { document.getElementById('wb-ctxmenu').classList.remove('open'); }
+
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#wb-ctxmenu')) wbCloseCtx();
+    });
+
+    async function wbCreateChild(parentId, kind, label) {
+      const parent_id = parentId === 'root' ? null : parentId;
+      const display_id = await wbNextDisplayId(kind);
+      const { data, error } = await sb.from('elements').insert({
+        project_id: wbProject.id, parent_id, kind, label, display_id, props: {}
+      }).select().single();
+
+      if (error) { console.error(error); fcShowToast('Could not create element'); wbCloseCtx(); return; }
+
+      wbElements.push(data);
+      wbExpandedIds.add(parentId);
+      wbRenderTree();
+      wbSelectNode(data.id);
+      wbCloseCtx();
+      fcShowToast('Created ' + label + (data.display_id ? ' (' + data.display_id + ')' : ''));
+    }
+
+    async function wbDeleteNode(id) {
+      if (!confirm('Delete this element? Child elements will be deleted too.')) return;
+      const { error } = await sb.from('elements').delete().eq('id', id);
+      if (error) { console.error(error); fcShowToast('Could not delete'); return; }
+      // Cascade already happened server-side — reload to keep the local array in sync.
+      if (wbSelectedId === id) wbSelectNode(null);
+      await wbLoadElements();
+      wbRenderTree();
+      fcShowToast('Deleted');
+    }
+
+    function wbStub(action) {
+      wbCloseCtx();
+      fcShowToast(action + ' \u2014 coming in a later build');
+    }
+
+    // ---------- F10 Model Browser Legend ----------
+
+    function wbShowLegend() {
+      document.getElementById('modal-title').textContent = 'Model Browser Legend';
+      document.getElementById('modal-context').textContent = 'Icon key for the FuSa workspace';
+      const rows = [
+        ['section', 'Project'],
+        ['folder', 'Predefined / custom folder'],
+        ['item', 'Item Description'],
+        ['diagram', 'System diagram / architecture'],
+        ['section', 'Function Modeling'],
+        ['function', 'Function'],
+        ['section', 'Hazard Analysis'],
+        ['malfunction', 'Malfunction'],
+        ['hazard', 'Hazard'],
+        ['section', 'Safety Goals & Requirements'],
+        ['goal', 'Safety Goal'],
+        ['requirement', 'Functional Safety Requirement'],
+        ['section', 'Safety Analysis'],
+        ['worksheet', 'FMEA / FTA / Diagnostic Coverage worksheet'],
+      ];
+      let html = '<div>';
+      rows.forEach(r => {
+        if (r[0] === 'section') { html += '<div class="wb-legend-section">' + r[1] + '</div>'; }
+        else { html += '<div class="wb-legend-row"><span class="wb-legend-glyph">' + WB_GLYPHS[r[0]] + '</span>' + r[1] + '</div>'; }
+      });
+      html += '</div>';
+      document.getElementById('modal-body').innerHTML = html;
+      document.getElementById('modal-actions').innerHTML = '<button class="modal-btn solid" onclick="closeModal()">Close</button>';
+      document.getElementById('modal-overlay').classList.add('open');
     }
 
     function escapeHtml(str) {

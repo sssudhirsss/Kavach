@@ -477,15 +477,6 @@
   .modal-topic-text ul { margin: 8px 0 0; padding-left: 18px; }
   .modal-topic-text li { margin-bottom: 4px; }
 
-  .mute-btn {
-    width: 34px; height: 34px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    border: none; border-radius: 999px; background: var(--panel);
-    color: var(--text-dim); cursor: pointer; margin-right: 4px;
-  }
-  .mute-btn:hover { background: #EAECEF; }
-  .mute-btn.muted { color: #EA4335; background: #FCE7E5; }
-
   .modal-close {
     position: absolute;
     top: 16px; right: 16px;
@@ -777,9 +768,6 @@
 
       <div class="search-bar">
         <input id="search-input" type="text" placeholder="Ask coworker for tasks…Start / Open project or teach me FuSa…" autocomplete="off" onkeydown="if(event.key==='Enter') handleSearchSubmit()" />
-        <button class="mute-btn" id="mute-btn" onclick="toggleVoiceMute()" aria-label="Mute voice commands and responses" title="Mute voice commands &amp; responses">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
-        </button>
         <button class="mic-btn" id="mic-btn" onclick="startVoiceInput()" aria-label="Voice input">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
         </button>
@@ -1278,7 +1266,7 @@
       return keys.map(k => STANDARD_META[k].label.split(' — ')[0]).join(', ');
     }
 
-    function handleSearchSubmit() {
+    function handleSearchSubmit(viaVoice) {
       const input = document.getElementById('search-input');
       const text = input.value.trim();
       if (!text) return;
@@ -1287,9 +1275,9 @@
       const matches = matchStandards(text);
 
       if (lower.includes('start')) {
-        openNewProjectModal(matches);
+        openNewProjectModal(matches, viaVoice);
       } else if (lower.includes('open')) {
-        openOpenProjectModal(matches);
+        openOpenProjectModal(matches, viaVoice);
       } else if (matches.length > 0) {
         matches.forEach(k => trainMe(k));
       } else {
@@ -1316,13 +1304,10 @@
     // Silently does nothing if unsupported \u2014 speech is a bonus, never required.
     // onEnd (optional) fires after speech finishes, so callers can chain the
     // next step (e.g. start listening again) once the assistant stops talking.
-    let voiceMuted = false;
+    // Speech is only ever triggered from voice-initiated flows (see viaVoice
+    // below) \u2014 nothing speaks in response to typing or clicking.
     let voiceUnsupportedWarned = false;
     function speak(text, onEnd) {
-      if (voiceMuted) {
-        if (onEnd) onEnd();
-        return;
-      }
       if (!window.speechSynthesis) {
         if (!voiceUnsupportedWarned) {
           voiceUnsupportedWarned = true;
@@ -1353,9 +1338,11 @@
 
     // Voice commands are confirmed before acting: capture speech, ask the
     // user to confirm out loud, then either proceed (on "yes") or drop it
-    // and wait for the next command (on anything else).
+    // and wait for the next command (on anything else). Everything inside
+    // this function is voice-initiated, so it's the one place speak() is
+    // always appropriate — the resulting handleSearchSubmit(true) call tells
+    // downstream steps (project type/name prompts) that they may speak too.
     function startVoiceInput() {
-      if (voiceMuted) { fcShowToast('Voice is muted \u2014 click the speaker icon to unmute'); return; }
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
         comingSoon("Voice input isn't supported in this browser");
@@ -1367,25 +1354,13 @@
         speak('Did you want to ' + transcript + '? Say yes to proceed.', () => {
           listenOnce(SpeechRecognition, (answer) => {
             if (answer.toLowerCase().includes('yes')) {
-              handleSearchSubmit();
+              handleSearchSubmit(true);
             } else {
               speak('OK, waiting for your next command.');
             }
           });
         });
       });
-    }
-
-    // Mutes/unmutes both voice INPUT (the mic) and voice OUTPUT (spoken responses).
-    // voiceMuted itself is declared where speak() is defined, below.
-    function toggleVoiceMute() {
-      voiceMuted = !voiceMuted;
-      if (voiceMuted && window.speechSynthesis) window.speechSynthesis.cancel();
-      const btn = document.getElementById('mute-btn');
-      btn.classList.toggle('muted', voiceMuted);
-      btn.title = voiceMuted ? 'Unmute voice commands & responses' : 'Mute voice commands & responses';
-      btn.setAttribute('aria-label', btn.title);
-      fcShowToast(voiceMuted ? 'Voice muted' : 'Voice unmuted');
     }
 
     // Two icon states for the mic button: off (default — crossed-out mic, per
@@ -1443,7 +1418,7 @@
       return html;
     }
 
-    function openNewProjectModal(keys) {
+    function openNewProjectModal(keys, viaVoice) {
       const chosenKeys = keys || [];
       document.getElementById('modal-title').textContent = 'New Project';
 
@@ -1453,17 +1428,18 @@
         document.getElementById('modal-actions').innerHTML =
           '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
         document.getElementById('modal-overlay').classList.add('open');
-        speak('What type of project is this? Functional Safety, Cyber Security, SOTIF, or Artificial Intelligence?');
+        if (viaVoice) speak('What type of project is this? Functional Safety, Cyber Security, SOTIF, or Artificial Intelligence?');
         return;
       }
-      showNewProjectNameStep(chosenKeys);
+      showNewProjectNameStep(chosenKeys, viaVoice);
     }
 
     function pickNewProjectType(key) {
-      showNewProjectNameStep([key]);
+      // Reached by clicking a type-picker button, never by voice.
+      showNewProjectNameStep([key], false);
     }
 
-    function showNewProjectNameStep(keys) {
+    function showNewProjectNameStep(keys, viaVoice) {
       document.getElementById('modal-title').textContent = 'New Project';
       document.getElementById('modal-context').textContent = selectedLabel(keys);
 
@@ -1475,7 +1451,7 @@
         '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>' +
         '<button class="modal-btn solid" id="new-proj-create" disabled onclick="createProject(JSON.parse(this.dataset.keys))" data-keys=\'' + JSON.stringify(keys) + '\'>Create</button>';
 
-      speak('What would you like to name this project?');
+      if (viaVoice) speak('What would you like to name this project?');
 
       const input = document.getElementById('new-proj-name');
       const createBtn = document.getElementById('new-proj-create');
@@ -1502,7 +1478,7 @@
       showProjectView(project);
     }
 
-    function openOpenProjectModal(keys) {
+    function openOpenProjectModal(keys, viaVoice) {
       const chosenKeys = keys || [];
       document.getElementById('modal-title').textContent = 'Open Project';
 
@@ -1512,13 +1488,14 @@
         document.getElementById('modal-actions').innerHTML =
           '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
         document.getElementById('modal-overlay').classList.add('open');
-        speak('Which type of project would you like to open?');
+        if (viaVoice) speak('Which type of project would you like to open?');
         return;
       }
       showProjectListStep(chosenKeys);
     }
 
     function pickOpenProjectType(key) {
+      // Reached by clicking a type-picker button, never by voice.
       showProjectListStep(key === 'all' ? [] : [key]);
     }
 

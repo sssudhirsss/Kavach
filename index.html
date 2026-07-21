@@ -459,6 +459,30 @@
   .modal-btn.solid:hover { opacity: 0.85; }
   .modal-btn.solid:disabled { opacity: 0.35; cursor: not-allowed; }
 
+  .disc-menu { display: flex; flex-direction: column; gap: 8px; padding-bottom: 4px; }
+  .disc-menu-btn {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    text-align: left; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid var(--line); background: var(--bg); cursor: pointer;
+    font-family: inherit; width: 100%;
+  }
+  .disc-menu-btn:hover { background: var(--panel); border-color: var(--accent); }
+  .disc-menu-title { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+  .disc-menu-sub { font-size: 12px; color: var(--text-dim); }
+
+  .modal-topic-text { font-size: 13.5px; color: var(--text); line-height: 1.6; }
+  .modal-topic-text ul { margin: 8px 0 0; padding-left: 18px; }
+  .modal-topic-text li { margin-bottom: 4px; }
+
+  .mute-btn {
+    width: 34px; height: 34px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: none; border-radius: 999px; background: var(--panel);
+    color: var(--text-dim); cursor: pointer; margin-right: 4px;
+  }
+  .mute-btn:hover { background: #EAECEF; }
+  .mute-btn.muted { color: #EA4335; background: #FCE7E5; }
+
   .modal-close {
     position: absolute;
     top: 16px; right: 16px;
@@ -750,6 +774,9 @@
 
       <div class="search-bar">
         <input id="search-input" type="text" placeholder="Ask coworker for tasks…Start / Open project or teach me FuSa…" autocomplete="off" onkeydown="if(event.key==='Enter') handleSearchSubmit()" />
+        <button class="mute-btn" id="mute-btn" onclick="toggleVoiceMute()" aria-label="Mute voice commands and responses" title="Mute voice commands &amp; responses">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path><path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path></svg>
+        </button>
         <button class="mic-btn" onclick="startVoiceInput()" aria-label="Voice input">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
         </button>
@@ -758,25 +785,25 @@
     </div>
 
     <div class="disc-grid">
-      <div class="disc-card disc-fu" onclick="trainMe('fu')">
+      <div class="disc-card disc-fu" onclick="openDisciplineMenu('fu')">
         <div class="disc-letter c1">Fu</div>
         <div class="disc-name">Functional Safety</div>
         <div class="disc-standard mono">ISO 26262</div>
         <div class="disc-desc">Full lifecycle, Parts 1&ndash;12 &mdash; vocabulary through concept, system, hardware, software, production, and supporting processes.</div>
       </div>
-      <div class="disc-card disc-c" onclick="trainMe('c')">
+      <div class="disc-card disc-c" onclick="openDisciplineMenu('c')">
         <div class="disc-letter c2">C</div>
         <div class="disc-name">Cybersecurity</div>
         <div class="disc-standard mono">ISO/SAE 21434 &amp; UN ECE Regs</div>
         <div class="disc-desc">Full lifecycle, Clauses 4&ndash;15 &mdash; org management through concept, development, production, operations, and TARA.</div>
       </div>
-      <div class="disc-card disc-s" onclick="trainMe('s')">
+      <div class="disc-card disc-s" onclick="openDisciplineMenu('s')">
         <div class="disc-letter c3">S</div>
         <div class="disc-name">SOTIF</div>
         <div class="disc-standard mono">ISO 21448</div>
         <div class="disc-desc">Full lifecycle, Clauses 4&ndash;13 &mdash; specification through triggering conditions, verification, and field monitoring.</div>
       </div>
-      <div class="disc-card disc-ai" onclick="trainMe('ai')">
+      <div class="disc-card disc-ai" onclick="openDisciplineMenu('ai')">
         <div class="disc-letter c4">AI</div>
         <div class="disc-name">AI Safety</div>
         <div class="disc-standard mono">ISO/PAS 8800</div>
@@ -1138,6 +1165,50 @@
       fcToggle(true);
     }
 
+    // ---------- Discipline card menu (Fu / C / S / AI) ----------
+    // Clicking a card no longer auto-opens the chat \u2014 it shows a small menu of
+    // what you can actually do, and chat only opens if you explicitly ask to.
+    function openDisciplineMenu(key) {
+      const meta = STANDARD_META[key];
+      const shortLabel = meta.label.split(' \u2014 ')[0];
+      const standardName = meta.label.split(' \u2014 ')[1] || '';
+
+      document.getElementById('modal-title').textContent = shortLabel;
+      document.getElementById('modal-context').textContent = standardName;
+      document.getElementById('modal-body').innerHTML =
+        '<div class="disc-menu">' +
+          '<button class="disc-menu-btn" onclick="closeModal(); openNewProjectModal([\'' + key + '\']);">' +
+            '<span class="disc-menu-title">Start new project</span>' +
+            '<span class="disc-menu-sub">Create a new ' + shortLabel + ' project</span>' +
+          '</button>' +
+          '<button class="disc-menu-btn" onclick="closeModal(); openOpenProjectModal([\'' + key + '\']);">' +
+            '<span class="disc-menu-title">Open existing project</span>' +
+            '<span class="disc-menu-sub">Continue work on a saved ' + shortLabel + ' project</span>' +
+          '</button>' +
+          '<button class="disc-menu-btn" onclick="showTopicModal(\'' + key + '\')">' +
+            '<span class="disc-menu-title">Learn about ' + shortLabel + '</span>' +
+            '<span class="disc-menu-sub">A quick overview of ' + standardName + '</span>' +
+          '</button>' +
+        '</div>';
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    // Shows the standard overview directly in the modal, not the chat panel \u2014
+    // chat only opens if the person explicitly clicks through to it from here.
+    function showTopicModal(key) {
+      const topic = TOPICS[key];
+      const meta = STANDARD_META[key];
+      document.getElementById('modal-title').textContent = topic.label;
+      document.getElementById('modal-context').textContent = meta.label.split(' \u2014 ')[0];
+      document.getElementById('modal-body').innerHTML = '<div class="modal-topic-text">' + topic.text + '</div>';
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Close</button>' +
+        '<button class="modal-btn solid" onclick="closeModal(); trainMe(\'' + key + '\');">Ask more in chat</button>';
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
     let toastTimer;
     function comingSoon(label) {
       const toast = document.getElementById('fc-toast');
@@ -1251,6 +1322,7 @@
     // user to confirm out loud, then either proceed (on "yes") or drop it
     // and wait for the next command (on anything else).
     function startVoiceInput() {
+      if (voiceMuted) { fcShowToast('Voice is muted \u2014 click the speaker icon to unmute'); return; }
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) {
         comingSoon("Voice input isn't supported in this browser");
@@ -1269,6 +1341,18 @@
           });
         });
       });
+    }
+
+    // Mutes/unmutes both voice INPUT (the mic) and voice OUTPUT (spoken responses).
+    // voiceMuted itself is declared where speak() is defined, below.
+    function toggleVoiceMute() {
+      voiceMuted = !voiceMuted;
+      if (voiceMuted && window.speechSynthesis) window.speechSynthesis.cancel();
+      const btn = document.getElementById('mute-btn');
+      btn.classList.toggle('muted', voiceMuted);
+      btn.title = voiceMuted ? 'Unmute voice commands & responses' : 'Mute voice commands & responses';
+      btn.setAttribute('aria-label', btn.title);
+      fcShowToast(voiceMuted ? 'Voice muted' : 'Voice unmuted');
     }
 
     // Runs a single speech-recognition pass and calls onHeard(transcript).

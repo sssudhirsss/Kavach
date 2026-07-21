@@ -144,7 +144,7 @@
 
   .disc-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(5, 1fr);
     gap: 14px;
     padding: 40px 0 10px;
   }
@@ -161,6 +161,9 @@
   .disc-standard { font-size: 10px; color: var(--text-dim); margin-bottom: 10px; }
   .disc-desc { font-size: 12px; line-height: 1.5; color: var(--text); }
 
+  @media (max-width: 1040px) {
+    .disc-grid { grid-template-columns: repeat(3, 1fr); }
+  }
   @media (max-width: 860px) {
     .disc-grid { grid-template-columns: 1fr 1fr; }
   }
@@ -809,6 +812,12 @@
         <div class="disc-standard mono">ISO/PAS 8800</div>
         <div class="disc-desc">Full lifecycle, Clauses 5&ndash;15 &mdash; AI safety management through data, V&amp;V, safety analysis, and operation.</div>
       </div>
+      <div class="disc-card disc-fucsai" onclick="openCombinedMenu()">
+        <div class="disc-letter"><span class="c1">Fu</span><span class="c2">C</span><span class="c3">S</span><span class="c4">AI</span></div>
+        <div class="disc-name">Combined Project</div>
+        <div class="disc-standard mono">All 4 disciplines</div>
+        <div class="disc-desc">One unified project spanning Functional Safety, Cybersecurity, SOTIF, and AI Safety &mdash; for programs that need a single, shared safety case.</div>
+      </div>
     </div>
 
     <div class="vehicle-row" aria-hidden="true">
@@ -1206,6 +1215,30 @@
       document.getElementById('modal-actions').innerHTML =
         '<button class="modal-btn ghost" onclick="closeModal()">Close</button>' +
         '<button class="modal-btn solid" onclick="closeModal(); trainMe(\'' + key + '\');">Ask more in chat</button>';
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    // ---------- FuCSAI combined-project menu ----------
+    // Same idea as openDisciplineMenu, but for a single project spanning all
+    // four disciplines at once. Passing an empty keys array to the existing
+    // name/list steps is exactly how the rest of the app already represents
+    // "all disciplines" — see selectedLabel([]) and createProject's default.
+    function openCombinedMenu() {
+      document.getElementById('modal-title').textContent = 'FuCSAI';
+      document.getElementById('modal-context').textContent = 'Combined project \u2014 all four disciplines';
+      document.getElementById('modal-body').innerHTML =
+        '<div class="disc-menu">' +
+          '<button class="disc-menu-btn" onclick="closeModal(); showNewProjectNameStep([]);">' +
+            '<span class="disc-menu-title">Start new project</span>' +
+            '<span class="disc-menu-sub">Create one project spanning Functional Safety, Cybersecurity, SOTIF &amp; AI Safety</span>' +
+          '</button>' +
+          '<button class="disc-menu-btn" onclick="closeModal(); showProjectListStep([]);">' +
+            '<span class="disc-menu-title">Open existing project</span>' +
+            '<span class="disc-menu-sub">Browse all your saved projects, across every discipline</span>' +
+          '</button>' +
+        '</div>';
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
       document.getElementById('modal-overlay').classList.add('open');
     }
 

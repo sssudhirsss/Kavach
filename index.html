@@ -3,60 +3,1128 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FuCSAI — Coming Soon</title>
+<title>FuCSAI — World's first online safety analysis tool</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    height: 100%;
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
-    background: #FFFFFF;
-    color: #3F4650;
+  :root {
+    --bg: #FFFFFF;
+    --ink: #3F4650;
+    --text: #5B6470;
+    --text-dim: #96A0AC;
+    --accent: #0F766E;
+    --line: #EDEFF2;
+    --panel: #F8F9FA;
+    --fu-bg: #EEF9F6; --fu-ink: #0F766E;
+    --c-bg:  #EFF4FE; --c-ink:  #2563EB;
+    --s-bg:  #FDF6EA; --s-ink:  #B45309;
+    --ai-bg: #F5F2FC; --ai-ink: #7C3AED;
   }
-  .wrap {
-    height: 100%;
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono { font-family: 'IBM Plex Mono', monospace; }
+  a { color: inherit; }
+
+  .page {
+    min-height: 100vh;
     display: flex;
+    flex-direction: column;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px;
+  }
+
+  /* ---------- Nav ---------- */
+  nav {
+    display: flex;
+    align-items: center;
+    padding: 22px 0 10px;
+  }
+  .nav-mark {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+  .nav-mark span { color: var(--accent); }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    text-align: center;
+    padding: 20px 12px 8px;
+  }
+  .brandmark {
+    font-size: 64px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 10px 0 6px;
+  }
+  .c1 { color: #4285F4; } /* Functional Safety */
+  .c2 { color: #EA4335; } /* Cyber Security */
+  .c3 { color: #FBBC05; } /* SOTIF */
+  .c4 { color: #34A853; } /* AI */
+  .tagline {
+    font-size: 16px;
+    color: var(--text-dim);
+    margin: 0 0 34px;
+  }
+
+  .vehicle-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    padding: 26px 0 18px;
+    flex-wrap: wrap;
+  }
+  .vehicle-row svg { width: 34px; height: 34px; opacity: 0.55; }
+
+  .search-bar {
+    display: flex;
+    align-items: center;
+    max-width: 560px;
+    margin: 0 auto 6px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 6px 8px 6px 22px;
+    box-shadow: 0 1px 4px rgba(15,23,42,0.06);
+    transition: box-shadow 0.15s ease;
+  }
+  .search-bar:focus-within { box-shadow: 0 4px 14px rgba(15,23,42,0.10); }
+  #search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14.5px;
+    color: var(--ink);
+    background: transparent;
+  }
+  #search-input::placeholder { color: var(--text-dim); }
+  .mic-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: var(--panel);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .mic-btn:hover { background: #EAECEF; }
+  .mic-btn.listening { color: #EA4335; background: #FCE7E5; }
+  .go-btn {
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 999px;
+    border: none;
+    background: var(--accent);
+    color: #fff;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 6px;
+  }
+  .go-btn:hover { background: var(--accent-dark); }
+
+  .disc-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    padding: 40px 0 10px;
+  }
+  .disc-card {
+    background: var(--panel);
+    border-radius: 16px;
+    padding: 20px 18px;
+    cursor: pointer;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .disc-card:hover { box-shadow: 0 10px 24px rgba(15,23,42,0.08); transform: translateY(-2px); }
+  .disc-letter { font-weight: 700; font-size: 22px; margin-bottom: 6px; }
+  .disc-name { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .disc-standard { font-size: 10px; color: var(--text-dim); margin-bottom: 10px; }
+  .disc-desc { font-size: 12px; line-height: 1.5; color: var(--text); }
+
+  @media (max-width: 860px) {
+    .disc-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .disc-grid { grid-template-columns: 1fr; }
+  }
+
+  @media (max-width: 700px) {
+    .brandmark { font-size: 42px; }
+    .vehicle-row { gap: 18px; }
+    .vehicle-row svg { width: 26px; height: 26px; }
+  }
+
+  .nav-link {
+    font-size: 13.5px;
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .nav-link:hover { color: var(--ink); }
+  .nav-avatar {
+    margin-left: auto;
+    display: flex;
+  }
+  .nav-avatar svg {
+    width: 30px;
+    height: 30px;
+  }
+
+  footer {
+    border-top: 1px solid var(--line);
+    padding: 16px 0;
+    font-size: 12px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 18px;
+  }
+  .footer-mark {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+  }
+  .footer-mark .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-left: auto;
+  }
+  .footer-links a {
+    color: var(--text-dim);
+    text-decoration: none;
+  }
+  .footer-links a:hover { color: var(--ink); text-decoration: underline; }
+
+  /* ---------- Chat widget ---------- */
+  #fc-bubble {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--accent);
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(15,118,110,0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: transform 0.15s ease;
+  }
+  #fc-bubble:hover { transform: scale(1.05); }
+
+  #fc-panel {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    width: 350px;
+    max-width: calc(100vw - 32px);
+    height: 480px;
+    max-height: calc(100vh - 48px);
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    box-shadow: 0 20px 50px rgba(15,23,42,0.14);
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 1000;
+  }
+  #fc-panel.open { display: flex; }
+
+  #fc-header {
+    padding: 16px 16px 14px;
+    background: var(--accent);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  #fc-avatar {
+    width: 34px; height: 34px; border-radius: 12px;
+    background: rgba(255,255,255,0.18);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  #fc-header-text { flex: 1; }
+  #fc-header-name { font-size: 13.5px; font-weight: 600; }
+  #fc-header-status { font-size: 10.5px; opacity: 0.85; display:flex; align-items:center; gap:5px; }
+  #fc-header-status .pulse { width:6px; height:6px; border-radius:50%; background:#B9EFDE; }
+  #fc-close { background: none; border: none; color: #fff; opacity: 0.85; cursor: pointer; padding: 4px; }
+
+  #fc-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .fc-msg {
+    background: var(--panel);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+    max-width: 92%;
+  }
+  .fc-msg ul { margin: 8px 0 0; padding-left: 18px; }
+  .fc-msg li { margin-bottom: 4px; }
+
+  #fc-inputbar {
+    padding: 12px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 8px;
+  }
+  #fc-input {
+    flex: 1;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 12.5px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--text-dim);
+  }
+  #fc-input:disabled { cursor: not-allowed; }
+  #fc-send {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: none;
+    background: var(--line);
+    color: var(--text-dim);
+    display: flex; align-items: center; justify-content: center;
+    cursor: not-allowed;
+  }
+  #fc-soon {
+    font-size: 10px;
+    color: var(--text-dim);
+    text-align: center;
+    padding: 0 12px 12px;
+  }
+
+  #fc-toast {
+    position: fixed;
+    bottom: 92px;
+    right: 24px;
+    background: var(--ink);
+    color: #fff;
+    font-size: 12.5px;
+    font-weight: 500;
+    padding: 12px 16px;
+    border-radius: 10px;
+    box-shadow: 0 12px 28px rgba(15,23,42,0.22);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 1001;
+    max-width: 280px;
+  }
+  #fc-toast.show { opacity: 1; transform: translateY(0); }
+
+  /* ---------- Modal (New Project / Open Project) ---------- */
+  #modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(20,22,26,0.32);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    padding: 20px;
+  }
+  #modal-overlay.open { display: flex; }
+
+  .modal-card {
+    background: #fff;
+    border-radius: 16px;
+    width: 380px;
+    max-width: 100%;
+    max-height: 82vh;
+    box-shadow: 0 24px 60px rgba(15,23,42,0.22);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 22px 24px 4px;
+  }
+  .modal-title {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .modal-context {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
+  .modal-body { padding: 18px 24px 4px; }
+
+  .modal-prompt {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+  .modal-input {
+    width: 100%;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    padding: 11px 13px;
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    outline: none;
+    color: var(--ink);
+    transition: border-color 0.15s ease;
+  }
+  .modal-input:focus { border-color: var(--accent); }
+
+  .modal-actions {
+    padding: 18px 24px 22px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+  .modal-btn {
+    padding: 9px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .modal-btn.ghost { background: transparent; color: var(--text-dim); }
+  .modal-btn.ghost:hover { color: var(--ink); }
+  .modal-btn.solid { background: var(--ink); color: #fff; }
+  .modal-btn.solid:hover { opacity: 0.85; }
+  .modal-btn.solid:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .modal-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    background: none; border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .proj-list { padding: 6px 12px 12px; overflow-y: auto; }
+  .proj-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  .proj-row:hover { background: var(--panel); }
+  .proj-row-name { font-size: 13.5px; font-weight: 500; color: var(--ink); }
+  .proj-row-meta { font-size: 10.5px; color: var(--text-dim); margin-top: 2px; }
+  .proj-row-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
+  .proj-empty { padding: 30px 24px 22px; text-align: center; font-size: 12.5px; color: var(--text-dim); }
+
+  .type-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .type-pick-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .type-pick-btn:hover { background: var(--panel); }
+  .type-pick-letter { font-weight: 700; font-size: 18px; }
+  .type-pick-name { font-size: 12px; color: var(--ink); font-weight: 500; }
+
+  .project-view {
+    display: none;
+    min-height: 100vh;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    padding: 24px;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px;
+    position: relative;
   }
-  .mark {
+  .back-link {
+    position: absolute;
+    top: 26px;
+    left: 28px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-size: 13.5px;
+    cursor: pointer;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .back-link:hover { color: var(--ink); }
+  .pv-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     font-weight: 700;
-    font-size: 18px;
-    color: #3F4650;
-    margin-bottom: 28px;
+    font-size: 22px;
+    margin-bottom: 18px;
   }
-  .mark span { color: #0F766E; }
-  h1 {
-    font-size: 30px;
-    font-weight: 700;
-    color: #3F4650;
-    margin: 0 0 10px;
-  }
-  p {
-    font-size: 14px;
-    color: #96A0AC;
-    margin: 0;
-  }
-  .eyebrow {
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: #0F766E;
+  .pv-name { font-size: 24px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+  .pv-type { font-size: 13px; color: var(--text-dim); margin-bottom: 22px; }
+  .pv-status {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    background: var(--panel);
+    padding: 8px 16px;
+    border-radius: 999px;
     margin-bottom: 14px;
   }
+  .pv-spinner {
+    width: 13px; height: 13px;
+    border-radius: 50%;
+    border: 2px solid var(--line);
+    border-top-color: var(--accent);
+    animation: pv-spin 0.8s linear infinite;
+  }
+  @keyframes pv-spin { to { transform: rotate(360deg); } }
+  .pv-note { font-size: 12.5px; color: var(--text-dim); max-width: 320px; }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="mark">FuC<span>S</span>AI</div>
-    <div class="eyebrow">Functional Safety &middot; Cybersecurity &middot; SOTIF &middot; AI Safety</div>
-    <h1>Coming Soon</h1>
-     </div>
+
+  <div class="page">
+    <nav>
+      <a class="nav-link" href="#">About</a>
+      <span class="nav-avatar"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_User" overflow="hidden"><g><circle cx="48" cy="30" r="16" fill="#7030A0"/><path d="M80 82 80 66C80 63.6 78.8 61.2 76.8 59.6 72.4 56 66.8 53.6 61.2 52 57.2 50.8 52.8 50 48 50 43.6 50 39.2 50.8 34.8 52 29.2 53.6 23.6 56.4 19.2 59.6 17.2 61.2 16 63.6 16 66L16 82 80 82Z" fill="#7030A0"/></g></svg></span>
+    </nav>
+
+    <div class="hero">
+      <h1 class="brandmark"><span class="c1">Fu</span><span class="c2">C</span><span class="c3">S</span><span class="c4">AI</span></h1>
+      <p class="tagline">AI Powered Cowork</p>
+
+      <div class="search-bar">
+        <input id="search-input" type="text" placeholder="Ask coworker for tasks…Start / Open project or teach me FuSa…" autocomplete="off" onkeydown="if(event.key==='Enter') handleSearchSubmit()" />
+        <button class="mic-btn" onclick="startVoiceInput()" aria-label="Voice input">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+        </button>
+        <button class="go-btn" onclick="handleSearchSubmit()" aria-label="Go">Go</button>
+      </div>
+    </div>
+
+    <div class="disc-grid">
+      <div class="disc-card disc-fu" onclick="trainMe('fu')">
+        <div class="disc-letter c1">Fu</div>
+        <div class="disc-name">Functional Safety</div>
+        <div class="disc-standard mono">ISO 26262</div>
+        <div class="disc-desc">Full lifecycle, Parts 1&ndash;12 &mdash; vocabulary through concept, system, hardware, software, production, and supporting processes.</div>
+      </div>
+      <div class="disc-card disc-c" onclick="trainMe('c')">
+        <div class="disc-letter c2">C</div>
+        <div class="disc-name">Cybersecurity</div>
+        <div class="disc-standard mono">ISO/SAE 21434 &amp; UN ECE Regs</div>
+        <div class="disc-desc">Full lifecycle, Clauses 4&ndash;15 &mdash; org management through concept, development, production, operations, and TARA.</div>
+      </div>
+      <div class="disc-card disc-s" onclick="trainMe('s')">
+        <div class="disc-letter c3">S</div>
+        <div class="disc-name">SOTIF</div>
+        <div class="disc-standard mono">ISO 21448</div>
+        <div class="disc-desc">Full lifecycle, Clauses 4&ndash;13 &mdash; specification through triggering conditions, verification, and field monitoring.</div>
+      </div>
+      <div class="disc-card disc-ai" onclick="trainMe('ai')">
+        <div class="disc-letter c4">AI</div>
+        <div class="disc-name">AI Safety</div>
+        <div class="disc-standard mono">ISO/PAS 8800</div>
+        <div class="disc-desc">Full lifecycle, Clauses 5&ndash;15 &mdash; AI safety management through data, V&amp;V, safety analysis, and operation.</div>
+      </div>
+    </div>
+
+    <div class="vehicle-row" aria-hidden="true">
+      <span class="veh-icon"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_Scooter" overflow="hidden">
+<path d="M16.64 62C17.4574 66.6171 21.8629 69.6974 26.48 68.88 29.9903 68.2585 32.7385 65.5103 33.36 62Z"  fill="#D9D9D9"/><path d="M45.27 40 17 40C15.64 40 12.84 39.13 12.84 36.5 12.84 36.5 12.3 33 13.67 33L41.11 33C44.43 33 46.64 40 45.27 40Z"  fill="#D9D9D9"/><path d="M76.12 42.42 72.51 33.81C72.9366 33.9298 73.377 33.9936 73.82 34L78.5 34 78.5 26 73.82 26C72.2537 25.973 70.7753 26.7216 69.87 28L61.5 28 61.5 32 67.5 32C68.83 35.38 69 40.32 69 43.49 68.9956 44.0653 68.9555 44.6397 68.88 45.21L68.88 45.29C68.9009 45.3584 68.9009 45.4316 68.88 45.5 68.0555 52.3375 61.8443 57.2119 55.0068 56.3874 48.5498 55.6088 43.7755 49.9984 44.04 43.5 44.04 43.33 44.04 43.17 44.04 43.01L16.49 43.01C12.9672 45.7334 11.0232 50.0258 11.3 54.47 11.3091 54.6523 11.3497 54.8316 11.42 55L7.8 55 6.11 59 40.24 59C40.33 59.14 40.41 59.29 40.51 59.42L42.77 62.25C44.08 64.091 46.2442 65.1296 48.5 65L69.42 65C67.0263 59.123 69.85 52.4183 75.7269 50.0246 80.6609 48.0149 86.3293 49.6606 89.42 54L89.78 54C88 46.05 81.27 43.33 76.12 42.42Z"  fill="#D9D9D9"/><circle cx="80" cy="60.51" r="8.5"  fill="#D9D9D9"/></svg></span>
+      <span class="veh-icon"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_ElectricCar" overflow="hidden">
+<circle cx="34.5" cy="66" r="6.5" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><circle cx="74.5" cy="66" r="6.5" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M83.09 49 76.09 49C75.1994 49.0198 74.3433 48.6555 73.74 48L63.16 37.43C61.9378 36.0308 60.2209 35.1598 58.37 35L33.73 35C31.8839 35.1767 30.1729 36.0447 28.94 37.43L18.51 48C17.8606 48.6407 17.4996 49.5178 17.51 50.43L17.51 56 12.51 56C11.6816 56.0055 11.0056 55.3384 11 54.51 11 54.5067 11 54.5033 11 54.5L11 37.19C13.4334 36.3301 15.0442 34.0105 15 31.43L15 28 13 28 13 24C13 23.4477 12.5523 23 12 23 11.4477 23 11 23.4477 11 24L11 28 8 28 8 24C8 23.4477 7.55228 23 7 23 6.44772 23 6 23.4477 6 24L6 28 4 28 4 31.43C3.95577 34.0105 5.56663 36.3301 8 37.19L8 54.5C8.0055 56.983 10.017 58.9945 12.5 59L17.5 59 17.5 59C17.511 62.7107 20.5193 65.7145 24.23 65.72L25.07 65.72C25.0534 60.628 29.1679 56.4866 34.2599 56.47 34.2799 56.4699 34.3 56.4699 34.32 56.47 39.4991 56.5631 43.6313 60.8204 43.57 66L65.43 66C65.3963 60.8398 69.5206 56.613 74.68 56.52 79.772 56.5034 83.9134 60.6179 83.93 65.7099 83.9301 65.7299 83.9301 65.75 83.93 65.77L88.14 65.77C89.9934 65.7645 91.4945 64.2634 91.5 62.41L91.5 57.41C91.5111 52.7763 87.7637 49.0111 83.1301 49 83.1167 49 83.1034 49 83.09 49ZM44 49 22.29 49 31.38 39.87C32.1139 39.2627 33.0486 38.9523 34 39L44 39ZM47 49 47 39 58.45 39C59.3261 38.9303 60.1888 39.2483 60.81 39.87L69.89 49Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/></svg></span>
+      <span class="veh-icon"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_DumpTruck" overflow="hidden">
+<g><circle cx="20" cy="67.5" r="7" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><circle cx="78" cy="67.5" r="7" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M68 45.5 68 35.5 74 35.5C75.8 35.5 77.4 36.7 77.8 38.4L79.8 45.3C79.8 45.4 79.9 45.4 79.9 45.5L68 45.5ZM90.4 50.3 85.1 46.3C84.4 45.8 83.9 45 83.7 44.2L81.7 37.3C80.7 33.9 77.6 31.5 74 31.5L64 31.5 64 45.5 64 51.5 64 67.5 68 67.5C68 62 72.5 57.5 78 57.5 83.5 57.5 88 62 88 67.5 90.2 67.5 92 65.7 92 63.5L92 53.5C92 52.2 91.4 51.1 90.4 50.3Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M4 67.5 10 67.5C10 62 14.5 57.5 20 57.5 25.5 57.5 30 62 30 67.5L60 67.5 60 53.5 4 53.5 4 67.5Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M68 27.5 68 21.5 52 21.5 48 25.5 13 25.5 4 25.5 4 40.5 13 49.5 60 49.5 60 31.5 64 27.5Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/></g></svg></span>
+      <span class="veh-icon"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_CementTruck" overflow="hidden">
+<g><circle cx="20" cy="72.2" r="7" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><circle cx="78" cy="72.2" r="7" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M90.4 55 85.1 51C84.4 50.5 83.9 49.7 83.7 48.9L81.7 42C80.7 38.6 77.6 36.2 74 36.2L64 36.2 64 50.2 64 56.2 64 72.2 68 72.2C68 66.7 72.5 62.2 78 62.2 83.5 62.2 88 66.7 88 72.2 90.2 72.2 92 70.4 92 68.2L92 58.2C92 56.9 91.4 55.8 90.4 55ZM68 50.2 68 40.2 74 40.2C75.8 40.2 77.4 41.4 77.8 43.1L79.8 50C79.8 50.1 79.9 50.1 79.9 50.2L68 50.2Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M4 72.2 10 72.2C10 66.7 14.5 62.2 20 62.2 25.5 62.2 30 66.7 30 72.2L60 72.2 60 58.2 4 58.2 4 72.2Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M10 54.2 16 54.2 16 42.5C20.3 45.5 24.8 48.2 28.6 50.2L39.9 19.2C32 17.4 21 16.5 12.5 16.9L6 34.7C7.2 35.8 8.6 36.9 10 38L10 54.2Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M34.4 52.7C46 56.8 54.3 51.7 57.5 42.9 60.7 34.1 57.4 24.8 45.8 20.7 45.8 20.7 45.8 20.7 45.7 20.7L34.1 52.7C34.2 52.6 34.3 52.7 34.4 52.7Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/></g></svg></span>
+      <span class="veh-icon"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_Truck" overflow="hidden">
+<circle cx="20" cy="66" r="7" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><circle cx="78" cy="66" r="7" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><rect x="4" y="24" width="56" height="24" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M68 34 74 34C75.8 34 77.4 35.2 77.8 36.9L79.8 43.8C79.8 43.9 79.9 43.9 79.9 44L68 44 68 34ZM74 30 64 30 64 44 64 50 64 66 68 66C68 60.5 72.5 56 78 56 83.5 56 88 60.5 88 66 90.2 66 92 64.2 92 62L92 52C92 50.7 91.4 49.6 90.4 48.8L85.1 44.8C84.4 44.3 83.9 43.5 83.7 42.7L81.7 35.8C80.7 32.4 77.5 30 74 30Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M60 66 30 66C30 60.5 25.5 56 20 56 14.5 56 10 60.5 10 66L4 66 4 52 60 52 60 66Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/></svg></span>
+      <span class="veh-icon"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_Bus" overflow="hidden">
+<path d="M8 30C8 28.9 8.9 28 10 28L24 28 24 44 8 44 8 30ZM28 28 44 28 44 44 28 44 28 28ZM48 28 64 28 64 44 48 44 48 28ZM68 28 81.3 28C83.2 28 84.9 29.4 85.2 31.3L87.5 45.5C87.7 47 87.9 48.5 87.9 50L74 50 68 44 68 28ZM4 28 4 64C4 66.2 5.8 68 8 68L8.2 68C8.1 67.4 8 66.7 8 66 8 60.5 12.5 56 18 56 23.5 56 28 60.5 28 66 28 66.7 27.9 67.4 27.8 68L64.2 68C64.1 67.4 64 66.7 64 66 64 60.5 68.5 56 74 56 79.5 56 84 60.5 84 66 84 66.7 83.9 67.4 83.8 68L88 68C90.2 68 92 66.2 92 64L92 51.2C92 49.1 91.8 46.9 91.5 44.8L89.2 30.5C88.5 26.7 85.2 23.9 81.3 23.9L8 23.9C5.8 24 4 25.8 4 28Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><circle cx="74" cy="66" r="7" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><circle cx="18" cy="66" r="7" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/></svg></span>
+      <span class="veh-icon"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_HealthAndSafety" overflow="hidden">
+<path d="M84.928 45.757C84.4392 47.9084 82.3692 49.315 80.189 48.977L61.033 46.383 51.053 51.855C51.0456 51.8588 51.0428 51.8679 51.0466 51.8752 51.0497 51.8812 51.0564 51.8844 51.063 51.883L60.2 50.311C61.0754 50.1588 61.9766 50.2994 62.764 50.711L80.235 59.88C82.2252 60.8924 83.0178 63.3265 82.0054 65.3167 80.993 67.3069 78.5589 68.0995 76.5687 67.0871 76.5386 67.0717 76.5087 67.0561 76.479 67.04L60.223 58.512 40.929 61.831C40.6213 61.881 40.309 61.8954 39.998 61.874L39.998 61.874C39.973 61.874 39.951 61.864 39.927 61.862 39.68 61.844 39.4353 61.8029 39.196 61.739 37.8326 61.4871 36.5694 60.8512 35.555 59.906 34.9193 59.2393 34.3834 58.4842 33.964 57.664L23.2 40.356 23.124 40.343 18.858 48.376 20.446 56.652C20.8975 58.7828 19.6347 60.9025 17.546 61.52 15.3867 62.0885 13.1754 60.799 12.6068 58.6397 12.5835 58.5512 12.5632 58.4619 12.546 58.372L10.653 48.507C10.4798 47.6051 10.6191 46.6711 11.048 45.859L16.548 35.426C16.8177 34.9191 17.1927 34.4758 17.648 34.126L17.648 34.119 17.798 34.031C17.9833 33.8978 18.1797 33.7807 18.385 33.681L34.516 24.093C35.436 23.5679 36.5175 23.4009 37.553 23.624L49.253 26.142 51.688 18.062C52.5013 16.0576 54.6527 14.9434 56.759 15.436 58.8319 16.0089 60.0479 18.1537 59.475 20.2266 59.4489 20.3211 59.4192 20.4147 59.386 20.507L55.905 32.047C55.7219 32.6823 55.4143 33.2748 55 33.79 54.0613 34.8622 52.6156 35.3421 51.222 35.044L39.65 32.553C39.6182 32.5459 39.5867 32.5659 39.5796 32.5977 39.5763 32.6121 39.5786 32.6272 39.586 32.64L46.646 45.05 58.313 38.65C59.0707 38.2344 59.9417 38.0728 60.798 38.189L81.498 40.989C83.7108 41.2876 85.2626 43.3235 84.964 45.5364 84.954 45.6102 84.942 45.6838 84.928 45.757Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><path d="M72.255 82.425 64.039 82.425C64.688 84.187 63.7857 86.1416 62.0237 86.7906 61.6375 86.9329 61.2286 87.0038 60.817 87L39.085 87C37.2073 87.0174 35.671 85.5094 35.6536 83.6317 35.6498 83.2201 35.7207 82.8112 35.863 82.425L13.92 82.425C12.0248 82.3926 10.5147 80.8301 10.5471 78.9349 10.5787 77.0854 12.0704 75.5936 13.92 75.562L24.425 75.562C23.7754 73.8002 24.6771 71.8453 26.439 71.1958 26.8253 71.0533 27.2343 70.9823 27.646 70.986L42.516 70.986C44.3937 70.9689 45.9297 72.4773 45.9468 74.3549 45.9505 74.7667 45.8794 75.1757 45.737 75.562L72.255 75.562C74.1502 75.5296 75.7127 77.0397 75.7451 78.9349 75.7774 80.8301 74.2673 82.3926 72.3722 82.425 72.3331 82.4257 72.2941 82.4257 72.255 82.425Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/><circle cx="22.603" cy="18.228" r="8" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/></svg></span>
+      <span class="veh-icon"><svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="Icons_Key" overflow="hidden">
+<path d="M64.5 51.5 71 58 77.5 51.5 84 58 92 48 84 38 43.5 38C39.9 31.4 33 27 25 27 13.4 27 4 36.4 4 48 4 59.6 13.4 69 25 69 33 69 39.9 64.6 43.5 58L50 58 54 54 58 58 64.5 51.5ZM16 54C12.7 54 10 51.3 10 48 10 44.7 12.7 42 16 42 19.3 42 22 44.7 22 48 22 51.3 19.3 54 16 54Z" class="MsftOfcThm_Background2_lumMod_90_Fill_v2" fill="#D9D9D9"/></svg></span>
+    </div>
+
+    <footer>
+      <div class="footer-mark">
+        <span class="c1" style="font-size:14px;">Fu<span class="c2">C</span><span class="c3">S</span><span class="c4">AI</span></span>
+      </div>
+      <span>&copy; 2026 FuCSAI</span>
+      <div class="footer-links">
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+        <a href="#">Security</a>
+        <a href="#">Status</a>
+        <a href="#">Community</a>
+        <a href="#">Docs</a>
+        <a href="#">Contact</a>
+        <a href="#">Manage cookies</a>
+        <a href="#">Do not share my personal information</a>
+      </div>
+    </footer>
+  </div>
+
+  <div id="project-view" class="project-view">
+    <button class="back-link" onclick="backToHome()">&larr; Back</button>
+    <div class="pv-icon" id="pv-icon"></div>
+    <div class="pv-name" id="pv-name"></div>
+    <div class="pv-type" id="pv-type"></div>
+    <div class="pv-status"><span class="pv-spinner"></span> In Progress</div>
+    <p class="pv-note">This project's workspace is being built &mdash; check back soon.</p>
+  </div>
+
+  <!-- Chat widget -->
+  <button id="fc-bubble" onclick="fcToggle()" aria-label="Open Safety Assistant">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+  </button>
+
+  <div id="fc-panel">
+    <div id="fc-header">
+      <div id="fc-avatar">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3c0 1.5 1 2 1 3.5S9 12 9 12h6s-1-2-1-3.5 1-2 1-3.5a3 3 0 0 0-3-3z"></path><path d="M12 12v2"></path><path d="M8 22v-4a4 4 0 0 1 8 0v4"></path><path d="M5 22h14"></path></svg>
+      </div>
+      <div id="fc-header-text">
+        <div id="fc-header-name">Safety Assistant</div>
+        <div id="fc-header-status"><span class="pulse"></span> Online</div>
+      </div>
+      <button id="fc-close" onclick="fcToggle()" aria-label="Close">✕</button>
+    </div>
+    <div id="fc-body">
+      <div class="fc-msg">
+        Hi, I'm your <strong>Safety Assistant</strong>. I'll guide you through performing safety analysis and creating work products step by step &mdash; think of me as your encyclopedia for automotive safety standards.
+      </div>
+      <div class="fc-msg">
+        Ask me anything about:
+        <ul>
+          <li>Automotive Functional Safety &mdash; ISO 26262</li>
+          <li>Automotive Cybersecurity Engineering &mdash; ISO/SAE 21434 &amp; UN ECE Regulations</li>
+          <li>Safety of the Intended Function (SOTIF) &mdash; ISO 21448</li>
+          <li>Automotive Safety and Artificial Intelligence &mdash; ISO/PAS 8800</li>
+        </ul>
+      </div>
+      <div class="fc-msg">I can also walk you through creating a HARA, FMEA, FTA, or other work product from scratch, clause by clause.</div>
+    </div>
+    <div id="fc-inputbar">
+      <input id="fc-input" type="text" placeholder="Full assistant launching soon…" disabled />
+      <button id="fc-send" disabled>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+    <div id="fc-soon">Live Q&amp;A is coming soon.</div>
+  </div>
+
+  <div id="modal-overlay" onclick="if(event.target===this) closeModal()">
+    <div class="modal-card">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <div class="modal-head">
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-context" id="modal-context"></div>
+      </div>
+      <div class="modal-body" id="modal-body"></div>
+      <div class="modal-actions" id="modal-actions"></div>
+    </div>
+  </div>
+
+  <div id="fc-toast"></div>
+
+  <script>
+    function fcToggle(forceOpen) {
+      const panel = document.getElementById('fc-panel');
+      if (forceOpen) { panel.classList.add('open'); return; }
+      panel.classList.toggle('open');
+    }
+
+    const TOPICS = {
+      fu: {
+        label: 'ISO 26262',
+        text: "ISO 26262:2018 (2nd edition) has 12 parts, structured as a V-model:" +
+          "<ul>" +
+          "<li><strong>Part 1</strong> Vocabulary</li>" +
+          "<li><strong>Part 2</strong> Management of functional safety</li>" +
+          "<li><strong>Part 3</strong> Concept phase &mdash; item definition, HARA, functional safety concept</li>" +
+          "<li><strong>Part 4</strong> Product development at the system level</li>" +
+          "<li><strong>Part 5</strong> Product development at the hardware level</li>" +
+          "<li><strong>Part 6</strong> Product development at the software level</li>" +
+          "<li><strong>Part 7</strong> Production, operation, service &amp; decommissioning</li>" +
+          "<li><strong>Part 8</strong> Supporting processes</li>" +
+          "<li><strong>Part 9</strong> ASIL-oriented and safety-oriented analyses</li>" +
+          "<li><strong>Part 10</strong> Guidelines on ISO 26262</li>" +
+          "<li><strong>Part 11</strong> Guidelines for semiconductors</li>" +
+          "<li><strong>Part 12</strong> Adaptation for motorcycles</li>" +
+          "</ul>" +
+          "Parts 5 and 6 (hardware and software) run in parallel below Part 4, with Parts 8 and 9 applying across the whole lifecycle. Ask me about any part, clause, or work product."
+      },
+      c: {
+        label: 'ISO/SAE 21434',
+        text: "ISO/SAE 21434:2021 is organized in clauses, spanning the full lifecycle:" +
+          "<ul>" +
+          "<li><strong>Cl.4</strong> General considerations</li>" +
+          "<li><strong>Cl.5</strong> Organizational cybersecurity management</li>" +
+          "<li><strong>Cl.6</strong> Project dependent cybersecurity management</li>" +
+          "<li><strong>Cl.7</strong> Distributed cybersecurity activities (supplier/customer)</li>" +
+          "<li><strong>Cl.8</strong> Continual cybersecurity activities (monitoring, vulnerability management)</li>" +
+          "<li><strong>Cl.9</strong> Concept &mdash; item definition, risk assessment, cybersecurity goals &amp; requirements</li>" +
+          "<li><strong>Cl.10</strong> Product development</li>" +
+          "<li><strong>Cl.11</strong> Cybersecurity validation</li>" +
+          "<li><strong>Cl.12</strong> Production</li>" +
+          "<li><strong>Cl.13</strong> Operations and maintenance</li>" +
+          "<li><strong>Cl.14</strong> End of cybersecurity support &amp; decommissioning</li>" +
+          "<li><strong>Cl.15</strong> Threat Analysis and Risk Assessment (TARA) methods</li>" +
+          "</ul>" +
+          "Clauses 5&ndash;15 each define work products (42 total per Annex A). It's also the technical backbone behind UN Regulations 155 (CSMS) and 156 (SUMS)."
+      },
+      s: {
+        label: 'ISO 21448',
+        text: "ISO 21448:2022 (SOTIF) is organized as:" +
+          "<ul>" +
+          "<li><strong>Cl.4</strong> Overview and organization of SOTIF activities</li>" +
+          "<li><strong>Cl.5</strong> Specification and description of the item/function</li>" +
+          "<li><strong>Cl.6</strong> Identification &amp; evaluation of hazardous behaviour, and V&amp;V targets (severity/exposure/controllability &mdash; no ASIL here)</li>" +
+          "<li><strong>Cl.7</strong> Identification &amp; evaluation of functional insufficiencies and triggering conditions</li>" +
+          "<li><strong>Cl.8</strong> Functional modification to reduce SOTIF-related risk</li>" +
+          "<li><strong>Cl.9</strong> Definition of the verification and validation strategy</li>" +
+          "<li><strong>Cl.10&ndash;11</strong> Verification &amp; validation &mdash; known-scenario verification, then residual-risk evaluation for unknown scenarios</li>" +
+          "<li><strong>Cl.12</strong> Evaluation of the achievement of SOTIF (release)</li>" +
+          "<li><strong>Cl.13</strong> Operation phase &mdash; field monitoring for emerging SOTIF issues</li>" +
+          "</ul>" +
+          "The core idea: functional insufficiencies (not faults) triggered by specific conditions, reduced until residual risk from unknown scenarios is acceptable."
+      },
+      ai: {
+        label: 'ISO/PAS 8800',
+        text: "ISO/PAS 8800:2024 is organized as:" +
+          "<ul>" +
+          "<li><strong>Cl.5</strong> Requirements for conformity</li>" +
+          "<li><strong>Cl.6</strong> AI within ISO 26262/ISO 21448 &mdash; basic concepts, cause-and-effect error model</li>" +
+          "<li><strong>Cl.7</strong> AI safety management &mdash; the reference AI safety lifecycle</li>" +
+          "<li><strong>Cl.8</strong> Assurance arguments for AI systems</li>" +
+          "<li><strong>Cl.9</strong> Derivation of AI safety requirements</li>" +
+          "<li><strong>Cl.10</strong> Selection of AI technologies &amp; architectural/development measures</li>" +
+          "<li><strong>Cl.11</strong> Data-related considerations &mdash; the dataset lifecycle</li>" +
+          "<li><strong>Cl.12</strong> Verification and validation of the AI system</li>" +
+          "<li><strong>Cl.13</strong> Safety analysis of AI systems</li>" +
+          "<li><strong>Cl.14</strong> Measures during operation &mdash; field monitoring, re-training/re-validation</li>" +
+          "<li><strong>Cl.15</strong> Confidence in AI development frameworks &amp; tools</li>" +
+          "</ul>" +
+          "It tailors/extends ISO 26262 (malfunctioning AI behaviour) and ISO 21448 (AI functional insufficiencies) rather than replacing either \u2014 hazard analysis itself stays in the ISO 26262/21448 scope."
+      }
+    };
+
+    function trainMe(key) {
+      const topic = TOPICS[key];
+      const body = document.getElementById('fc-body');
+
+      const userMsg = document.createElement('div');
+      userMsg.className = 'fc-msg';
+      userMsg.style.background = '#0F766E';
+      userMsg.style.color = '#fff';
+      userMsg.style.alignSelf = 'flex-end';
+      userMsg.style.marginLeft = 'auto';
+      userMsg.textContent = 'Train me on ' + topic.label;
+
+      const replyMsg = document.createElement('div');
+      replyMsg.className = 'fc-msg';
+      replyMsg.innerHTML = topic.text;
+
+      body.appendChild(userMsg);
+      body.appendChild(replyMsg);
+      body.scrollTop = body.scrollHeight;
+
+      fcToggle(true);
+    }
+
+    let toastTimer;
+    function comingSoon(label) {
+      const toast = document.getElementById('fc-toast');
+      toast.textContent = label + ' — coming soon.';
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 3200);
+    }
+
+    // ---------- Search bar: routes "Start", "Open", or "teach me <standard>" ----------
+
+    const STANDARD_META = {
+      fu: { label: 'Functional Safety — ISO 26262', ink: '#4285F4', bg: '#E5EFFD' },
+      c:  { label: 'Cyber Security — ISO/SAE 21434', ink: '#EA4335', bg: '#FCE7E5' },
+      s:  { label: 'SOTIF — ISO 21448',               ink: '#B08200', bg: '#FEF6DA' },
+      ai: { label: 'Artificial Intelligence — ISO/PAS 8800', ink: '#34A853', bg: '#E3F3E8' },
+    };
+    const STANDARD_ORDER = ['fu', 'c', 's', 'ai'];
+
+    const STANDARD_KEYWORDS = {
+      fu: ['fusa', 'functional safety', '26262'],
+      c:  ['cyber', '21434', 'security'],
+      s:  ['sotif', '21448'],
+      ai: ['artificial intelligence', ' ai ', '8800', 'ai safety'],
+    };
+
+    function matchStandards(text) {
+      const t = ' ' + text.toLowerCase() + ' ';
+      return Object.keys(STANDARD_KEYWORDS).filter(k => STANDARD_KEYWORDS[k].some(kw => t.includes(kw)));
+    }
+
+    function selectedLabel(keys) {
+      if (!keys || keys.length === 0) return 'All disciplines';
+      return keys.map(k => STANDARD_META[k].label.split(' — ')[0]).join(', ');
+    }
+
+    function handleSearchSubmit() {
+      const input = document.getElementById('search-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const lower = text.toLowerCase();
+      const matches = matchStandards(text);
+
+      if (lower.includes('start')) {
+        openNewProjectModal(matches);
+      } else if (lower.includes('open')) {
+        openOpenProjectModal(matches);
+      } else if (matches.length > 0) {
+        matches.forEach(k => trainMe(k));
+      } else {
+        fcToggle(true);
+        const body = document.getElementById('fc-body');
+        const userMsg = document.createElement('div');
+        userMsg.className = 'fc-msg';
+        userMsg.style.background = '#0F766E';
+        userMsg.style.color = '#fff';
+        userMsg.style.alignSelf = 'flex-end';
+        userMsg.style.marginLeft = 'auto';
+        userMsg.textContent = text;
+        const replyMsg = document.createElement('div');
+        replyMsg.className = 'fc-msg';
+        replyMsg.textContent = "I can help with ISO 26262, ISO/SAE 21434, ISO 21448, or ISO/PAS 8800 — or say \u201cstart\u201d or \u201copen\u201d for a project.";
+        body.appendChild(userMsg);
+        body.appendChild(replyMsg);
+        body.scrollTop = body.scrollHeight;
+      }
+      input.value = '';
+    }
+
+    // Speaks a short prompt aloud using the browser's built-in text-to-speech.
+    // Silently does nothing if unsupported \u2014 speech is a bonus, never required.
+    // onEnd (optional) fires after speech finishes, so callers can chain the
+    // next step (e.g. start listening again) once the assistant stops talking.
+    let voiceMuted = false;
+    let voiceUnsupportedWarned = false;
+    function speak(text, onEnd) {
+      if (voiceMuted) {
+        if (onEnd) onEnd();
+        return;
+      }
+      if (!window.speechSynthesis) {
+        if (!voiceUnsupportedWarned) {
+          voiceUnsupportedWarned = true;
+          comingSoon("Voice responses aren't supported in this browser");
+        }
+        if (onEnd) onEnd();
+        return;
+      }
+      try {
+        window.speechSynthesis.cancel();
+        // Chrome has a known race condition where speak() called immediately
+        // after cancel() in the same tick can be silently dropped \u2014 a short
+        // delay avoids it. Also nudge getVoices() in case voices haven't
+        // loaded yet on first use.
+        window.speechSynthesis.getVoices();
+        setTimeout(() => {
+          const utter = new SpeechSynthesisUtterance(text);
+          utter.rate = 1.0;
+          utter.pitch = 1.0;
+          utter.volume = 1.0;
+          if (onEnd) { utter.onend = onEnd; utter.onerror = onEnd; }
+          window.speechSynthesis.speak(utter);
+        }, 60);
+      } catch (e) {
+        if (onEnd) onEnd();
+      }
+    }
+
+    // Voice commands are confirmed before acting: capture speech, ask the
+    // user to confirm out loud, then either proceed (on "yes") or drop it
+    // and wait for the next command (on anything else).
+    function startVoiceInput() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        comingSoon("Voice input isn't supported in this browser");
+        return;
+      }
+      listenOnce(SpeechRecognition, (transcript) => {
+        const input = document.getElementById('search-input');
+        input.value = transcript;
+        speak('Did you want to ' + transcript + '? Say yes to proceed.', () => {
+          listenOnce(SpeechRecognition, (answer) => {
+            if (answer.toLowerCase().includes('yes')) {
+              handleSearchSubmit();
+            } else {
+              speak('OK, waiting for your next command.');
+            }
+          });
+        });
+      });
+    }
+
+    // Runs a single speech-recognition pass and calls onHeard(transcript).
+    // Shared by the initial command capture and the yes/no confirmation.
+    function listenOnce(SpeechRecognition, onHeard) {
+      const micBtn = document.querySelector('.mic-btn');
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      micBtn.classList.add('listening');
+      recognition.start();
+      recognition.onresult = (e) => {
+        onHeard(e.results[0][0].transcript);
+      };
+      recognition.onend = () => micBtn.classList.remove('listening');
+      recognition.onerror = () => { micBtn.classList.remove('listening'); comingSoon('Couldn\u2019t hear that — try typing instead'); };
+    }
+
+    // ---------- New Project / Open Project (demo, saved locally in this browser) ----------
+
+    const PROJECTS_KEY = 'fucsai_demo_projects';
+
+    function getProjects() {
+      try { return JSON.parse(localStorage.getItem(PROJECTS_KEY)) || []; }
+      catch (e) { return []; }
+    }
+    function saveProjects(list) {
+      localStorage.setItem(PROJECTS_KEY, JSON.stringify(list));
+    }
+
+    function closeModal() {
+      document.getElementById('modal-overlay').classList.remove('open');
+    }
+
+    function renderTypePicker(onPickFn, includeAll) {
+      let html = '<div class="type-picker">';
+      STANDARD_ORDER.forEach(k => {
+        const meta = STANDARD_META[k];
+        const letter = k === 'ai' ? 'AI' : (k === 'fu' ? 'Fu' : k.toUpperCase());
+        html += '<button class="type-pick-btn" onclick="' + onPickFn + '(\'' + k + '\')">' +
+          '<span class="type-pick-letter" style="color:' + meta.ink + '">' + letter + '</span>' +
+          '<span class="type-pick-name">' + meta.label.split(' — ')[0] + '</span>' +
+          '</button>';
+      });
+      if (includeAll) {
+        html += '<button class="type-pick-btn" onclick="' + onPickFn + '(\'all\')">' +
+          '<span class="type-pick-letter" style="color:var(--text-dim)">&middot;&middot;&middot;</span>' +
+          '<span class="type-pick-name">All types</span>' +
+          '</button>';
+      }
+      html += '</div>';
+      return html;
+    }
+
+    function openNewProjectModal(keys) {
+      const chosenKeys = keys || [];
+      document.getElementById('modal-title').textContent = 'New Project';
+
+      if (chosenKeys.length === 0) {
+        document.getElementById('modal-context').textContent = 'What type of project is this?';
+        document.getElementById('modal-body').innerHTML = renderTypePicker('pickNewProjectType', false);
+        document.getElementById('modal-actions').innerHTML =
+          '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
+        document.getElementById('modal-overlay').classList.add('open');
+        speak('What type of project is this? Functional Safety, Cyber Security, SOTIF, or Artificial Intelligence?');
+        return;
+      }
+      showNewProjectNameStep(chosenKeys);
+    }
+
+    function pickNewProjectType(key) {
+      showNewProjectNameStep([key]);
+    }
+
+    function showNewProjectNameStep(keys) {
+      document.getElementById('modal-title').textContent = 'New Project';
+      document.getElementById('modal-context').textContent = selectedLabel(keys);
+
+      document.getElementById('modal-body').innerHTML =
+        '<div class="modal-prompt">What would you like to name this project?</div>' +
+        '<input id="new-proj-name" class="modal-input" type="text" placeholder="Project name" autocomplete="off" />';
+
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>' +
+        '<button class="modal-btn solid" id="new-proj-create" disabled onclick="createProject(JSON.parse(this.dataset.keys))" data-keys=\'' + JSON.stringify(keys) + '\'>Create</button>';
+
+      speak('What would you like to name this project?');
+
+      const input = document.getElementById('new-proj-name');
+      const createBtn = document.getElementById('new-proj-create');
+      input.addEventListener('input', () => { createBtn.disabled = input.value.trim().length === 0; });
+      input.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !createBtn.disabled) createProject(keys); });
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function createProject(keys) {
+      const input = document.getElementById('new-proj-name');
+      const name = input.value.trim();
+      if (!name) return;
+
+      const standards = (keys && keys.length > 0) ? keys : ['fu', 'c', 's', 'ai'];
+      const project = { id: Date.now().toString(36), name, standards, createdAt: new Date().toISOString() };
+      const projects = getProjects();
+      projects.unshift(project);
+      saveProjects(projects);
+
+      showProjectView(project);
+    }
+
+    function openOpenProjectModal(keys) {
+      const chosenKeys = keys || [];
+      document.getElementById('modal-title').textContent = 'Open Project';
+
+      if (chosenKeys.length === 0) {
+        document.getElementById('modal-context').textContent = 'Which type of project?';
+        document.getElementById('modal-body').innerHTML = renderTypePicker('pickOpenProjectType', true);
+        document.getElementById('modal-actions').innerHTML =
+          '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>';
+        document.getElementById('modal-overlay').classList.add('open');
+        speak('Which type of project would you like to open?');
+        return;
+      }
+      showProjectListStep(chosenKeys);
+    }
+
+    function pickOpenProjectType(key) {
+      showProjectListStep(key === 'all' ? [] : [key]);
+    }
+
+    function showProjectListStep(keys) {
+      document.getElementById('modal-title').textContent = 'Open Project';
+      document.getElementById('modal-context').textContent = keys.length > 0 ? selectedLabel(keys) : 'All saved projects';
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Close</button>' +
+        '<button class="modal-btn solid" onclick="openNewProjectModal(JSON.parse(this.dataset.keys))" data-keys=\'' + JSON.stringify(keys) + '\'>New Project</button>';
+      renderProjectList(keys);
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    function renderProjectList(keys) {
+      const filterKeys = keys || [];
+      let projects = getProjects();
+      if (filterKeys.length > 0) {
+        projects = projects.filter(p => (p.standards || []).some(s => filterKeys.includes(s)));
+      }
+      const body = document.getElementById('modal-body');
+
+      if (projects.length === 0) {
+        body.innerHTML = '<div class="proj-empty">No projects yet' + (filterKeys.length ? ' for this type' : '') + '.<br>Create one to see it here.</div>';
+        return;
+      }
+
+      body.innerHTML = '<div class="proj-list">' + projects.map(p => {
+        const date = new Date(p.createdAt).toLocaleDateString();
+        const tags = (p.standards || []).map(k => {
+          const meta = STANDARD_META[k];
+          return '<span class="proj-row-tag" style="background:' + meta.bg + ';color:' + meta.ink + ';margin-left:4px;">' + meta.label.split(' — ')[0] + '</span>';
+        }).join('');
+        return '<div class="proj-row" onclick="openProject(\'' + p.id + '\')">' +
+          '<div><div class="proj-row-name">' + escapeHtml(p.name) + '</div>' +
+          '<div class="proj-row-meta">Created ' + date + '</div></div>' +
+          '<div>' + tags + '</div>' +
+          '</div>';
+      }).join('') + '</div>';
+    }
+
+    function openProject(id) {
+      const p = getProjects().find(p => p.id === id);
+      if (p) showProjectView(p);
+    }
+
+    // ---------- Dedicated project page (in-progress placeholder) ----------
+
+    function showProjectView(project) {
+      closeModal();
+      const keys = (project.standards && project.standards.length > 0) ? project.standards : ['fu', 'c', 's', 'ai'];
+      const primary = STANDARD_META[keys[0]];
+      const letter = keys[0] === 'ai' ? 'AI' : (keys[0] === 'fu' ? 'Fu' : keys[0].toUpperCase());
+
+      document.getElementById('pv-icon').textContent = letter;
+      document.getElementById('pv-icon').style.color = primary.ink;
+      document.getElementById('pv-icon').style.background = primary.bg;
+      document.getElementById('pv-name').textContent = project.name;
+      document.getElementById('pv-type').textContent = keys.map(k => STANDARD_META[k].label.split(' — ')[0]).join(' \u00b7 ');
+
+      document.querySelector('.page').style.display = 'none';
+      document.getElementById('project-view').style.display = 'flex';
+    }
+
+    function backToHome() {
+      document.getElementById('project-view').style.display = 'none';
+      document.querySelector('.page').style.display = 'flex';
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+  </script>
+
 </body>
 </html>

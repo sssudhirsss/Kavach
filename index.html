@@ -1139,8 +1139,9 @@
       }
     };
 
-    function trainMe(key) {
-      const topic = TOPICS[key];
+    // Shared helper for pushing a user/assistant exchange into the chat panel.
+    // replyHtml is trusted, pre-built HTML (canned content), never raw user input.
+    function appendChatExchange(userText, replyHtml) {
       const body = document.getElementById('fc-body');
 
       const userMsg = document.createElement('div');
@@ -1149,16 +1150,20 @@
       userMsg.style.color = '#fff';
       userMsg.style.alignSelf = 'flex-end';
       userMsg.style.marginLeft = 'auto';
-      userMsg.textContent = 'Train me on ' + topic.label;
+      userMsg.textContent = userText;
 
       const replyMsg = document.createElement('div');
       replyMsg.className = 'fc-msg';
-      replyMsg.innerHTML = topic.text;
+      replyMsg.innerHTML = replyHtml;
 
       body.appendChild(userMsg);
       body.appendChild(replyMsg);
       body.scrollTop = body.scrollHeight;
+    }
 
+    function trainMe(key) {
+      const topic = TOPICS[key];
+      appendChatExchange('Train me on ' + topic.label, topic.text);
       fcToggle(true);
     }
 
@@ -1266,6 +1271,36 @@
       return keys.map(k => STANDARD_META[k].label.split(' — ')[0]).join(', ');
     }
 
+    // ---------- Guardrails: the assistant stays scoped to the four standards ----------
+    // It should never discuss its own build, implementation, model, prompts, data
+    // sources, or infrastructure — only the safety/security/AI standards themselves.
+    // NOTE: this is keyword matching for the current static/canned assistant.
+    // Once a real AI backend is wired in, this same restriction must be enforced
+    // in that model's system prompt (and ideally re-checked server-side) — client-side
+    // keyword matching alone is not a robust guardrail against a live LLM, since it's
+    // easy to phrase around a fixed word list.
+    const META_QUESTION_PATTERNS = [
+      'how are you built', 'how were you built', 'how is this built', 'how were you made',
+      'how do you work', 'how does this work', 'what model', 'which model', 'what llm',
+      'language model', 'are you gpt', 'are you claude', 'are you chatgpt', 'gpt-4', 'gpt4',
+      'training data', 'trained on', 'what data', 'your data', 'data source', 'dataset',
+      'source code', 'your code', 'who built you', 'who made you', 'who created you',
+      'who developed', 'development team', 'your architecture', 'system prompt',
+      'your prompt', 'your instructions', 'api key', 'tech stack', 'your backend',
+      'database', 'supabase', 'vercel', 'what powers you', 'built with', 'made with',
+      'developed by', 'open source', 'your infrastructure', 'how were you trained'
+    ];
+
+    function isMetaQuestion(text) {
+      const t = ' ' + text.toLowerCase() + ' ';
+      return META_QUESTION_PATTERNS.some(p => t.includes(p));
+    }
+
+    const META_GUARDRAIL_REPLY =
+      "I'm scoped to Functional Safety (ISO 26262), Cybersecurity (ISO/SAE 21434), SOTIF (ISO 21448), " +
+      "and AI Safety (ISO/PAS 8800) &mdash; I don't discuss my own build, underlying model, training data, " +
+      "or infrastructure. What would you like help with on one of those standards?";
+
     function handleSearchSubmit(viaVoice) {
       const input = document.getElementById('search-input');
       const text = input.value.trim();
@@ -1274,7 +1309,10 @@
       const lower = text.toLowerCase();
       const matches = matchStandards(text);
 
-      if (lower.includes('start')) {
+      if (isMetaQuestion(text)) {
+        fcToggle(true);
+        appendChatExchange(text, META_GUARDRAIL_REPLY);
+      } else if (lower.includes('start')) {
         openNewProjectModal(matches, viaVoice);
       } else if (lower.includes('open')) {
         openOpenProjectModal(matches, viaVoice);
@@ -1282,20 +1320,7 @@
         matches.forEach(k => trainMe(k));
       } else {
         fcToggle(true);
-        const body = document.getElementById('fc-body');
-        const userMsg = document.createElement('div');
-        userMsg.className = 'fc-msg';
-        userMsg.style.background = '#0F766E';
-        userMsg.style.color = '#fff';
-        userMsg.style.alignSelf = 'flex-end';
-        userMsg.style.marginLeft = 'auto';
-        userMsg.textContent = text;
-        const replyMsg = document.createElement('div');
-        replyMsg.className = 'fc-msg';
-        replyMsg.textContent = "I can help with ISO 26262, ISO/SAE 21434, ISO 21448, or ISO/PAS 8800 — or say \u201cstart\u201d or \u201copen\u201d for a project.";
-        body.appendChild(userMsg);
-        body.appendChild(replyMsg);
-        body.scrollTop = body.scrollHeight;
+        appendChatExchange(text, "I can help with ISO 26262, ISO/SAE 21434, ISO 21448, or ISO/PAS 8800 — or say \u201cstart\u201d or \u201copen\u201d for a project.");
       }
       input.value = '';
     }

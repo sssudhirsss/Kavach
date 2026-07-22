@@ -1167,11 +1167,31 @@
     // Fill these in from your Supabase project: Project Settings > API
     const SUPABASE_URL = 'https://izxgzpwsrzykrxljgdzi.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml6eGd6cHdzcnp5a3J4bGpnZHppIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ2NjM5NzEsImV4cCI6MjEwMDIzOTk3MX0.UNs9PWpmy7NE5mG3gX2jFavBh8Xp1-QRmV4cWHK6YzE';
-    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    let sb = null;
+    try {
+      if (window.supabase) {
+        sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } else {
+        console.error('Supabase client library failed to load (check network/ad-blocker/CDN access) — backend features will be unavailable, but the rest of the site still works.');
+      }
+    } catch (e) {
+      console.error('Failed to initialize Supabase client:', e);
+    }
+
+    // Anything that needs the backend should check this first so a CDN/network
+    // hiccup degrades gracefully instead of throwing and breaking other features.
+    function sbReady() {
+      if (!sb) {
+        fcShowToast('Can\u2019t reach the backend right now \u2014 check your connection and try again.');
+        return false;
+      }
+      return true;
+    }
 
     let currentUser = null;
 
     async function initAuth() {
+      if (!sb) return;
       const { data: { session } } = await sb.auth.getSession();
       currentUser = session ? session.user : null;
       renderAuthUI();
@@ -1227,6 +1247,7 @@
     }
 
     async function submitAuth(mode) {
+      if (!sbReady()) return;
       const email = document.getElementById('auth-email').value.trim();
       const password = document.getElementById('auth-password').value;
       const errEl = document.getElementById('auth-error');
@@ -1251,6 +1272,7 @@
     }
 
     async function signOut() {
+      if (!sbReady()) return;
       await sb.auth.signOut();
       const menu = document.getElementById('nav-user-menu');
       if (menu) menu.classList.remove('open');
@@ -1687,6 +1709,7 @@
 
     async function fetchProjects() {
       if (!currentUser) return [];
+      if (!sbReady()) return [];
       const { data, error } = await sb.from('projects').select('*').order('created_at', { ascending: false });
       if (error) { console.error(error); fcShowToast('Could not load projects'); return []; }
       return data.map(p => ({ id: p.id, name: p.name, standards: p.standards, createdAt: p.created_at }));
@@ -1749,6 +1772,8 @@
         '<button class="modal-btn ghost" onclick="closeModal()">Cancel</button>' +
         '<button class="modal-btn solid" id="new-proj-create" disabled onclick="createProject(JSON.parse(this.dataset.keys))" data-keys=\'' + JSON.stringify(keys) + '\'>Create</button>';
 
+      document.getElementById('modal-overlay').classList.add('open');
+
       if (viaVoice) speak('What would you like to name this project?');
 
       const input = document.getElementById('new-proj-name');
@@ -1760,6 +1785,7 @@
 
     async function createProject(keys) {
       if (!currentUser) { closeModal(); openAuthModal('signin'); return; }
+      if (!sbReady()) return;
 
       const input = document.getElementById('new-proj-name');
       const name = input.value.trim();
@@ -1843,6 +1869,7 @@
     }
 
     async function openProject(id) {
+      if (!sbReady()) return;
       const { data, error } = await sb.from('projects').select('*').eq('id', id).single();
       if (error) { console.error(error); fcShowToast('Could not open project'); return; }
       const project = { id: data.id, name: data.name, standards: data.standards, createdAt: data.created_at };
@@ -1990,6 +2017,7 @@
     }
 
     async function wbLoadElements() {
+      if (!sbReady()) { wbElements = []; return; }
       const { data, error } = await sb.from('elements').select('*').eq('project_id', wbProject.id).order('created_at');
       if (error) { console.error(error); fcShowToast('Could not load workspace'); wbElements = []; return; }
       if (!data || data.length === 0) {
@@ -2216,6 +2244,7 @@
       if (!node || node.locked) return;
       const name = prompt('Rename to:', node.label);
       if (!name || !name.trim()) return;
+      if (!sbReady()) return;
       const { error } = await sb.from('elements').update({ label: name.trim() }).eq('id', id);
       if (error) { console.error(error); fcShowToast('Could not rename'); return; }
       node.label = name.trim();
@@ -2292,6 +2321,7 @@
     });
 
     async function wbCreateChild(parentId, kind, label) {
+      if (!sbReady()) { wbCloseCtx(); return; }
       const parent_id = parentId === 'root' ? null : parentId;
       const display_id = await wbNextDisplayId(kind);
       const { data, error } = await sb.from('elements').insert({
@@ -2310,6 +2340,7 @@
 
     async function wbDeleteNode(id) {
       if (!confirm('Delete this element? Child elements will be deleted too.')) return;
+      if (!sbReady()) return;
       const { error } = await sb.from('elements').delete().eq('id', id);
       if (error) { console.error(error); fcShowToast('Could not delete'); return; }
       // Cascade already happened server-side — reload to keep the local array in sync.

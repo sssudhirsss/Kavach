@@ -2410,11 +2410,43 @@
     };
     const WB_DERIVE_OPTIONS = ['FTA Event(s)…', 'Diagnostic Coverage Worksheet…', 'FMEA Worksheet…'];
 
+    function wbShowCtxMenuAt(ev) {
+      const menu = document.getElementById('wb-ctxmenu');
+      const x = Math.min(ev.clientX, window.innerWidth - 230);
+      const y = Math.min(ev.clientY, window.innerHeight - 300);
+      menu.style.left = x + 'px';
+      menu.style.top = y + 'px';
+      menu.classList.add('open');
+    }
+
     function wbContextMenu(ev, id) {
       wbSelectNode(id);
       wbRenderTree();
       const node = wbFindNode(id);
       const menu = document.getElementById('wb-ctxmenu');
+
+      // Project nodes get their own small, purpose-built menu — opening and
+      // closing/reopening a project, rather than the work-product New/Derive
+      // menu that only makes sense inside a project's own folders.
+      if (node.kind === 'project') {
+        const proj = wbAllProjects.find(p => p.id === id);
+        const isClosed = proj && proj.status === 'closed';
+        menu.innerHTML =
+          '<div class="wb-ctx-item" onclick="wbOpenProjectFromMenu(\'' + id + '\')">Open Project</div>' +
+          '<div class="wb-ctx-sep"></div>' +
+          '<div class="wb-ctx-item" onclick="wbToggleProjectStatus(\'' + id + '\')">' + (isClosed ? 'Reopen Project' : 'Close Project') + '</div>';
+        wbShowCtxMenuAt(ev);
+        return;
+      }
+
+      // Root / discipline branches / the Closed Projects folder are pure
+      // navigation — nothing to create, rename, or delete on them here.
+      if (node.kind === 'root' || node.kind === 'branch' || node.kind === 'archive') {
+        menu.innerHTML = '<div class="wb-ctx-item disabled">No actions available</div>';
+        wbShowCtxMenuAt(ev);
+        return;
+      }
+
       // Seed folders keep their readable ids (item-def, hara, …); user-created folders get uuids
       // and simply fall back to the generic "New Package" option below via newOpts being undefined.
       const newOpts = WB_NEW_OPTIONS[id] || (node.kind === 'folder' ? [['element', 'Element'], ['worksheet', 'Worksheet']] : null);
@@ -2449,14 +2481,38 @@
       html += '<div class="wb-ctx-item' + (node.locked ? ' disabled' : '') + '" onclick="' + (node.locked ? '' : 'wbDeleteNode(\'' + id + '\'); wbCloseCtx();') + '">Delete</div>';
 
       menu.innerHTML = html;
-      const x = Math.min(ev.clientX, window.innerWidth - 230);
-      const y = Math.min(ev.clientY, window.innerHeight - 300);
-      menu.style.left = x + 'px';
-      menu.style.top = y + 'px';
-      menu.classList.add('open');
+      wbShowCtxMenuAt(ev);
     }
 
     function wbCloseCtx() { document.getElementById('wb-ctxmenu').classList.remove('open'); }
+
+    // Opens a project from its context menu — same effect as clicking its row,
+    // just reachable from "Open Project" too.
+    function wbOpenProjectFromMenu(id) {
+      const proj = wbAllProjects.find(p => p.id === id);
+      wbCloseCtx();
+      if (!proj) return;
+      wbExpandedIds.add(id);
+      wbSelectNode(id);
+      wbRenderTree();
+      if (!(wbProject && wbProject.id === id)) wbSwitchProject(proj);
+    }
+
+    // Toggles a project between active and closed. Closing doesn't delete
+    // anything or kick you out if it's the one currently open — it just moves
+    // where the project shows up in its branch (main list vs Closed Projects).
+    async function wbToggleProjectStatus(id) {
+      wbCloseCtx();
+      if (!sbReady()) return;
+      const proj = wbAllProjects.find(p => p.id === id);
+      if (!proj) return;
+      const newStatus = proj.status === 'closed' ? 'active' : 'closed';
+      const { error } = await sb.from('projects').update({ status: newStatus }).eq('id', id);
+      if (error) { console.error(error); fcShowToast('Could not update project status'); return; }
+      proj.status = newStatus;
+      wbRenderTree();
+      fcShowToast(newStatus === 'closed' ? 'Project closed' : 'Project reopened');
+    }
 
     document.addEventListener('click', function (e) {
       if (!e.target.closest('#wb-ctxmenu')) wbCloseCtx();

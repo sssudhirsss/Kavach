@@ -992,7 +992,7 @@
 
       <div class="info-grid">
         <div class="info-card">
-          <div class="info-eyebrow">Safety, Security &amp; Assurance Engineering</div>
+          <div class="info-eyebrow">Overview</div>
           <div class="info-title">One workspace for functional safety, cybersecurity, SOTIF, and AI safety</div>
           <p class="info-body">FuCSAI is a model-based workspace for teams building safety-critical electrical, electronic, software, and AI-enabled systems. It brings consistent, standards-aligned analysis to every stage of the lifecycle &mdash; from early concept work through system, hardware, and software development, and on to production and operation.</p>
           <div class="info-checks">
@@ -1930,14 +1930,30 @@
 
     let wbProject = null;
     let wbSelectedId = null;   // 'root' or a real element uuid
-    let wbElements = [];       // flat array of element rows from Supabase — parent_id links them into a tree
+    let wbElements = [];       // flat array of element rows for the CURRENTLY OPEN project — parent_id links them into a tree
+    let wbAllProjects = [];    // lightweight list of every project this user owns, across all disciplines
     let wbExpandedIds = new Set(['root']);
-    const ROOT = { id: 'root', label: '', kind: 'folder', locked: true };
+    const ROOT = { id: 'root', label: 'Projects', kind: 'root', locked: true };
+
+    // The five top-level branches requested: one per discipline, plus combined
+    // (multi-standard) projects. "match" decides which branch a project belongs
+    // to based on its standards array.
+    const WB_BRANCHES = [
+      { id: 'branch-fu', disciplineKey: 'fu', label: 'Functional Safety', match: p => p.standards.length === 1 && p.standards[0] === 'fu' },
+      { id: 'branch-c',  disciplineKey: 'c',  label: 'Cybersecurity',      match: p => p.standards.length === 1 && p.standards[0] === 'c' },
+      { id: 'branch-s',  disciplineKey: 's',  label: 'SOTIF',              match: p => p.standards.length === 1 && p.standards[0] === 's' },
+      { id: 'branch-ai', disciplineKey: 'ai', label: 'AI Safety',          match: p => p.standards.length === 1 && p.standards[0] === 'ai' },
+      { id: 'branch-combined', disciplineKey: null, label: 'FUCSAI (Combined Projects)', match: p => p.standards.length > 1 },
+    ];
 
     // Glyph set — deliberately distinct shapes/colors from medini's own icon set,
     // but carrying the same meaning (Failure Mode / Malfunction / Hazard / Error / Function / folders).
     const WB_GLYPHS = {
       folder:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.4a1.5 1.5 0 0 1 1.2.6l.9 1.2a.5.5 0 0 0 .4.2H13.5A1.5 1.5 0 0 1 15 5.5v7A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" fill="#B9C2CC"/></svg>',
+      root:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.4a1.5 1.5 0 0 1 1.2.6l.9 1.2a.5.5 0 0 0 .4.2H13.5A1.5 1.5 0 0 1 15 5.5v7A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" fill="#B9C2CC"/></svg>',
+      branch:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.4a1.5 1.5 0 0 1 1.2.6l.9 1.2a.5.5 0 0 0 .4.2H13.5A1.5 1.5 0 0 1 15 5.5v7A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" fill="currentColor"/></svg>',
+      archive:     '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h11A1.5 1.5 0 0 1 15 3.5V5H1V3.5z" fill="#96A0AC"/><path d="M1.5 6H14.5V13A1.5 1.5 0 0 1 13 14.5H3A1.5 1.5 0 0 1 1.5 13V6z" fill="none" stroke="#96A0AC" stroke-width="1.1"/><line x1="6.2" y1="9" x2="9.8" y2="9" stroke="#96A0AC" stroke-width="1.1"/></svg>',
+      project:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2.5" width="12" height="11" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/></svg>',
       item:        '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#4285F4" stroke-width="1.3"/><line x1="5.2" y1="5" x2="10.8" y2="5" stroke="#4285F4" stroke-width="1.1"/><line x1="5.2" y1="7.4" x2="10.8" y2="7.4" stroke="#4285F4" stroke-width="1.1"/><line x1="5.2" y1="9.8" x2="8.5" y2="9.8" stroke="#4285F4" stroke-width="1.1"/></svg>',
       hazard:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1l7 7-7 7-7-7z" fill="#7C3AED"/></svg>',
       malfunction: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="2.5" fill="#EA8C00"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">M</text></svg>',
@@ -1950,7 +1966,13 @@
       element:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2"/></svg>',
     };
 
-    function wbGlyph(kind) { return '<span class="wb-glyph">' + (WB_GLYPHS[kind] || WB_GLYPHS.element) + '</span>'; }
+    // Kinds that behave like folders (expandable, get an "Empty" note when childless).
+    const WB_FOLDER_LIKE_KINDS = ['folder', 'root', 'branch', 'archive', 'project'];
+
+    function wbGlyph(kind, color) {
+      const style = color ? ' style="color:' + color + '"' : '';
+      return '<span class="wb-glyph"' + style + '>' + (WB_GLYPHS[kind] || WB_GLYPHS.element) + '</span>';
+    }
 
     // Human-facing ID prefixes, medini-style (F-001, M-002, H-001…). The database assigns
     // these atomically via the next_display_id() function — see schema.sql. Folders don't get one.
@@ -2029,9 +2051,27 @@
       }
     }
 
+    // Lightweight list of every project this user owns (id/name/standards/status
+    // only — not their internal elements), used to populate the 5 branches.
+    async function wbFetchAllProjects() {
+      if (!sbReady() || !currentUser) { wbAllProjects = []; return; }
+      const { data, error } = await sb.from('projects').select('*').eq('owner_id', currentUser.id).order('created_at', { ascending: false });
+      if (error) { console.error(error); wbAllProjects = []; return; }
+      wbAllProjects = data || [];
+    }
+
+    function wbBranchForProject(project) {
+      return WB_BRANCHES.find(b => b.match(project));
+    }
+
+    function wbProjectsForBranch(branchId, closed) {
+      const branch = WB_BRANCHES.find(b => b.id === branchId);
+      if (!branch) return [];
+      return wbAllProjects.filter(p => branch.match(p) && ((p.status === 'closed') === !!closed));
+    }
+
     async function wbOpen(project) {
       wbProject = project;
-      ROOT.label = project.name;
 
       const meta = STANDARD_META.fu;
       document.getElementById('wb-icon').textContent = 'Fu';
@@ -2043,14 +2083,34 @@
       document.getElementById('wb-shell').style.flexDirection = 'column';
       document.getElementById('wb-tree').innerHTML = '<div class="wb-empty-note" style="padding:10px;">Loading workspace&hellip;</div>';
 
+      await wbFetchAllProjects();
       await wbLoadElements();
-      wbExpandedIds = new Set(['root', ...wbElements.filter(e => e.kind === 'folder' && e.parent_id === null).map(e => e.id)]);
+
+      // Expanded by default: the root, the branch this project belongs to, and
+      // the project itself — every other branch stays collapsed until asked for.
+      const ownBranch = wbBranchForProject(project);
+      wbExpandedIds = new Set(['root', project.id, ...wbElements.filter(e => e.kind === 'folder' && e.parent_id === null).map(e => e.id)]);
+      if (ownBranch) wbExpandedIds.add(ownBranch.id);
 
       wbRenderTree();
       wbSelectNode(null);
       wbSwitchTab('props');
       document.addEventListener('keydown', wbKeyHandler);
       wbDockAssistant();
+    }
+
+    // Switches which project's contents are loaded into the editor/tree while
+    // staying inside the same workspace — used when clicking a different
+    // project node in the branch tree rather than leaving and re-entering.
+    async function wbSwitchProject(project) {
+      wbProject = project;
+      document.getElementById('wb-name').textContent = project.name;
+      wbSelectNode(null);
+      document.getElementById('wb-tree').innerHTML = '<div class="wb-empty-note" style="padding:10px;">Loading project&hellip;</div>';
+      await wbLoadElements();
+      wbExpandedIds.add(project.id);
+      wbElements.filter(e => e.kind === 'folder' && e.parent_id === null).forEach(e => wbExpandedIds.add(e.id));
+      wbRenderTree();
     }
 
     // ---------- Assistant docking (workspace layout only — see chat notes) ----------
@@ -2085,11 +2145,51 @@
 
     function wbFindNode(id) {
       if (!id || id === 'root') return ROOT;
+
+      const branch = WB_BRANCHES.find(b => b.id === id);
+      if (branch) return { id: branch.id, label: branch.label, kind: 'branch', locked: true, disciplineKey: branch.disciplineKey };
+
+      if (id.indexOf('closed-') === 0) {
+        return { id, label: 'Closed Projects', kind: 'archive', locked: true };
+      }
+
+      const proj = wbAllProjects.find(p => p.id === id);
+      if (proj) {
+        return {
+          id: proj.id, label: proj.name, kind: 'project', locked: true,
+          props: { Status: proj.status === 'closed' ? 'Closed' : 'Active', Disciplines: (proj.standards || []).map(k => STANDARD_META[k].label.split(' — ')[0]).join(', ') }
+        };
+      }
+
       return wbElements.find(e => e.id === id) || null;
     }
 
     function wbChildrenOf(id) {
-      const parentId = (id === 'root' || id === null) ? null : id;
+      if (id === 'root') {
+        return WB_BRANCHES.map(b => ({ id: b.id, label: b.label, kind: 'branch', locked: true, disciplineKey: b.disciplineKey }));
+      }
+
+      if (typeof id === 'string' && id.indexOf('branch-') === 0) {
+        const active = wbProjectsForBranch(id, false).map(p => ({ id: p.id, label: p.name, kind: 'project', locked: true }));
+        return active.concat([{ id: 'closed-' + id.slice('branch-'.length), label: 'Closed Projects', kind: 'archive', locked: true }]);
+      }
+
+      if (typeof id === 'string' && id.indexOf('closed-') === 0) {
+        const branchId = 'branch-' + id.slice('closed-'.length);
+        return wbProjectsForBranch(branchId, true).map(p => ({ id: p.id, label: p.name, kind: 'project', locked: true }));
+      }
+
+      const proj = wbAllProjects.find(p => p.id === id);
+      if (proj) {
+        // Only the currently loaded project actually has its elements fetched —
+        // other project nodes stay collapsed/empty until you click them.
+        if (wbProject && wbProject.id === id) {
+          return wbElements.filter(e => e.parent_id === null);
+        }
+        return [];
+      }
+
+      const parentId = (id === null) ? null : id;
       return wbElements.filter(e => e.parent_id === parentId);
     }
 
@@ -2097,17 +2197,38 @@
       document.getElementById('wb-tree').innerHTML = wbRenderNode(ROOT);
     }
 
+    function wbNodeColor(node) {
+      if (node.kind === 'branch') {
+        return node.disciplineKey ? STANDARD_META[node.disciplineKey].ink : '#7C3AED';
+      }
+      if (node.kind === 'project') {
+        const proj = wbAllProjects.find(p => p.id === node.id);
+        const branch = proj && wbBranchForProject(proj);
+        if (branch) return branch.disciplineKey ? STANDARD_META[branch.disciplineKey].ink : '#7C3AED';
+      }
+      return null;
+    }
+
+    function wbEmptyMessage(node) {
+      if (node.kind === 'archive') return 'No closed projects.';
+      if (node.kind === 'branch') return 'No projects yet \u2014 use Start on the home page to create one.';
+      if (node.kind === 'project') {
+        return (wbProject && wbProject.id === node.id) ? 'Empty \u2014 right-click to add a work product.' : 'Click to open this project.';
+      }
+      return 'Empty \u2014 right-click to add a work product.';
+    }
+
     function wbRenderNode(node) {
       const children = wbChildrenOf(node.id);
       const hasChildren = children.length > 0;
-      const isFolderLike = node.kind === 'folder';
+      const isFolderLike = WB_FOLDER_LIKE_KINDS.includes(node.kind);
       const leafClass = (hasChildren || isFolderLike) ? '' : ' leaf';
       const expanded = wbExpandedIds.has(node.id) ? ' expanded' : '';
       const selected = node.id === wbSelectedId ? ' selected' : '';
       let html = '<div class="wb-node' + expanded + '" data-id="' + node.id + '">';
       html += '<div class="wb-node-row' + leafClass + selected + '" onclick="wbNodeClick(\'' + node.id + '\', event)" oncontextmenu="wbContextMenu(event, \'' + node.id + '\'); return false;">';
       html += '<span class="wb-chevron"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 6 15 12 9 18"/></svg></span>';
-      html += wbGlyph(node.kind);
+      html += wbGlyph(node.kind, wbNodeColor(node));
       html += '<span class="wb-node-label">' + escapeHtml(node.label) + '</span>';
       if (node.display_id) html += '<span class="wb-node-badge">' + node.display_id + '</span>';
       html += '</div>';
@@ -2116,7 +2237,7 @@
         children.forEach(c => { html += wbRenderNode(c); });
         html += '</div>';
       } else if (isFolderLike) {
-        html += '<div class="wb-children"><div class="wb-empty-note" style="padding:6px 10px;">Empty &mdash; right-click to add a work product.</div></div>';
+        html += '<div class="wb-children"><div class="wb-empty-note" style="padding:6px 10px;">' + wbEmptyMessage(node) + '</div></div>';
       }
       html += '</div>';
       return html;
@@ -2126,7 +2247,18 @@
       ev.stopPropagation();
       const node = wbFindNode(id);
       if (!node) return;
-      if (node.kind === 'folder') {
+
+      if (node.kind === 'project') {
+        const proj = wbAllProjects.find(p => p.id === id);
+        const alreadyActive = wbProject && wbProject.id === id;
+        if (wbExpandedIds.has(id)) wbExpandedIds.delete(id); else wbExpandedIds.add(id);
+        wbSelectNode(id);
+        wbRenderTree();
+        if (proj && !alreadyActive) wbSwitchProject(proj);
+        return;
+      }
+
+      if (WB_FOLDER_LIKE_KINDS.includes(node.kind)) {
         if (wbExpandedIds.has(id)) wbExpandedIds.delete(id); else wbExpandedIds.add(id);
       }
       wbSelectNode(id);
@@ -2150,15 +2282,25 @@
         return;
       }
       const kindLabels = {
-        folder: 'Folder', item: 'Item Description', diagram: 'System Diagram', function: 'Function',
+        folder: 'Folder', root: 'Workspace', branch: 'Discipline', archive: 'Closed Projects', project: 'Project',
+        item: 'Item Description', diagram: 'System Diagram', function: 'Function',
         malfunction: 'Malfunction', hazard: 'Hazard', goal: 'Safety Goal', requirement: 'Functional Safety Requirement',
         worksheet: 'Worksheet', element: 'Element'
       };
+      const folderLikeDesc = 'This folder groups related work products. Right-click it to create a new one, or expand it in the Model Browser on the left.';
+      const descByKind = {
+        root: 'The top of your Model Browser \u2014 every discipline you work in lives here.',
+        branch: 'Expand to see active projects for this discipline, plus any closed projects tucked away below.',
+        archive: 'Closed projects for this discipline. They stay here, out of the way, until reopened.',
+        project: (wbProject && node.id === wbProject.id)
+          ? 'This project is currently open \u2014 its own folders are shown below.'
+          : 'Click this project to open it in the workspace.',
+      };
       el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + (node.display_id ? ' <span class="wb-editor-kind" style="margin-left:6px;">' + node.display_id + '</span>' : '') + '</div>' +
         '<div class="wb-editor-kind">' + (kindLabels[node.kind] || node.kind) + '</div>' +
-        '<div class="wb-editor-desc">' + (node.kind === 'folder'
-          ? 'This folder groups related work products. Right-click it to create a new one, or expand it in the Model Browser on the left.'
-          : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.') + '</div>';
+        '<div class="wb-editor-desc">' + (descByKind[node.kind] || (node.kind === 'folder'
+          ? folderLikeDesc
+          : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.')) + '</div>';
     }
 
     function wbRenderProps(node) {
@@ -2276,7 +2418,7 @@
       // Seed folders keep their readable ids (item-def, hara, …); user-created folders get uuids
       // and simply fall back to the generic "New Package" option below via newOpts being undefined.
       const newOpts = WB_NEW_OPTIONS[id] || (node.kind === 'folder' ? [['element', 'Element'], ['worksheet', 'Worksheet']] : null);
-      const canDerive = node.kind !== 'folder' && node.id !== 'root';
+      const canDerive = !WB_FOLDER_LIKE_KINDS.includes(node.kind) && node.id !== 'root';
 
       let html = '';
       if (newOpts) {

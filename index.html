@@ -161,9 +161,134 @@
   .disc-standard { font-size: 10px; color: var(--text-dim); margin-bottom: 10px; }
   .disc-desc { font-size: 12px; line-height: 1.5; color: var(--text); }
 
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    padding: 18px 0 6px;
+  }
+  .info-card {
+    background: var(--panel);
+    border-radius: 18px;
+    padding: 26px 26px 28px;
+  }
+  .info-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+  .info-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.35;
+    margin-bottom: 12px;
+  }
+  .info-body {
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--text);
+    margin: 0 0 12px;
+  }
+  .info-checks {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+    margin-top: 16px;
+  }
+  .info-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink);
+    line-height: 1.4;
+  }
+  .info-check-item svg { flex-shrink: 0; margin-top: 1px; color: var(--accent); }
+  .info-features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px 16px;
+    margin-top: 18px;
+  }
+  .info-feature-item {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--line);
+    line-height: 1.4;
+  }
+
+  @media (max-width: 900px) {
+    .info-grid { grid-template-columns: 1fr; }
+    .info-features { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 560px) {
+    .info-checks { grid-template-columns: 1fr; }
+    .info-features { grid-template-columns: 1fr; }
+  }
+
   @media (max-width: 1040px) {
     .disc-grid { grid-template-columns: repeat(3, 1fr); }
   }
+
+  .features-section {
+    padding: 30px 0 10px;
+    border-top: 1px solid var(--line);
+    margin-top: 12px;
+  }
+  .features-heading {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .features-intro {
+    font-size: 12.5px;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 0 20px;
+    line-height: 1.6;
+  }
+  .feature-row {
+    border-bottom: 1px solid var(--line);
+    padding: 16px 0;
+  }
+  .feature-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+  }
+  .feature-content { flex: 1; }
+  .feature-title { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .feature-summary { font-size: 12.5px; color: var(--text); line-height: 1.55; }
+  .feature-toggle {
+    flex-shrink: 0;
+    width: 28px; height: 28px;
+    border-radius: 999px;
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 2px;
+  }
+  .feature-toggle:hover { border-color: var(--accent); color: var(--accent); }
+  .feature-toggle .icon-minus { display: none; }
+  .feature-row.open .feature-toggle .icon-plus { display: none; }
+  .feature-row.open .feature-toggle .icon-minus { display: block; }
+  .feature-detail {
+    display: none;
+    font-size: 12.5px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    padding: 12px 44px 0 0;
+  }
+  .feature-row.open .feature-detail { display: block; }
   @media (max-width: 860px) {
     .disc-grid { grid-template-columns: 1fr 1fr; }
   }
@@ -775,6 +900,56 @@
       </div>
     </div>
 
+    <div class="info-grid">
+      <div class="info-card">
+        <div class="info-eyebrow">Safety, Security &amp; Assurance Engineering</div>
+        <div class="info-title">One workspace for functional safety, cybersecurity, SOTIF, and AI safety</div>
+        <p class="info-body">FuCSAI is a model-based workspace for teams building safety-critical electrical, electronic, software, and AI-enabled systems. It brings consistent, standards-aligned analysis to every stage of the lifecycle &mdash; from early concept work through system, hardware, and software development, and on to production and operation.</p>
+        <div class="info-checks">
+          <div class="info-check-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
+            <span>Run functional safety analysis end to end</span>
+          </div>
+          <div class="info-check-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
+            <span>Stay aligned with ISO 26262, ISO/SAE 21434, ISO 21448 &amp; ISO/PAS 8800</span>
+          </div>
+          <div class="info-check-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
+            <span>Assess SOTIF triggering conditions and scenarios</span>
+          </div>
+          <div class="info-check-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
+            <span>Apply hazard, threat, and safety analysis methods in one place</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="info-card">
+        <div class="info-eyebrow">Capabilities</div>
+        <div class="info-title">Every safety and security analysis method, in one workspace</div>
+        <p class="info-body">FuCSAI supports the core techniques teams already rely on &mdash; hazard analysis and risk assessment, fault tree analysis, failure modes and effects analysis, and diagnostic coverage assessment &mdash; alongside cybersecurity threat analysis and AI-specific safety analysis, all in a single connected model.</p>
+        <p class="info-body">Work spans the full lifecycle: from early concept and item definition, through system, hardware, and software development, to production, operation, and field monitoring &mdash; with every work product traceable back to the requirement or goal it satisfies.</p>
+        <div class="info-features">
+          <div class="info-feature-item">Every method in one workspace</div>
+          <div class="info-feature-item">End-to-end traceability</div>
+          <div class="info-feature-item">Model-based analysis</div>
+          <div class="info-feature-item">Automated consistency checks</div>
+          <div class="info-feature-item">Customizable reports</div>
+          <div class="info-feature-item">Cross-discipline shared model</div>
+          <div class="info-feature-item">Visualize critical elements</div>
+          <div class="info-feature-item">Built for collaborative teams</div>
+          <div class="info-feature-item">SOTIF &amp; AI safety analysis</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="features-section">
+      <div class="features-heading">Key Features</div>
+      <p class="features-intro">FuCSAI bundles these analysis methods into one connected, model-based environment &mdash; so nothing gets re-entered by hand between disciplines.</p>
+      <div id="key-features-list"></div>
+    </div>
+
     <div class="disc-grid">
       <div class="disc-card disc-fu" onclick="openDisciplineMenu('fu')">
         <div class="disc-letter c1">Fu</div>
@@ -1057,6 +1232,88 @@
     }
 
     initAuth();
+
+    // ---------- Key Features accordion ----------
+    // Paraphrased into FuCSAI's own voice and scope — no third-party product
+    // names or lifted phrasing, since these summarize general capabilities
+    // rather than reproduce any specific source's marketing copy.
+    const KEY_FEATURES = [
+      {
+        id: 'kf-concept',
+        title: 'Safety & Security Concept Modeling',
+        summary: 'Capture functional, technical, and hardware/software concepts as connected models — tying requirements, goals, and architecture together in one place, with editors built for everything from early hazard screening through a full HARA.',
+        detail: 'Bring in and round-trip requirements from your existing requirements-management tooling, with custom attribute mapping so nothing gets lost in translation.'
+      },
+      {
+        id: 'kf-modelbased',
+        title: 'Model-Based Safety Analysis',
+        summary: 'Trace safety-critical issues back to your design models using both inductive and deductive methods, directly against the architecture you\u2019ve already built.',
+        detail: 'Includes integrated FMEA, FMEDA, FMECA, fault tree analysis, and reliability block diagrams, built on structural and behavioral system models.'
+      },
+      {
+        id: 'kf-reliability',
+        title: 'Reliability Prediction & Analysis',
+        summary: 'Evaluate hardware reliability using established industry handbooks and quantitative methods like FTA, RBD, FMEDA, and FMECA.',
+        detail: 'Draws on recognized failure-rate data sources and a configurable catalog of safety mechanisms aligned with ISO 26262 and IEC 61508.'
+      },
+      {
+        id: 'kf-trace',
+        title: 'Traceability & Consistency',
+        summary: 'Automatic consistency checks validate your safety and security concepts against the standard, with rich traceability for impact analysis.',
+        detail: 'Navigate directly from any element to everything it\u2019s connected to across your other models.'
+      },
+      {
+        id: 'kf-teamwork',
+        title: 'Teamwork & Review Support',
+        summary: 'Work as a safety engineering team — share, compare, and merge projects without stepping on each other\u2019s work.',
+        detail: 'Two-way and three-way project comparisons, merge support, and integration with task-tracking workflows keep reviews and collaboration moving.'
+      },
+      {
+        id: 'kf-integration',
+        title: 'Integration into Your Engineering Environment',
+        summary: 'Exchange requirements, design models, and part libraries with the tools your team already uses.',
+        detail: 'Custom attribute and relationship mapping keeps data consistent on both sides, with export to common document formats like Word, Excel, PDF, and HTML.'
+      },
+      {
+        id: 'kf-customization',
+        title: 'Customization & Process Adaptation',
+        summary: 'Adapt FuCSAI to your company\u2019s own processes, guidelines, and templates, rather than the other way around.',
+        detail: 'Customize the underlying data model and editors through a profiling mechanism (attributes, references, queries), with checklists to track process activities against your corporate workflow.'
+      },
+      {
+        id: 'kf-reporting',
+        title: 'Reporting & Documentation',
+        summary: 'Generate the reports and safety assessment documentation your program needs, straight from your analysis.',
+        detail: 'Default reporting covers every work product — HARA, FMEA, FMEDA, FTA, checklists, goals, requirements, and system design — exportable to Word, Excel, PDF, HTML, and more.'
+      }
+    ];
+
+    function renderKeyFeatures() {
+      const container = document.getElementById('key-features-list');
+      if (!container) return;
+      container.innerHTML = KEY_FEATURES.map(f =>
+        '<div class="feature-row" id="' + f.id + '">' +
+          '<div class="feature-main">' +
+            '<div class="feature-content">' +
+              '<div class="feature-title">' + f.title + '</div>' +
+              '<div class="feature-summary">' + f.summary + '</div>' +
+            '</div>' +
+            '<button class="feature-toggle" onclick="toggleFeature(\'' + f.id + '\')" aria-label="Expand ' + f.title + '">' +
+              '<svg class="icon-plus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
+              '<svg class="icon-minus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
+            '</button>' +
+          '</div>' +
+          '<div class="feature-detail">' + f.detail + '</div>' +
+        '</div>'
+      ).join('');
+    }
+
+    function toggleFeature(id) {
+      const row = document.getElementById(id);
+      if (row) row.classList.toggle('open');
+    }
+
+    renderKeyFeatures();
 
     function fcToggle(forceOpen) {
       const panel = document.getElementById('fc-panel');

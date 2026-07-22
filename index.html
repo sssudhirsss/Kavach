@@ -171,31 +171,8 @@
     background: var(--panel);
     border-radius: 18px;
     padding: 26px 26px 28px;
-    cursor: pointer;
-    transition: box-shadow 0.2s ease;
   }
-  .info-card:hover { box-shadow: 0 10px 24px rgba(15,23,42,0.08); }
 
-  .reveal-hint {
-    font-size: 11px;
-    color: var(--text-dim);
-    font-style: italic;
-    margin-top: 2px;
-  }
-  .reveal-card:hover .reveal-hint,
-  .reveal-card.open .reveal-hint { display: none; }
-  .reveal-content {
-    max-height: 0;
-    opacity: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease, opacity 0.25s ease, margin-top 0.3s ease;
-  }
-  .reveal-card:hover .reveal-content,
-  .reveal-card.open .reveal-content {
-    max-height: 900px;
-    opacity: 1;
-    margin-top: 14px;
-  }
   .info-eyebrow {
     font-family: 'IBM Plex Mono', monospace;
     font-size: 10.5px;
@@ -264,7 +241,6 @@
     padding: 30px 0 10px;
     border-top: 1px solid var(--line);
     margin-top: 12px;
-    cursor: pointer;
   }
   .features-heading {
     font-size: 20px;
@@ -283,37 +259,15 @@
     border-bottom: 1px solid var(--line);
     padding: 16px 0;
   }
-  .feature-main {
-    display: flex;
-    align-items: flex-start;
-    gap: 16px;
-  }
   .feature-content { flex: 1; }
   .feature-title { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
   .feature-summary { font-size: 12.5px; color: var(--text); line-height: 1.55; }
-  .feature-toggle {
-    flex-shrink: 0;
-    width: 28px; height: 28px;
-    border-radius: 999px;
-    border: 1.5px solid var(--line);
-    background: var(--bg);
-    color: var(--ink);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    margin-top: 2px;
-  }
-  .feature-toggle:hover { border-color: var(--accent); color: var(--accent); }
-  .feature-toggle .icon-minus { display: none; }
-  .feature-row.open .feature-toggle .icon-plus { display: none; }
-  .feature-row.open .feature-toggle .icon-minus { display: block; }
   .feature-detail {
-    display: none;
     font-size: 12.5px;
     color: var(--text-dim);
     line-height: 1.6;
-    padding: 12px 44px 0 0;
+    padding-top: 8px;
   }
-  .feature-row.open .feature-detail { display: block; }
   @media (max-width: 860px) {
     .disc-grid { grid-template-columns: 1fr 1fr; }
   }
@@ -1008,62 +962,53 @@
       <button class="back-link" style="position:static; margin-bottom: 18px;" onclick="backToHome()">&larr; Back</button>
 
       <div class="info-grid">
-        <div class="info-card reveal-card" onclick="toggleReveal(this, event)">
+        <div class="info-card">
           <div class="info-eyebrow">Safety, Security &amp; Assurance Engineering</div>
           <div class="info-title">One workspace for functional safety, cybersecurity, SOTIF, and AI safety</div>
-          <div class="reveal-hint">Hover or click to read more</div>
-          <div class="reveal-content">
-            <p class="info-body">FuCSAI is a model-based workspace for teams building safety-critical electrical, electronic, software, and AI-enabled systems. It brings consistent, standards-aligned analysis to every stage of the lifecycle &mdash; from early concept work through system, hardware, and software development, and on to production and operation.</p>
-            <div class="info-checks">
-              <div class="info-check-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
-                <span>Run functional safety analysis end to end</span>
-              </div>
-              <div class="info-check-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
-                <span>Stay aligned with ISO 26262, ISO/SAE 21434, ISO 21448 &amp; ISO/PAS 8800</span>
-              </div>
-              <div class="info-check-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
-                <span>Assess SOTIF triggering conditions and scenarios</span>
-              </div>
-              <div class="info-check-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
-                <span>Apply hazard, threat, and safety analysis methods in one place</span>
-              </div>
+          <p class="info-body">FuCSAI is a model-based workspace for teams building safety-critical electrical, electronic, software, and AI-enabled systems. It brings consistent, standards-aligned analysis to every stage of the lifecycle &mdash; from early concept work through system, hardware, and software development, and on to production and operation.</p>
+          <div class="info-checks">
+            <div class="info-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
+              <span>Run functional safety analysis end to end</span>
+            </div>
+            <div class="info-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
+              <span>Stay aligned with ISO 26262, ISO/SAE 21434, ISO 21448 &amp; ISO/PAS 8800</span>
+            </div>
+            <div class="info-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
+              <span>Assess SOTIF triggering conditions and scenarios</span>
+            </div>
+            <div class="info-check-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="8 12.5 10.8 15.3 16 9.3"></polyline></svg>
+              <span>Apply hazard, threat, and safety analysis methods in one place</span>
             </div>
           </div>
         </div>
 
-        <div class="info-card reveal-card" onclick="toggleReveal(this, event)">
+        <div class="info-card">
           <div class="info-eyebrow">Capabilities</div>
           <div class="info-title">Every safety and security analysis method, in one workspace</div>
-          <div class="reveal-hint">Hover or click to read more</div>
-          <div class="reveal-content">
-            <p class="info-body">FuCSAI supports the core techniques teams already rely on &mdash; hazard analysis and risk assessment, fault tree analysis, failure modes and effects analysis, and diagnostic coverage assessment &mdash; alongside cybersecurity threat analysis and AI-specific safety analysis, all in a single connected model.</p>
-            <p class="info-body">Work spans the full lifecycle: from early concept and item definition, through system, hardware, and software development, to production, operation, and field monitoring &mdash; with every work product traceable back to the requirement or goal it satisfies.</p>
-            <div class="info-features">
-              <div class="info-feature-item">Every method in one workspace</div>
-              <div class="info-feature-item">End-to-end traceability</div>
-              <div class="info-feature-item">Model-based analysis</div>
-              <div class="info-feature-item">Automated consistency checks</div>
-              <div class="info-feature-item">Customizable reports</div>
-              <div class="info-feature-item">Cross-discipline shared model</div>
-              <div class="info-feature-item">Visualize critical elements</div>
-              <div class="info-feature-item">Built for collaborative teams</div>
-              <div class="info-feature-item">SOTIF &amp; AI safety analysis</div>
-            </div>
+          <p class="info-body">FuCSAI supports the core techniques teams already rely on &mdash; hazard analysis and risk assessment, fault tree analysis, failure modes and effects analysis, and diagnostic coverage assessment &mdash; alongside cybersecurity threat analysis and AI-specific safety analysis, all in a single connected model.</p>
+          <p class="info-body">Work spans the full lifecycle: from early concept and item definition, through system, hardware, and software development, to production, operation, and field monitoring &mdash; with every work product traceable back to the requirement or goal it satisfies.</p>
+          <div class="info-features">
+            <div class="info-feature-item">Every method in one workspace</div>
+            <div class="info-feature-item">End-to-end traceability</div>
+            <div class="info-feature-item">Model-based analysis</div>
+            <div class="info-feature-item">Automated consistency checks</div>
+            <div class="info-feature-item">Customizable reports</div>
+            <div class="info-feature-item">Cross-discipline shared model</div>
+            <div class="info-feature-item">Visualize critical elements</div>
+            <div class="info-feature-item">Built for collaborative teams</div>
+            <div class="info-feature-item">SOTIF &amp; AI safety analysis</div>
           </div>
         </div>
       </div>
 
-      <div class="features-section reveal-card" onclick="toggleReveal(this, event)">
+      <div class="features-section">
         <div class="features-heading">Key Features</div>
         <p class="features-intro">FuCSAI bundles these analysis methods into one connected, model-based environment &mdash; so nothing gets re-entered by hand between disciplines.</p>
-        <div class="reveal-hint">Hover or click to see all features</div>
-        <div class="reveal-content">
-          <div id="key-features-list"></div>
-        </div>
+        <div id="key-features-list"></div>
       </div>
     </div>
   </div>
@@ -1340,36 +1285,16 @@
       if (!container) return;
       container.innerHTML = KEY_FEATURES.map(f =>
         '<div class="feature-row" id="' + f.id + '">' +
-          '<div class="feature-main">' +
-            '<div class="feature-content">' +
-              '<div class="feature-title">' + f.title + '</div>' +
-              '<div class="feature-summary">' + f.summary + '</div>' +
-            '</div>' +
-            '<button class="feature-toggle" onclick="event.stopPropagation(); toggleFeature(\'' + f.id + '\')" aria-label="Expand ' + f.title + '">' +
-              '<svg class="icon-plus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
-              '<svg class="icon-minus" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>' +
-            '</button>' +
+          '<div class="feature-content">' +
+            '<div class="feature-title">' + f.title + '</div>' +
+            '<div class="feature-summary">' + f.summary + '</div>' +
+            '<div class="feature-detail">' + f.detail + '</div>' +
           '</div>' +
-          '<div class="feature-detail">' + f.detail + '</div>' +
         '</div>'
       ).join('');
     }
 
-    function toggleFeature(id) {
-      const row = document.getElementById(id);
-      if (row) row.classList.toggle('open');
-    }
-
     renderKeyFeatures();
-
-    // Reveal-on-hover-or-click for the Overview / Capabilities cards and the
-    // Key Features section. Hover shows content on desktop via CSS alone;
-    // this click handler adds a persistent "open" state for touch devices
-    // (which don't really have hover) and for anyone who'd rather click.
-    function toggleReveal(el, ev) {
-      if (ev) ev.stopPropagation();
-      el.classList.toggle('open');
-    }
 
     function fcToggle(forceOpen) {
       const panel = document.getElementById('fc-panel');

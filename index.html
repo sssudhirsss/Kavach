@@ -792,6 +792,35 @@
   }
 
   .wb-main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+
+  .wb-assistant-dock {
+    width: 340px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--bg);
+    transition: width 0.18s ease;
+    overflow: hidden;
+  }
+  .wb-shell.assistant-collapsed .wb-assistant-dock {
+    width: 0;
+    border-left: none;
+  }
+  /* When the shared Safety Assistant panel is moved into the dock (see
+     wbDockAssistant), it fills this column instead of floating over the page. */
+  #fc-panel.docked {
+    position: static;
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    max-height: none;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    display: flex;
+  }
   .wb-editor {
     flex: 1;
     overflow: auto;
@@ -1032,6 +1061,10 @@
         <div class="wb-header-sub">Functional Safety &middot; ISO 26262</div>
       </div>
       <div class="wb-header-spacer"></div>
+      <button class="wb-header-btn" id="wb-assistant-toggle-btn" onclick="toggleAssistantDock()" title="Show/hide Safety Assistant">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        Assistant
+      </button>
       <button class="wb-header-btn" onclick="wbShowLegend()" title="F10">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 2-3 4"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
         Legend
@@ -1068,6 +1101,7 @@
           <div class="wb-panel-body" id="wb-panel-body"></div>
         </div>
       </div>
+      <div class="wb-assistant-dock" id="wb-assistant-dock"></div>
     </div>
   </div>
 
@@ -1078,6 +1112,7 @@
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
   </button>
 
+  <span id="fc-panel-anchor"></span>
   <div id="fc-panel">
     <div id="fc-header">
       <div id="fc-avatar">
@@ -1847,6 +1882,7 @@
       document.getElementById('wb-shell').style.display = 'none';
       document.getElementById('about-view').style.display = 'none';
       document.removeEventListener('keydown', wbKeyHandler);
+      wbUndockAssistant();
       document.querySelector('.page').style.display = 'flex';
     }
 
@@ -1986,6 +2022,37 @@
       wbSelectNode(null);
       wbSwitchTab('props');
       document.addEventListener('keydown', wbKeyHandler);
+      wbDockAssistant();
+    }
+
+    // ---------- Assistant docking (workspace layout only — see chat notes) ----------
+    // Moves the single shared Safety Assistant panel (#fc-panel) from its normal
+    // floating position into the workspace's right-hand dock, and back again on
+    // exit. Same panel, same chat logic — just repositioned per context, so
+    // there's one chat implementation instead of two.
+    function wbDockAssistant() {
+      const dock = document.getElementById('wb-assistant-dock');
+      const panel = document.getElementById('fc-panel');
+      if (dock && panel && panel.parentNode !== dock) {
+        dock.appendChild(panel);
+        panel.classList.add('docked');
+        document.getElementById('fc-bubble').style.display = 'none';
+      }
+      document.getElementById('wb-shell').classList.remove('assistant-collapsed');
+    }
+
+    function wbUndockAssistant() {
+      const anchor = document.getElementById('fc-panel-anchor');
+      const panel = document.getElementById('fc-panel');
+      if (anchor && panel && panel.classList.contains('docked')) {
+        anchor.parentNode.insertBefore(panel, anchor.nextSibling);
+        panel.classList.remove('docked', 'open');
+        document.getElementById('fc-bubble').style.display = 'flex';
+      }
+    }
+
+    function toggleAssistantDock() {
+      document.getElementById('wb-shell').classList.toggle('assistant-collapsed');
     }
 
     function wbFindNode(id) {

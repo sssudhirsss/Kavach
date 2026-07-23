@@ -2217,7 +2217,6 @@
       diagram:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2.5" width="5.5" height="4.5" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1.2"/><rect x="9" y="9" width="5.5" height="4.5" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1.2"/><path d="M7 4.7h2.3M9.3 4.7v6.6M4.2 7v4" fill="none" stroke="#4285F4" stroke-width="1"/></svg>',
       element:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2"/></svg>',
       checklist:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="#5B6470" stroke-width="1.3"/><polyline points="4.5 8 7 10.5 11.5 5.5" fill="none" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      record:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#5B6470" stroke-width="1.3"/><line x1="5.1" y1="4.8" x2="10.9" y2="4.8" stroke="#5B6470" stroke-width="1"/><line x1="5.1" y1="7.2" x2="10.9" y2="7.2" stroke="#5B6470" stroke-width="1"/><line x1="5.1" y1="9.6" x2="8.8" y2="9.6" stroke="#5B6470" stroke-width="1"/><circle cx="11.3" cy="11.7" r="2.4" fill="none" stroke="#16A34A" stroke-width="1"/><polyline points="10.3 11.7 11 12.4 12.3 11" fill="none" stroke="#16A34A" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       link:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M6.5 9.5L9.5 6.5" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M7.8 4.2L9 3a2.2 2.2 0 0 1 3.1 3.1L10.9 7.3" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M8.2 11.8L7 13a2.2 2.2 0 0 1-3.1-3.1L5.1 8.7" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
       failuremodecollection: wbCollectionGlyph(WB_SHAPE.failuremode),
       malfunctioncollection: wbCollectionGlyph(WB_SHAPE.malfunction),
@@ -2310,7 +2309,7 @@
       requirement_func: 'FSR', requirement_tech: 'TSR', requirement_hw: 'HSR',
       requirement_sw: 'SSR', requirement_decomposed: 'DSR',
       worksheet: 'WS', element: 'EL', hardwarepart: 'HW', softwareunit: 'SWU',
-      component: 'COMP', controller: 'CTRL', record: 'REC'
+      component: 'COMP', controller: 'CTRL'
     };
 
     // Seed definitions — the Model Browser skeleton for a brand-new Functional
@@ -2328,21 +2327,54 @@
       const f = (tempId, parentTempId, label) => ({ tempId, parentTempId, kind: 'folder', label, props: { folderKind: tempId } });
 
       return [
-        f('item-def', null, 'Item Definition'),
-        f('fn-vehicle', 'item-def', 'Vehicle Level Functions'),
+        // ---------- Part 3: Concept Phase ----------
+        f('concept', null, 'Concept Phase (Part 3)'),
+        f('item-def', 'concept', 'Item Definition'),
+        f('hara', 'concept', 'Hazard Analysis and Risk Assessment'),
+        f('func-safety-concept', 'concept', 'Functional Safety Concept'),
+        f('concept-supporting', 'concept', 'Supporting Processes'),
 
-        f('hara', null, 'Hazard Analysis and Risk Assessment'),
+        // ---------- Part 4: System Level Development ----------
+        f('system-level', null, 'System Level Development (Part 4)'),
+        f('tech-safety-concept', 'system-level', 'Technical Safety Concept'),
+        f('system-design', 'system-level', 'System Design'),
+        f('system-integration', 'system-level', 'System Integration and Testing'),
+        f('safety-validation', 'system-level', 'Safety Validation'),
+        f('system-supporting', 'system-level', 'Supporting Processes'),
 
-        f('goals', null, 'Safety Goals and Requirements'),
+        // ---------- Part 5: Hardware Level Development ----------
+        f('hw-level', null, 'Hardware Level Development (Part 5)'),
+        f('hw-safety-req', 'hw-level', 'Hardware Safety Requirements'),
+        f('hw-design', 'hw-level', 'Hardware Design'),
+        f('hw-arch-metrics', 'hw-level', 'Hardware Architectural Metrics'),
+        f('hw-pmhf', 'hw-level', 'Evaluation of Safety Goal Violations (PMHF)'),
+        f('hw-integration', 'hw-level', 'Hardware Integration and Verification'),
+        f('hw-supporting', 'hw-level', 'Supporting Processes'),
 
-        f('sysdesign', null, 'System Design'),
-        f('hw-models', 'sysdesign', 'Hardware Models'),
-        f('sw-models', 'sysdesign', 'Software Models'),
+        // ---------- Part 6: Software Level Development ----------
+        f('sw-level', null, 'Software Level Development (Part 6)'),
+        f('sw-safety-req', 'sw-level', 'Software Safety Requirements'),
+        f('sw-arch-design', 'sw-level', 'Software Architectural Design'),
+        f('sw-unit-design', 'sw-level', 'Software Unit Design and Implementation'),
+        f('sw-unit-verif', 'sw-level', 'Software Unit Verification'),
+        f('sw-integration-verif', 'sw-level', 'Software Integration and Verification'),
+        f('sw-supporting', 'sw-level', 'Supporting Processes'),
 
-        f('safety-analysis', null, 'Safety Analysis'),
-        f('fmea', 'safety-analysis', 'FMEA Worksheets'),
-        f('fta', 'safety-analysis', 'FTA Models'),
-        f('dc', 'safety-analysis', 'Diagnostic Coverage'),
+        // ---------- Part 7: Production and Operation ----------
+        f('prod-ops', null, 'Production and Operation (Part 7)'),
+        f('production', 'prod-ops', 'Production'),
+        f('operation', 'prod-ops', 'Operation, Service and Decommissioning'),
+        f('prodops-supporting', 'prod-ops', 'Supporting Processes'),
+
+        // ---------- Part 9: ASIL-Oriented and Safety-Oriented Analyses ----------
+        f('asil-analyses', null, 'ASIL- and Safety-Oriented Analyses (Part 9)'),
+        f('asil-decomp', 'asil-analyses', 'ASIL Decomposition'),
+        f('dfa', 'asil-analyses', 'Dependent Failure Analysis'),
+        f('safety-analyses', 'asil-analyses', 'Safety Analyses'),
+        f('fmea', 'safety-analyses', 'FMEA Worksheets'),
+        f('fta', 'safety-analyses', 'FTA Models'),
+        f('dc', 'safety-analyses', 'Diagnostic Coverage'),
+        f('asil-supporting', 'asil-analyses', 'Supporting Processes'),
       ];
     }
 
@@ -2620,7 +2652,7 @@
         requirement_tech: 'Technical Safety Requirement', requirement_hw: 'Hardware Safety Requirement',
         requirement_sw: 'Software Safety Requirement', requirement_decomposed: 'Decomposed Safety Requirement',
         component: 'Component', controller: 'Controller', hardwarepart: 'Hardware Part', softwareunit: 'Software Unit',
-        worksheet: 'Worksheet', element: 'Element', checklist: 'Checklist', link: 'External Link / Document', record: 'Record / Report'
+        worksheet: 'Worksheet', element: 'Element', checklist: 'Checklist', link: 'External Link / Document'
       };
       const folderLikeDesc = 'This folder groups related work products. Right-click it to create a new one, or expand it in the Model Browser on the left.';
       const descByKind = {
@@ -2731,21 +2763,32 @@
 
     // ---------- Context menu (New / Derive / Open With / Related Elements) ----------
 
-    // Part 8 (Supporting Processes) is cross-cutting per the standard — these
-    // apply the same way regardless of which phase's "Supporting Processes"
-    // folder they're created in, so one shared list covers all of them.
     const WB_NEW_OPTIONS = {
-      'item-def':        [['item', 'Item Description'], ['diagram', 'Item Architecture'], ['function', 'Function']],
-      'fn-vehicle':      [['function', 'Function']],
-      'hara':            [['malfunction', 'Malfunction'], ['hazard', 'Hazard'], ['hazardousevent', 'Hazardous Event']],
-      'goals':           [['goal', 'Safety Goal'], ['requirement_func', 'Functional Safety Requirement']],
-      'sysdesign':       [['diagram', 'System Diagram'], ['component', 'Component'], ['controller', 'Controller']],
-      'hw-models':       [['hardwarepart', 'Hardware Part']],
-      'sw-models':       [['softwareunit', 'Software Unit']],
-      'safety-analysis': [['worksheet', 'FMEA Worksheet'], ['worksheet', 'FTA Model'], ['worksheet', 'Diagnostic Coverage Worksheet']],
-      'fmea':            [['worksheet', 'FMEA Worksheet']],
-      'fta':             [['worksheet', 'FTA Model']],
-      'dc':              [['worksheet', 'Diagnostic Coverage Worksheet']],
+      // Part 3 — Concept Phase
+      'item-def':            [['item', 'Item Description'], ['diagram', 'Item Architecture'], ['function', 'Function']],
+      'hara':                [['malfunction', 'Malfunction'], ['hazard', 'Hazard'], ['hazardousevent', 'Hazardous Event'], ['goal', 'Safety Goal']],
+      'func-safety-concept': [['requirement_func', 'Functional Safety Requirement']],
+
+      // Part 4 — System Level Development
+      'tech-safety-concept': [['requirement_tech', 'Technical Safety Requirement']],
+      'system-design':       [['diagram', 'System Diagram'], ['component', 'Component'], ['controller', 'Controller']],
+
+      // Part 5 — Hardware Level Development
+      'hw-safety-req':       [['requirement_hw', 'Hardware Safety Requirement']],
+      'hw-design':           [['hardwarepart', 'Hardware Part'], ['diagram', 'Hardware Diagram']],
+      'hw-arch-metrics':     [['worksheet', 'Diagnostic Coverage Worksheet']],
+
+      // Part 6 — Software Level Development
+      'sw-safety-req':       [['requirement_sw', 'Software Safety Requirement']],
+      'sw-arch-design':      [['softwareunit', 'Software Unit'], ['diagram', 'Software Architecture Diagram']],
+      'sw-unit-design':      [['softwareunit', 'Software Unit']],
+
+      // Part 9 — ASIL- and Safety-Oriented Analyses
+      'asil-decomp':         [['requirement_decomposed', 'Decomposed Safety Requirement']],
+      'dfa':                 [['worksheet', 'Dependent Failure Analysis Worksheet']],
+      'fmea':                [['worksheet', 'FMEA Worksheet']],
+      'fta':                 [['worksheet', 'FTA Model']],
+      'dc':                  [['worksheet', 'Diagnostic Coverage Worksheet']],
     };
 
     // Available in EVERY folder regardless of type — matches the "marked"

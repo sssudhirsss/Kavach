@@ -153,6 +153,8 @@
     border-radius: 16px;
     padding: 20px 18px;
     position: relative;
+    display: flex;
+    flex-direction: column;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
   .disc-card:hover { box-shadow: 0 10px 24px rgba(15,23,42,0.08); transform: translateY(-2px); }
@@ -176,7 +178,7 @@
   .disc-icons {
     display: flex;
     gap: 8px;
-    margin-top: 14px;
+    margin-top: auto;
     padding-top: 12px;
     border-top: 1px solid var(--line);
   }
@@ -903,6 +905,8 @@
   .wb-ctx-item:hover { background: var(--fu-bg); color: var(--fu-ink); }
   .wb-ctx-item.disabled { color: var(--text-dim); cursor: default; }
   .wb-ctx-item.disabled:hover { background: none; color: var(--text-dim); }
+  .wb-ctx-item.danger { color: #DC2626; }
+  .wb-ctx-item.danger:hover { background: #FEE2E2; color: #B91C1C; }
   .wb-ctx-sep { height: 1px; background: var(--line); margin: 4px 6px; }
   .wb-ctx-arrow { font-size: 10px; color: var(--text-dim); }
   .wb-submenu {
@@ -2558,7 +2562,9 @@
         menu.innerHTML =
           '<div class="wb-ctx-item" onclick="wbOpenProjectFromMenu(\'' + id + '\')">Open Project</div>' +
           '<div class="wb-ctx-sep"></div>' +
-          '<div class="wb-ctx-item" onclick="wbToggleProjectStatus(\'' + id + '\')">' + (isClosed ? 'Reopen Project' : 'Close Project') + '</div>';
+          '<div class="wb-ctx-item" onclick="wbToggleProjectStatus(\'' + id + '\')">' + (isClosed ? 'Reopen Project' : 'Close Project') + '</div>' +
+          '<div class="wb-ctx-sep"></div>' +
+          '<div class="wb-ctx-item danger" onclick="wbDeleteProject(\'' + id + '\')">Delete Project&hellip;</div>';
         wbShowCtxMenuAt(ev);
         return;
       }
@@ -2636,6 +2642,44 @@
       proj.status = newStatus;
       wbRenderTree();
       fcShowToast(newStatus === 'closed' ? 'Project closed' : 'Project reopened');
+    }
+
+    // Permanently deletes a project and everything in it (the database cascades
+    // the delete down to all of its elements automatically). Unlike Close, this
+    // can't be undone, so it asks twice — once with the project's name typed
+    // back, since a plain OK/Cancel is too easy to click through by habit.
+    async function wbDeleteProject(id) {
+      wbCloseCtx();
+      const proj = wbAllProjects.find(p => p.id === id);
+      if (!proj) return;
+
+      const typed = prompt(
+        'This permanently deletes "' + proj.name + '" and everything in it \u2014 all folders, items, and analysis. This can\u2019t be undone.\n\n' +
+        'Type the project name to confirm:'
+      );
+      if (typed === null) return;
+      if (typed.trim() !== proj.name) {
+        fcShowToast('Name didn\u2019t match \u2014 project not deleted');
+        return;
+      }
+
+      if (!sbReady()) return;
+      const { error } = await sb.from('projects').delete().eq('id', id);
+      if (error) { console.error(error); fcShowToast('Could not delete project'); return; }
+
+      wbAllProjects = wbAllProjects.filter(p => p.id !== id);
+      fcShowToast('Deleted "' + proj.name + '"');
+
+      if (wbProject && wbProject.id === id) {
+        // The project we were sitting in no longer exists — nothing sensible
+        // left to show in the editor, so head back to the home page.
+        backToHome();
+        return;
+      }
+
+      wbExpandedIds.delete(id);
+      if (wbSelectedId === id) wbSelectNode(null);
+      wbRenderTree();
     }
 
     document.addEventListener('click', function (e) {

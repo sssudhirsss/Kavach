@@ -2217,6 +2217,7 @@
       diagram:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2.5" width="5.5" height="4.5" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1.2"/><rect x="9" y="9" width="5.5" height="4.5" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1.2"/><path d="M7 4.7h2.3M9.3 4.7v6.6M4.2 7v4" fill="none" stroke="#4285F4" stroke-width="1"/></svg>',
       element:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2"/></svg>',
       checklist:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="#5B6470" stroke-width="1.3"/><polyline points="4.5 8 7 10.5 11.5 5.5" fill="none" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      record:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#5B6470" stroke-width="1.3"/><line x1="5.1" y1="4.8" x2="10.9" y2="4.8" stroke="#5B6470" stroke-width="1"/><line x1="5.1" y1="7.2" x2="10.9" y2="7.2" stroke="#5B6470" stroke-width="1"/><line x1="5.1" y1="9.6" x2="8.8" y2="9.6" stroke="#5B6470" stroke-width="1"/><circle cx="11.3" cy="11.7" r="2.4" fill="none" stroke="#16A34A" stroke-width="1"/><polyline points="10.3 11.7 11 12.4 12.3 11" fill="none" stroke="#16A34A" stroke-width="0.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       link:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M6.5 9.5L9.5 6.5" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M7.8 4.2L9 3a2.2 2.2 0 0 1 3.1 3.1L10.9 7.3" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M8.2 11.8L7 13a2.2 2.2 0 0 1-3.1-3.1L5.1 8.7" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
       failuremodecollection: wbCollectionGlyph(WB_SHAPE.failuremode),
       malfunctioncollection: wbCollectionGlyph(WB_SHAPE.malfunction),
@@ -2309,7 +2310,7 @@
       requirement_func: 'FSR', requirement_tech: 'TSR', requirement_hw: 'HSR',
       requirement_sw: 'SSR', requirement_decomposed: 'DSR',
       worksheet: 'WS', element: 'EL', hardwarepart: 'HW', softwareunit: 'SWU',
-      component: 'COMP', controller: 'CTRL'
+      component: 'COMP', controller: 'CTRL', record: 'REC'
     };
 
     // Seed definitions — the Model Browser skeleton for a brand-new Functional
@@ -2327,6 +2328,12 @@
       const f = (tempId, parentTempId, label) => ({ tempId, parentTempId, kind: 'folder', label, props: { folderKind: tempId } });
 
       return [
+        // ---------- Part 2: Management of Functional Safety ----------
+        f('mgmt', null, 'Management of Functional Safety (Part 2)'),
+        f('overall-safety-mgmt', 'mgmt', 'Overall Safety Management'),
+        f('item-dev-safety-mgmt', 'mgmt', 'Safety Management During Item Development'),
+        f('prodops-safety-mgmt', 'mgmt', 'Safety Management Regarding Production, Operation, Service and Decommissioning'),
+
         // ---------- Part 3: Concept Phase ----------
         f('concept', null, 'Concept Phase (Part 3)'),
         f('item-def', 'concept', 'Item Definition'),
@@ -2358,10 +2365,13 @@
         f('sw-unit-design', 'sw-level', 'Software Unit Design and Implementation'),
         f('sw-unit-verif', 'sw-level', 'Software Unit Verification'),
         f('sw-integration-verif', 'sw-level', 'Software Integration and Verification'),
+        f('sw-embedded-testing', 'sw-level', 'Testing of the Embedded Software'),
+        f('sw-configuration', 'sw-level', 'Software Configuration'),
         f('sw-supporting', 'sw-level', 'Supporting Processes'),
 
         // ---------- Part 7: Production and Operation ----------
         f('prod-ops', null, 'Production and Operation (Part 7)'),
+        f('prodops-planning', 'prod-ops', 'Planning for Production, Operation, Service and Decommissioning'),
         f('production', 'prod-ops', 'Production'),
         f('operation', 'prod-ops', 'Operation, Service and Decommissioning'),
         f('prodops-supporting', 'prod-ops', 'Supporting Processes'),
@@ -2652,7 +2662,7 @@
         requirement_tech: 'Technical Safety Requirement', requirement_hw: 'Hardware Safety Requirement',
         requirement_sw: 'Software Safety Requirement', requirement_decomposed: 'Decomposed Safety Requirement',
         component: 'Component', controller: 'Controller', hardwarepart: 'Hardware Part', softwareunit: 'Software Unit',
-        worksheet: 'Worksheet', element: 'Element', checklist: 'Checklist', link: 'External Link / Document'
+        worksheet: 'Worksheet', element: 'Element', checklist: 'Checklist', link: 'External Link / Document', record: 'Record / Report'
       };
       const folderLikeDesc = 'This folder groups related work products. Right-click it to create a new one, or expand it in the Model Browser on the left.';
       const descByKind = {
@@ -2763,7 +2773,33 @@
 
     // ---------- Context menu (New / Derive / Open With / Related Elements) ----------
 
+    // Part 8 (Supporting Processes) is cross-cutting per the standard — these
+    // apply the same way regardless of which phase's "Supporting Processes"
+    // folder they're created in, so one shared list covers all of them.
+    const PART8_SUPPORTING_OPTIONS = [
+      ['record', 'Development Interface Agreement'],
+      ['record', 'Supplier Selection Report'],
+      ['record', 'Configuration Management Plan'],
+      ['record', 'Change Request'],
+      ['record', 'Change Report'],
+      ['record', 'Document Management Plan'],
+      ['record', 'Software Tool Qualification Report'],
+      ['record', 'Proven-in-Use Analysis Report'],
+    ];
+    // Clause 8.13 (Qualification of hardware components) is hardware-specific,
+    // so it's only offered inside Hardware Level Development's own folder.
+    const HW_QUALIFICATION_OPTIONS = [
+      ['record', 'Hardware Element Evaluation Plan'],
+      ['record', 'Hardware Element Test Plan'],
+      ['record', 'Hardware Element Evaluation Report'],
+    ];
+
     const WB_NEW_OPTIONS = {
+      // Part 2 — Management of Functional Safety
+      'overall-safety-mgmt':   [['record', 'Safety Culture Evidence'], ['record', 'Competence Management Evidence'], ['record', 'Quality Management Evidence'], ['record', 'Safety Anomaly Report']],
+      'item-dev-safety-mgmt':  [['record', 'Impact Analysis (Item Level)'], ['record', 'Impact Analysis (Element Level)'], ['record', 'Safety Plan'], ['record', 'Safety Case'], ['record', 'Confirmation Measure Report'], ['record', 'Release for Production Report']],
+      'prodops-safety-mgmt':   [['record', 'Safety Management Evidence']],
+
       // Part 3 — Concept Phase
       'item-def':            [['item', 'Item Description'], ['diagram', 'Item Architecture'], ['function', 'Function']],
       'hara':                [['malfunction', 'Malfunction'], ['hazard', 'Hazard'], ['hazardousevent', 'Hazardous Event'], ['goal', 'Safety Goal']],
@@ -2782,6 +2818,11 @@
       'sw-safety-req':       [['requirement_sw', 'Software Safety Requirement']],
       'sw-arch-design':      [['softwareunit', 'Software Unit'], ['diagram', 'Software Architecture Diagram']],
       'sw-unit-design':      [['softwareunit', 'Software Unit']],
+      'sw-embedded-testing': [['record', 'Embedded Software Verification Specification'], ['record', 'Embedded Software Verification Report']],
+      'sw-configuration':    [['record', 'Configuration Data Specification'], ['record', 'Calibration Data Specification']],
+
+      // Part 7 — Production and Operation
+      'prodops-planning':    [['record', 'Safety-Related Production Plan Content'], ['record', 'Safety-Related Service Plan Content'], ['record', 'Producibility Requirements Specification'], ['record', 'Operation/Service/Decommissioning Requirements Specification']],
 
       // Part 9 — ASIL- and Safety-Oriented Analyses
       'asil-decomp':         [['requirement_decomposed', 'Decomposed Safety Requirement']],
@@ -2789,6 +2830,14 @@
       'fmea':                [['worksheet', 'FMEA Worksheet']],
       'fta':                 [['worksheet', 'FTA Model']],
       'dc':                  [['worksheet', 'Diagnostic Coverage Worksheet']],
+
+      // Part 8 — Supporting Processes sub-folder inside every phase
+      'concept-supporting':    PART8_SUPPORTING_OPTIONS,
+      'system-supporting':     PART8_SUPPORTING_OPTIONS,
+      'hw-supporting':         PART8_SUPPORTING_OPTIONS.concat(HW_QUALIFICATION_OPTIONS),
+      'sw-supporting':         PART8_SUPPORTING_OPTIONS,
+      'prodops-supporting':    PART8_SUPPORTING_OPTIONS,
+      'asil-supporting':       PART8_SUPPORTING_OPTIONS,
     };
 
     // Available in EVERY folder regardless of type — matches the "marked"

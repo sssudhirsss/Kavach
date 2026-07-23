@@ -152,7 +152,6 @@
     background: var(--panel);
     border-radius: 16px;
     padding: 20px 18px;
-    cursor: pointer;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
   .disc-card:hover { box-shadow: 0 10px 24px rgba(15,23,42,0.08); transform: translateY(-2px); }
@@ -160,6 +159,26 @@
   .disc-name { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
   .disc-standard { font-size: 10px; color: var(--text-dim); margin-bottom: 10px; }
   .disc-desc { font-size: 12px; line-height: 1.5; color: var(--text); }
+
+  .disc-icons {
+    display: flex;
+    gap: 8px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+  .disc-icon-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-dim);
+    padding: 5px;
+    border-radius: 7px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .disc-icon-btn:hover { color: var(--ink); background: rgba(15,23,42,0.06); }
 
   .info-grid {
     display: grid;
@@ -916,35 +935,87 @@
     </div>
 
     <div class="disc-grid">
-      <div class="disc-card disc-fu" onclick="openDisciplineMenu('fu')">
+      <div class="disc-card disc-fu">
         <div class="disc-letter c1">Fu</div>
         <div class="disc-name">Functional Safety</div>
         <div class="disc-standard mono">ISO 26262</div>
         <div class="disc-desc">Full lifecycle, Parts 1&ndash;12 &mdash; vocabulary through concept, system, hardware, software, production, and supporting processes.</div>
+        <div class="disc-icons">
+          <button class="disc-icon-btn" title="Start new project" onclick="event.stopPropagation(); showNewProjectNameStep(['fu'], false);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><polyline points="10 8 5 12 10 16"/><line x1="5" y1="12" x2="16" y2="12"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Open existing project" onclick="event.stopPropagation(); showProjectListStep(['fu']);">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3v-2h3a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3z" fill="currentColor"/><polygon points="10,7 10,10 17,10 17,14 10,14 10,17 4,12" fill="currentColor"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Learn about Functional Safety" onclick="event.stopPropagation(); showTopicModal('fu');">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5c2.2-1 5-1 7 0.3v13.2c-2-1.3-4.8-1.3-7-0.3z"/><path d="M22 5c-2.2-1-5-1-7 0.3v13.2c2-1.3 4.8-1.3 7-0.3z"/><line x1="13.5" y1="8.5" x2="18.5" y2="8.5"/><line x1="13.5" y1="11" x2="18.5" y2="11"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="disc-card disc-c" onclick="openDisciplineMenu('c')">
+      <div class="disc-card disc-c">
         <div class="disc-letter c2">C</div>
         <div class="disc-name">Cybersecurity</div>
         <div class="disc-standard mono">ISO/SAE 21434 &amp; UN ECE Regs</div>
         <div class="disc-desc">Full lifecycle, Clauses 4&ndash;15 &mdash; org management through concept, development, production, operations, and TARA.</div>
+        <div class="disc-icons">
+          <button class="disc-icon-btn" title="Start new project" onclick="event.stopPropagation(); showNewProjectNameStep(['c'], false);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><polyline points="10 8 5 12 10 16"/><line x1="5" y1="12" x2="16" y2="12"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Open existing project" onclick="event.stopPropagation(); showProjectListStep(['c']);">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3v-2h3a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3z" fill="currentColor"/><polygon points="10,7 10,10 17,10 17,14 10,14 10,17 4,12" fill="currentColor"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Learn about Cybersecurity" onclick="event.stopPropagation(); showTopicModal('c');">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5c2.2-1 5-1 7 0.3v13.2c-2-1.3-4.8-1.3-7-0.3z"/><path d="M22 5c-2.2-1-5-1-7 0.3v13.2c2-1.3 4.8-1.3 7-0.3z"/><line x1="13.5" y1="8.5" x2="18.5" y2="8.5"/><line x1="13.5" y1="11" x2="18.5" y2="11"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="disc-card disc-s" onclick="openDisciplineMenu('s')">
+      <div class="disc-card disc-s">
         <div class="disc-letter c3">S</div>
         <div class="disc-name">SOTIF</div>
         <div class="disc-standard mono">ISO 21448</div>
         <div class="disc-desc">Full lifecycle, Clauses 4&ndash;13 &mdash; specification through triggering conditions, verification, and field monitoring.</div>
+        <div class="disc-icons">
+          <button class="disc-icon-btn" title="Start new project" onclick="event.stopPropagation(); showNewProjectNameStep(['s'], false);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><polyline points="10 8 5 12 10 16"/><line x1="5" y1="12" x2="16" y2="12"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Open existing project" onclick="event.stopPropagation(); showProjectListStep(['s']);">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3v-2h3a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3z" fill="currentColor"/><polygon points="10,7 10,10 17,10 17,14 10,14 10,17 4,12" fill="currentColor"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Learn about SOTIF" onclick="event.stopPropagation(); showTopicModal('s');">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5c2.2-1 5-1 7 0.3v13.2c-2-1.3-4.8-1.3-7-0.3z"/><path d="M22 5c-2.2-1-5-1-7 0.3v13.2c2-1.3 4.8-1.3 7-0.3z"/><line x1="13.5" y1="8.5" x2="18.5" y2="8.5"/><line x1="13.5" y1="11" x2="18.5" y2="11"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="disc-card disc-ai" onclick="openDisciplineMenu('ai')">
+      <div class="disc-card disc-ai">
         <div class="disc-letter c4">AI</div>
         <div class="disc-name">AI Safety</div>
         <div class="disc-standard mono">ISO/PAS 8800</div>
         <div class="disc-desc">Full lifecycle, Clauses 5&ndash;15 &mdash; AI safety management through data, V&amp;V, safety analysis, and operation.</div>
+        <div class="disc-icons">
+          <button class="disc-icon-btn" title="Start new project" onclick="event.stopPropagation(); showNewProjectNameStep(['ai'], false);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><polyline points="10 8 5 12 10 16"/><line x1="5" y1="12" x2="16" y2="12"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Open existing project" onclick="event.stopPropagation(); showProjectListStep(['ai']);">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3v-2h3a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3z" fill="currentColor"/><polygon points="10,7 10,10 17,10 17,14 10,14 10,17 4,12" fill="currentColor"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Learn about AI Safety" onclick="event.stopPropagation(); showTopicModal('ai');">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 5c2.2-1 5-1 7 0.3v13.2c-2-1.3-4.8-1.3-7-0.3z"/><path d="M22 5c-2.2-1-5-1-7 0.3v13.2c2-1.3 4.8-1.3 7-0.3z"/><line x1="13.5" y1="8.5" x2="18.5" y2="8.5"/><line x1="13.5" y1="11" x2="18.5" y2="11"/></svg>
+          </button>
+        </div>
       </div>
-      <div class="disc-card disc-fucsai" onclick="openCombinedMenu()">
+      <div class="disc-card disc-fucsai">
         <div class="disc-letter"><span class="c1">Fu</span><span class="c2">C</span><span class="c3">S</span><span class="c4">AI</span></div>
         <div class="disc-name">Combined Project</div>
         <div class="disc-standard mono">All 4 disciplines</div>
         <div class="disc-desc">One unified project spanning Functional Safety, Cybersecurity, SOTIF, and AI Safety &mdash; for programs that need a single, shared safety case.</div>
+        <div class="disc-icons">
+          <button class="disc-icon-btn" title="Start new project" onclick="event.stopPropagation(); showNewProjectNameStep([], false);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3"/><polyline points="10 8 5 12 10 16"/><line x1="5" y1="12" x2="16" y2="12"/></svg>
+          </button>
+          <button class="disc-icon-btn" title="Open existing project" onclick="event.stopPropagation(); showProjectListStep([]);">
+            <svg width="18" height="18" viewBox="0 0 24 24"><path d="M14 3h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-3v-2h3a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-3z" fill="currentColor"/><polygon points="10,7 10,10 17,10 17,14 10,14 10,17 4,12" fill="currentColor"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 

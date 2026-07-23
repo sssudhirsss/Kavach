@@ -2329,9 +2329,10 @@
       await wbLoadElements();
 
       // Expanded by default: the root, the branch this project belongs to, and
-      // the project itself — every other branch stays collapsed until asked for.
+      // the project itself — every folder inside it starts collapsed until
+      // the person clicks to open it.
       const ownBranch = wbBranchForProject(project);
-      wbExpandedIds = new Set(['root', project.id, ...wbElements.filter(e => e.kind === 'folder' && e.parent_id === null).map(e => e.id)]);
+      wbExpandedIds = new Set(['root', project.id]);
       if (ownBranch) wbExpandedIds.add(ownBranch.id);
 
       wbRenderTree();
@@ -2351,7 +2352,6 @@
       document.getElementById('wb-tree').innerHTML = '<div class="wb-empty-note" style="padding:10px;">Loading project&hellip;</div>';
       await wbLoadElements();
       wbExpandedIds.add(project.id);
-      wbElements.filter(e => e.kind === 'folder' && e.parent_id === null).forEach(e => wbExpandedIds.add(e.id));
       wbRenderTree();
     }
 

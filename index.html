@@ -824,7 +824,7 @@
   .wb-body { display: flex; flex: 1; min-height: 0; }
 
   .wb-sidebar {
-    width: 268px;
+    width: var(--wb-sidebar-width, 268px);
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
@@ -832,6 +832,27 @@
     background: var(--panel);
     min-height: 0;
   }
+  .wb-sidebar-resizer {
+    width: 5px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    background: transparent;
+    position: relative;
+  }
+  .wb-sidebar-resizer::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0; left: 2px;
+    width: 1px;
+    background: var(--line);
+  }
+  .wb-sidebar-resizer:hover::after,
+  .wb-sidebar-resizer.dragging::after {
+    left: 0; width: 5px;
+    background: var(--accent);
+    opacity: 0.35;
+  }
+  body.wb-resizing-sidebar { cursor: col-resize; user-select: none; }
   .wb-sidebar-toolbar {
     display: flex;
     align-items: center;
@@ -1274,6 +1295,7 @@
         </div>
         <div class="wb-tree-scroll" id="wb-tree" oncontextmenu="return false;"></div>
       </div>
+      <div class="wb-sidebar-resizer" id="wb-sidebar-resizer"></div>
       <div class="wb-main">
         <div class="wb-editor" id="wb-editor"></div>
         <div class="wb-panelstack">
@@ -2613,6 +2635,7 @@
       wbSwitchTab('props');
       document.addEventListener('keydown', wbKeyHandler);
       wbDockAssistant();
+      wbInitSidebarResize();
     }
 
     // Switches which project's contents are loaded into the editor/tree while
@@ -2652,6 +2675,62 @@
         panel.classList.remove('docked', 'open');
         document.getElementById('fc-bubble').style.display = 'flex';
       }
+    }
+
+    // ---------- Model Browser sidebar: drag-to-resize ----------
+    // The sidebar width lives in a CSS variable on the root element rather than
+    // a fixed class value, so dragging the handle just updates that variable.
+    // Kept in memory only (no persistence) — it resets to the default each
+    // time the workspace is opened, same as everything else in this session.
+    const WB_SIDEBAR_MIN = 180;
+    const WB_SIDEBAR_MAX = 560;
+    const WB_SIDEBAR_DEFAULT = 268;
+
+    function wbInitSidebarResize() {
+      const resizer = document.getElementById('wb-sidebar-resizer');
+      if (!resizer || resizer.dataset.wired) return;
+      resizer.dataset.wired = '1';
+
+      let dragging = false;
+
+      const onMove = (e) => {
+        if (!dragging) return;
+        const shell = document.getElementById('wb-shell');
+        const shellRect = shell.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let newWidth = clientX - shellRect.left;
+        newWidth = Math.max(WB_SIDEBAR_MIN, Math.min(WB_SIDEBAR_MAX, newWidth));
+        document.documentElement.style.setProperty('--wb-sidebar-width', newWidth + 'px');
+      };
+
+      const onUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        resizer.classList.remove('dragging');
+        document.body.classList.remove('wb-resizing-sidebar');
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        document.removeEventListener('touchmove', onMove);
+        document.removeEventListener('touchend', onUp);
+      };
+
+      const onDown = (e) => {
+        dragging = true;
+        resizer.classList.add('dragging');
+        document.body.classList.add('wb-resizing-sidebar');
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+        document.addEventListener('touchmove', onMove);
+        document.addEventListener('touchend', onUp);
+        e.preventDefault();
+      };
+
+      resizer.addEventListener('mousedown', onDown);
+      resizer.addEventListener('touchstart', onDown);
+      // Double-click the handle to reset to the default width.
+      resizer.addEventListener('dblclick', () => {
+        document.documentElement.style.setProperty('--wb-sidebar-width', WB_SIDEBAR_DEFAULT + 'px');
+      });
     }
 
     function toggleAssistantDock() {

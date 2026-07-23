@@ -2187,6 +2187,8 @@
       worksheet:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2" width="13" height="12" rx="1.2" fill="none" stroke="#B08200" stroke-width="1.3"/><line x1="1.5" y1="6" x2="14.5" y2="6" stroke="#B08200" stroke-width="1"/><line x1="6" y1="6" x2="6" y2="14" stroke="#B08200" stroke-width="1"/><line x1="10.3" y1="6" x2="10.3" y2="14" stroke="#B08200" stroke-width="1"/></svg>',
       diagram:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2.5" width="5.5" height="4.5" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1.2"/><rect x="9" y="9" width="5.5" height="4.5" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1.2"/><path d="M7 4.7h2.3M9.3 4.7v6.6M4.2 7v4" fill="none" stroke="#4285F4" stroke-width="1"/></svg>',
       element:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2"/></svg>',
+      checklist:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="#5B6470" stroke-width="1.3"/><polyline points="4.5 8 7 10.5 11.5 5.5" fill="none" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      link:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M6.5 9.5L9.5 6.5" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M7.8 4.2L9 3a2.2 2.2 0 0 1 3.1 3.1L10.9 7.3" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M8.2 11.8L7 13a2.2 2.2 0 0 1-3.1-3.1L5.1 8.7" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
     };
 
     // Kinds that behave like folders (expandable, get an "Empty" note when childless).
@@ -2211,30 +2213,30 @@
     // tempId/parentTempId are only used to wire up parent_id during the one-time seed insert.
     function wbSeedDefinitions() {
       return [
-        { tempId: 'item-def', parentTempId: null, kind: 'folder', label: 'Item Definition' },
+        { tempId: 'item-def', parentTempId: null, kind: 'folder', label: 'Item Definition', props: { folderKind: 'item-def' } },
         { tempId: 'item-desc', parentTempId: 'item-def', kind: 'item', label: 'Item Description', props: { Status: 'Draft' } },
         { tempId: 'item-arch', parentTempId: 'item-def', kind: 'diagram', label: 'Item Architecture', props: { Editor: 'Diagram Editor' } },
-        { tempId: 'fn-vehicle', parentTempId: 'item-def', kind: 'folder', label: 'Vehicle Level Functions' },
+        { tempId: 'fn-vehicle', parentTempId: 'item-def', kind: 'folder', label: 'Vehicle Level Functions', props: { folderKind: 'fn-vehicle' } },
         { tempId: 'f-001', parentTempId: 'fn-vehicle', kind: 'function', label: 'Lock Vehicle', props: { Type: 'Vehicle Level Function' } },
         { tempId: 'f-002', parentTempId: 'fn-vehicle', kind: 'function', label: 'Unlock Vehicle', props: { Type: 'Vehicle Level Function' } },
 
-        { tempId: 'hara', parentTempId: null, kind: 'folder', label: 'Hazard Analysis and Risk Assessment' },
+        { tempId: 'hara', parentTempId: null, kind: 'folder', label: 'Hazard Analysis and Risk Assessment', props: { folderKind: 'hara' } },
         { tempId: 'mal-lock', parentTempId: 'hara', kind: 'malfunction', label: 'Unintended Lock', props: {} },
         { tempId: 'mal-unlock', parentTempId: 'hara', kind: 'malfunction', label: 'Unintended Unlock', props: {} },
         { tempId: 'haz-001', parentTempId: 'hara', kind: 'hazard', label: 'Loss of Steering Control', props: { ASIL: 'C' } },
 
-        { tempId: 'goals', parentTempId: null, kind: 'folder', label: 'Safety Goals and Requirements' },
+        { tempId: 'goals', parentTempId: null, kind: 'folder', label: 'Safety Goals and Requirements', props: { folderKind: 'goals' } },
         { tempId: 'sg-001', parentTempId: 'goals', kind: 'goal', label: 'Prevent Unintended Lock', props: { ASIL: 'C' } },
         { tempId: 'fsr-001', parentTempId: 'goals', kind: 'requirement', label: 'Detect Lock Actuator Fault', props: { 'Derived from': 'SG-001' } },
 
-        { tempId: 'sysdesign', parentTempId: null, kind: 'folder', label: 'System Design' },
-        { tempId: 'hw-models', parentTempId: 'sysdesign', kind: 'folder', label: 'Hardware Models' },
-        { tempId: 'sw-models', parentTempId: 'sysdesign', kind: 'folder', label: 'Software Models' },
+        { tempId: 'sysdesign', parentTempId: null, kind: 'folder', label: 'System Design', props: { folderKind: 'sysdesign' } },
+        { tempId: 'hw-models', parentTempId: 'sysdesign', kind: 'folder', label: 'Hardware Models', props: { folderKind: 'hw-models' } },
+        { tempId: 'sw-models', parentTempId: 'sysdesign', kind: 'folder', label: 'Software Models', props: { folderKind: 'sw-models' } },
 
-        { tempId: 'safety-analysis', parentTempId: null, kind: 'folder', label: 'Safety Analysis' },
-        { tempId: 'fmea', parentTempId: 'safety-analysis', kind: 'folder', label: 'FMEA Worksheets' },
-        { tempId: 'fta', parentTempId: 'safety-analysis', kind: 'folder', label: 'FTA Models' },
-        { tempId: 'dc', parentTempId: 'safety-analysis', kind: 'folder', label: 'Diagnostic Coverage' },
+        { tempId: 'safety-analysis', parentTempId: null, kind: 'folder', label: 'Safety Analysis', props: { folderKind: 'safety-analysis' } },
+        { tempId: 'fmea', parentTempId: 'safety-analysis', kind: 'folder', label: 'FMEA Worksheets', props: { folderKind: 'fmea' } },
+        { tempId: 'fta', parentTempId: 'safety-analysis', kind: 'folder', label: 'FTA Models', props: { folderKind: 'fta' } },
+        { tempId: 'dc', parentTempId: 'safety-analysis', kind: 'folder', label: 'Diagnostic Coverage', props: { folderKind: 'dc' } },
       ];
     }
 
@@ -2508,7 +2510,7 @@
         folder: 'Folder', root: 'Workspace', branch: 'Discipline', archive: 'Closed Projects', project: 'Project',
         item: 'Item Description', diagram: 'System Diagram', function: 'Function',
         malfunction: 'Malfunction', hazard: 'Hazard', goal: 'Safety Goal', requirement: 'Functional Safety Requirement',
-        worksheet: 'Worksheet', element: 'Element'
+        worksheet: 'Worksheet', element: 'Element', checklist: 'Checklist', link: 'External Link / Document'
       };
       const folderLikeDesc = 'This folder groups related work products. Right-click it to create a new one, or expand it in the Model Browser on the left.';
       const descByKind = {
@@ -2621,6 +2623,7 @@
 
     const WB_NEW_OPTIONS = {
       'item-def':        [['item', 'Item Description'], ['diagram', 'Item Architecture'], ['function', 'Function']],
+      'fn-vehicle':       [['function', 'Function']],
       'hara':            [['malfunction', 'Malfunction'], ['hazard', 'Hazard']],
       'goals':           [['goal', 'Safety Goal'], ['requirement', 'Functional Safety Requirement']],
       'sysdesign':       [['diagram', 'System Diagram'], ['element', 'Hardware Element'], ['element', 'Software Element']],
@@ -2631,6 +2634,17 @@
       'fta':             [['worksheet', 'FTA Model']],
       'dc':              [['worksheet', 'Diagnostic Coverage Worksheet']],
     };
+
+    // Available in EVERY folder regardless of type — matches the "marked"
+    // universal entries shown in the M01 training deck's "Creating Work
+    // Products" slide (Package, Checklist, External Link, External Document).
+    const GENERIC_NEW_OPTIONS = [
+      ['folder', 'Package'],
+      ['checklist', 'Checklist'],
+      ['link', 'External Link'],
+      ['link', 'External Document'],
+    ];
+
     const WB_DERIVE_OPTIONS = ['FTA Event(s)…', 'Diagnostic Coverage Worksheet…', 'FMEA Worksheet…'];
 
     function wbShowCtxMenuAt(ev) {
@@ -2672,17 +2686,27 @@
         return;
       }
 
-      // Seed folders keep their readable ids (item-def, hara, …); user-created folders get uuids
-      // and simply fall back to the generic "New Package" option below via newOpts being undefined.
-      const newOpts = WB_NEW_OPTIONS[id] || (node.kind === 'folder' ? [['element', 'Element'], ['worksheet', 'Worksheet']] : null);
+      // Every folder gets the universal "always available" set (Package,
+      // Checklist, External Link, External Document); recognized folders also
+      // get their own type-specific options on top. Lookup is by folderKind —
+      // a stable tag set at seed time — not the folder's real UUID, since
+      // that's random per project and would never match a fixed table.
+      const folderKind = node.props && node.props.folderKind;
+      const specificOpts = WB_NEW_OPTIONS[folderKind] || null;
+      const newOpts = (node.kind === 'folder')
+        ? (specificOpts ? specificOpts.concat(GENERIC_NEW_OPTIONS) : GENERIC_NEW_OPTIONS.slice())
+        : null;
       const canDerive = !WB_FOLDER_LIKE_KINDS.includes(node.kind) && node.id !== 'root';
 
       let html = '';
       if (newOpts) {
         html += '<div class="wb-ctx-item">New <span class="wb-ctx-arrow">&#9656;</span>' +
-          '<div class="wb-submenu">' + newOpts.map(o =>
-            '<div class="wb-ctx-item" onclick="wbCreateChild(\'' + id + '\',\'' + o[0] + '\',\'' + o[1].replace(/'/g, "\\'") + '\')">' + o[1] + '</div>'
-          ).join('') + '</div></div>';
+          '<div class="wb-submenu">' +
+          newOpts.map((o, i) => {
+            const sepBefore = (specificOpts && i === specificOpts.length) ? '<div class="wb-ctx-sep"></div>' : '';
+            return sepBefore + '<div class="wb-ctx-item" onclick="wbCreateChild(\'' + id + '\',\'' + o[0] + '\',\'' + o[1].replace(/'/g, "\\'") + '\')">' + o[1] + '</div>';
+          }).join('') +
+          '</div></div>';
       } else {
         html += '<div class="wb-ctx-item disabled">New <span class="wb-ctx-arrow">&#9656;</span></div>';
       }

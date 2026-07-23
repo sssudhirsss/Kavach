@@ -152,9 +152,22 @@
     background: var(--panel);
     border-radius: 16px;
     padding: 20px 18px;
+    position: relative;
     transition: box-shadow 0.2s ease, transform 0.2s ease;
   }
   .disc-card:hover { box-shadow: 0 10px 24px rgba(15,23,42,0.08); transform: translateY(-2px); }
+  .disc-lock {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-dim);
+  }
+  .disc-lock.unlocked { color: #16A34A; }
   .disc-letter { font-weight: 700; font-size: 22px; margin-bottom: 6px; }
   .disc-name { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
   .disc-standard { font-size: 10px; color: var(--text-dim); margin-bottom: 10px; }
@@ -936,6 +949,7 @@
 
     <div class="disc-grid">
       <div class="disc-card disc-fu">
+        <div class="disc-lock" id="lock-fu" title="Checking license…"></div>
         <div class="disc-letter c1">Fu</div>
         <div class="disc-name">Functional Safety</div>
         <div class="disc-standard mono">ISO 26262</div>
@@ -953,6 +967,7 @@
         </div>
       </div>
       <div class="disc-card disc-c">
+        <div class="disc-lock" id="lock-c" title="Checking license…"></div>
         <div class="disc-letter c2">C</div>
         <div class="disc-name">Cybersecurity</div>
         <div class="disc-standard mono">ISO/SAE 21434 &amp; UN ECE Regs</div>
@@ -970,6 +985,7 @@
         </div>
       </div>
       <div class="disc-card disc-s">
+        <div class="disc-lock" id="lock-s" title="Checking license…"></div>
         <div class="disc-letter c3">S</div>
         <div class="disc-name">SOTIF</div>
         <div class="disc-standard mono">ISO 21448</div>
@@ -987,6 +1003,7 @@
         </div>
       </div>
       <div class="disc-card disc-ai">
+        <div class="disc-lock" id="lock-ai" title="Checking license…"></div>
         <div class="disc-letter c4">AI</div>
         <div class="disc-name">AI Safety</div>
         <div class="disc-standard mono">ISO/PAS 8800</div>
@@ -1004,6 +1021,7 @@
         </div>
       </div>
       <div class="disc-card disc-fucsai">
+        <div class="disc-lock" id="lock-combined" title="Checking license…"></div>
         <div class="disc-letter"><span class="c1">Fu</span><span class="c2">C</span><span class="c3">S</span><span class="c4">AI</span></div>
         <div class="disc-name">Combined Project</div>
         <div class="disc-standard mono">All 4 disciplines</div>
@@ -1275,7 +1293,42 @@
     function renderAuthUI() {
       document.getElementById('nav-user-email').textContent = currentUser ? currentUser.email : '';
       document.getElementById('nav-user-menu-email').textContent = currentUser ? currentUser.email : '';
+      fetchEntitlements();
     }
+
+    // ---------- License lock badges (top-right of each discipline card) ----------
+    // There's no purchase flow yet — entitlements are granted manually via the
+    // Supabase SQL Editor (see migration_04_entitlements.sql). This just reflects
+    // whatever's on file for the signed-in user; signed-out visitors see everything
+    // as locked, since license status doesn't mean anything without an account.
+    let wbEntitlements = new Set();
+
+    const LOCK_ICON_CLOSED = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 8 0v4"></path></svg>';
+    const LOCK_ICON_OPEN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V7a4 4 0 0 1 7.4-2.1"></path></svg>';
+
+    async function fetchEntitlements() {
+      wbEntitlements = new Set();
+      if (!sb || !currentUser) { renderDiscCardLocks(); return; }
+      const { data, error } = await sb.from('entitlements').select('standard_key').eq('user_id', currentUser.id);
+      if (error) { console.error(error); renderDiscCardLocks(); return; }
+      wbEntitlements = new Set((data || []).map(r => r.standard_key));
+      renderDiscCardLocks();
+    }
+
+    function renderDiscCardLocks() {
+      ['fu', 'c', 's', 'ai', 'combined'].forEach(key => {
+        const el = document.getElementById('lock-' + key);
+        if (!el) return;
+        const unlocked = wbEntitlements.has(key);
+        el.className = 'disc-lock' + (unlocked ? ' unlocked' : '');
+        el.innerHTML = unlocked ? LOCK_ICON_OPEN : LOCK_ICON_CLOSED;
+        el.title = !currentUser
+          ? 'Sign in to check license status'
+          : (unlocked ? 'Licensed' : 'Not licensed yet');
+      });
+    }
+
+    renderDiscCardLocks();
 
     function onNavAuthClick() {
       if (currentUser) {

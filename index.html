@@ -2328,63 +2328,21 @@
       const f = (tempId, parentTempId, label) => ({ tempId, parentTempId, kind: 'folder', label, props: { folderKind: tempId } });
 
       return [
-        // ---------- Part 2: Management of Functional Safety ----------
-        f('mgmt', null, 'Management of Functional Safety (Part 2)'),
-        f('overall-safety-mgmt', 'mgmt', 'Overall Safety Management'),
-        f('item-dev-safety-mgmt', 'mgmt', 'Safety Management During Item Development'),
-        f('prodops-safety-mgmt', 'mgmt', 'Safety Management Regarding Production, Operation, Service and Decommissioning'),
+        f('item-def', null, 'Item Definition'),
+        f('fn-vehicle', 'item-def', 'Vehicle Level Functions'),
 
-        // ---------- Part 3: Concept Phase ----------
-        f('concept', null, 'Concept Phase (Part 3)'),
-        f('item-def', 'concept', 'Item Definition'),
-        f('hara', 'concept', 'Hazard Analysis and Risk Assessment'),
-        f('func-safety-concept', 'concept', 'Functional Safety Concept'),
-        f('concept-supporting', 'concept', 'Supporting Processes'),
+        f('hara', null, 'Hazard Analysis and Risk Assessment'),
 
-        // ---------- Part 4: System Level Development ----------
-        f('system-level', null, 'System Level Development (Part 4)'),
-        f('tech-safety-concept', 'system-level', 'Technical Safety Concept'),
-        f('system-design', 'system-level', 'System Design'),
-        f('system-integration', 'system-level', 'System Integration and Testing'),
-        f('safety-validation', 'system-level', 'Safety Validation'),
-        f('system-supporting', 'system-level', 'Supporting Processes'),
+        f('goals', null, 'Safety Goals and Requirements'),
 
-        // ---------- Part 5: Hardware Level Development ----------
-        f('hw-level', null, 'Hardware Level Development (Part 5)'),
-        f('hw-safety-req', 'hw-level', 'Hardware Safety Requirements'),
-        f('hw-design', 'hw-level', 'Hardware Design'),
-        f('hw-arch-metrics', 'hw-level', 'Hardware Architectural Metrics'),
-        f('hw-pmhf', 'hw-level', 'Evaluation of Safety Goal Violations (PMHF)'),
-        f('hw-integration', 'hw-level', 'Hardware Integration and Verification'),
-        f('hw-supporting', 'hw-level', 'Supporting Processes'),
+        f('sysdesign', null, 'System Design'),
+        f('hw-models', 'sysdesign', 'Hardware Models'),
+        f('sw-models', 'sysdesign', 'Software Models'),
 
-        // ---------- Part 6: Software Level Development ----------
-        f('sw-level', null, 'Software Level Development (Part 6)'),
-        f('sw-safety-req', 'sw-level', 'Software Safety Requirements'),
-        f('sw-arch-design', 'sw-level', 'Software Architectural Design'),
-        f('sw-unit-design', 'sw-level', 'Software Unit Design and Implementation'),
-        f('sw-unit-verif', 'sw-level', 'Software Unit Verification'),
-        f('sw-integration-verif', 'sw-level', 'Software Integration and Verification'),
-        f('sw-embedded-testing', 'sw-level', 'Testing of the Embedded Software'),
-        f('sw-configuration', 'sw-level', 'Software Configuration'),
-        f('sw-supporting', 'sw-level', 'Supporting Processes'),
-
-        // ---------- Part 7: Production and Operation ----------
-        f('prod-ops', null, 'Production and Operation (Part 7)'),
-        f('prodops-planning', 'prod-ops', 'Planning for Production, Operation, Service and Decommissioning'),
-        f('production', 'prod-ops', 'Production'),
-        f('operation', 'prod-ops', 'Operation, Service and Decommissioning'),
-        f('prodops-supporting', 'prod-ops', 'Supporting Processes'),
-
-        // ---------- Part 9: ASIL-Oriented and Safety-Oriented Analyses ----------
-        f('asil-analyses', null, 'ASIL- and Safety-Oriented Analyses (Part 9)'),
-        f('asil-decomp', 'asil-analyses', 'ASIL Decomposition'),
-        f('dfa', 'asil-analyses', 'Dependent Failure Analysis'),
-        f('safety-analyses', 'asil-analyses', 'Safety Analyses'),
-        f('fmea', 'safety-analyses', 'FMEA Worksheets'),
-        f('fta', 'safety-analyses', 'FTA Models'),
-        f('dc', 'safety-analyses', 'Diagnostic Coverage'),
-        f('asil-supporting', 'asil-analyses', 'Supporting Processes'),
+        f('safety-analysis', null, 'Safety Analysis'),
+        f('fmea', 'safety-analysis', 'FMEA Worksheets'),
+        f('fta', 'safety-analysis', 'FTA Models'),
+        f('dc', 'safety-analysis', 'Diagnostic Coverage'),
       ];
     }
 
@@ -2776,68 +2734,18 @@
     // Part 8 (Supporting Processes) is cross-cutting per the standard — these
     // apply the same way regardless of which phase's "Supporting Processes"
     // folder they're created in, so one shared list covers all of them.
-    const PART8_SUPPORTING_OPTIONS = [
-      ['record', 'Development Interface Agreement'],
-      ['record', 'Supplier Selection Report'],
-      ['record', 'Configuration Management Plan'],
-      ['record', 'Change Request'],
-      ['record', 'Change Report'],
-      ['record', 'Document Management Plan'],
-      ['record', 'Software Tool Qualification Report'],
-      ['record', 'Proven-in-Use Analysis Report'],
-    ];
-    // Clause 8.13 (Qualification of hardware components) is hardware-specific,
-    // so it's only offered inside Hardware Level Development's own folder.
-    const HW_QUALIFICATION_OPTIONS = [
-      ['record', 'Hardware Element Evaluation Plan'],
-      ['record', 'Hardware Element Test Plan'],
-      ['record', 'Hardware Element Evaluation Report'],
-    ];
-
     const WB_NEW_OPTIONS = {
-      // Part 2 — Management of Functional Safety
-      'overall-safety-mgmt':   [['record', 'Safety Culture Evidence'], ['record', 'Competence Management Evidence'], ['record', 'Quality Management Evidence'], ['record', 'Safety Anomaly Report']],
-      'item-dev-safety-mgmt':  [['record', 'Impact Analysis (Item Level)'], ['record', 'Impact Analysis (Element Level)'], ['record', 'Safety Plan'], ['record', 'Safety Case'], ['record', 'Confirmation Measure Report'], ['record', 'Release for Production Report']],
-      'prodops-safety-mgmt':   [['record', 'Safety Management Evidence']],
-
-      // Part 3 — Concept Phase
-      'item-def':            [['item', 'Item Description'], ['diagram', 'Item Architecture'], ['function', 'Function']],
-      'hara':                [['malfunction', 'Malfunction'], ['hazard', 'Hazard'], ['hazardousevent', 'Hazardous Event'], ['goal', 'Safety Goal']],
-      'func-safety-concept': [['requirement_func', 'Functional Safety Requirement']],
-
-      // Part 4 — System Level Development
-      'tech-safety-concept': [['requirement_tech', 'Technical Safety Requirement']],
-      'system-design':       [['diagram', 'System Diagram'], ['component', 'Component'], ['controller', 'Controller']],
-
-      // Part 5 — Hardware Level Development
-      'hw-safety-req':       [['requirement_hw', 'Hardware Safety Requirement']],
-      'hw-design':           [['hardwarepart', 'Hardware Part'], ['diagram', 'Hardware Diagram']],
-      'hw-arch-metrics':     [['worksheet', 'Diagnostic Coverage Worksheet']],
-
-      // Part 6 — Software Level Development
-      'sw-safety-req':       [['requirement_sw', 'Software Safety Requirement']],
-      'sw-arch-design':      [['softwareunit', 'Software Unit'], ['diagram', 'Software Architecture Diagram']],
-      'sw-unit-design':      [['softwareunit', 'Software Unit']],
-      'sw-embedded-testing': [['record', 'Embedded Software Verification Specification'], ['record', 'Embedded Software Verification Report']],
-      'sw-configuration':    [['record', 'Configuration Data Specification'], ['record', 'Calibration Data Specification']],
-
-      // Part 7 — Production and Operation
-      'prodops-planning':    [['record', 'Safety-Related Production Plan Content'], ['record', 'Safety-Related Service Plan Content'], ['record', 'Producibility Requirements Specification'], ['record', 'Operation/Service/Decommissioning Requirements Specification']],
-
-      // Part 9 — ASIL- and Safety-Oriented Analyses
-      'asil-decomp':         [['requirement_decomposed', 'Decomposed Safety Requirement']],
-      'dfa':                 [['worksheet', 'Dependent Failure Analysis Worksheet']],
-      'fmea':                [['worksheet', 'FMEA Worksheet']],
-      'fta':                 [['worksheet', 'FTA Model']],
-      'dc':                  [['worksheet', 'Diagnostic Coverage Worksheet']],
-
-      // Part 8 — Supporting Processes sub-folder inside every phase
-      'concept-supporting':    PART8_SUPPORTING_OPTIONS,
-      'system-supporting':     PART8_SUPPORTING_OPTIONS,
-      'hw-supporting':         PART8_SUPPORTING_OPTIONS.concat(HW_QUALIFICATION_OPTIONS),
-      'sw-supporting':         PART8_SUPPORTING_OPTIONS,
-      'prodops-supporting':    PART8_SUPPORTING_OPTIONS,
-      'asil-supporting':       PART8_SUPPORTING_OPTIONS,
+      'item-def':        [['item', 'Item Description'], ['diagram', 'Item Architecture'], ['function', 'Function']],
+      'fn-vehicle':      [['function', 'Function']],
+      'hara':            [['malfunction', 'Malfunction'], ['hazard', 'Hazard'], ['hazardousevent', 'Hazardous Event']],
+      'goals':           [['goal', 'Safety Goal'], ['requirement_func', 'Functional Safety Requirement']],
+      'sysdesign':       [['diagram', 'System Diagram'], ['component', 'Component'], ['controller', 'Controller']],
+      'hw-models':       [['hardwarepart', 'Hardware Part']],
+      'sw-models':       [['softwareunit', 'Software Unit']],
+      'safety-analysis': [['worksheet', 'FMEA Worksheet'], ['worksheet', 'FTA Model'], ['worksheet', 'Diagnostic Coverage Worksheet']],
+      'fmea':            [['worksheet', 'FMEA Worksheet']],
+      'fta':             [['worksheet', 'FTA Model']],
+      'dc':              [['worksheet', 'Diagnostic Coverage Worksheet']],
     };
 
     // Available in EVERY folder regardless of type — matches the "marked"

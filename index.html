@@ -927,6 +927,13 @@
   .wb-editor-title { font-size: 16px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
   .wb-editor-kind { font-size: 11.5px; color: var(--text-dim); font-family: 'IBM Plex Mono', monospace; margin-bottom: 20px; }
   .wb-editor-desc { font-size: 13px; color: var(--text); line-height: 1.6; max-width: 640px; }
+  .wb-readme-body { font-size: 13px; color: var(--text); line-height: 1.6; max-width: 640px; }
+  .wb-readme-body h4 { font-size: 12.5px; font-weight: 600; color: var(--ink); text-transform: uppercase; letter-spacing: 0.03em; margin: 22px 0 8px; }
+  .wb-readme-body h4:first-child { margin-top: 0; }
+  .wb-readme-body ul { margin: 0; padding-left: 18px; }
+  .wb-readme-body li { margin-bottom: 6px; }
+  .wb-readme-body li span.mono { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; }
+  .wb-readme-body p { margin: 0; }
 
   .wb-panelstack {
     height: 190px;
@@ -2189,6 +2196,7 @@
       element:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2"/></svg>',
       checklist:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="#5B6470" stroke-width="1.3"/><polyline points="4.5 8 7 10.5 11.5 5.5" fill="none" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       link:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M6.5 9.5L9.5 6.5" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M7.8 4.2L9 3a2.2 2.2 0 0 1 3.1 3.1L10.9 7.3" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M8.2 11.8L7 13a2.2 2.2 0 0 1-3.1-3.1L5.1 8.7" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
+      readme:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="1.5" width="11" height="13" rx="1.2" fill="none" stroke="#5B6470" stroke-width="1.3"/><line x1="5" y1="5" x2="11" y2="5" stroke="#5B6470" stroke-width="1.1"/><line x1="5" y1="7.4" x2="11" y2="7.4" stroke="#5B6470" stroke-width="1.1"/><line x1="5" y1="9.8" x2="9" y2="9.8" stroke="#5B6470" stroke-width="1.1"/></svg>',
     };
 
     // Kinds that behave like folders (expandable, get an "Empty" note when childless).
@@ -2213,6 +2221,13 @@
     // tempId/parentTempId are only used to wire up parent_id during the one-time seed insert.
     function wbSeedDefinitions() {
       return [
+        { tempId: 'readme', parentTempId: null, kind: 'readme', label: 'ReadMe', props: {
+            File: 'ESL.mprx',
+            Version: '2023 R2.1',
+            Note: 'This is a generic sample project based on the BestPracticesTemplate. All data in this project are purely for demonstration purposes and in no way related to development and safety analyses for a real system.',
+            Disclaimer: 'Read the separate LICENSE.txt'
+          } },
+
         { tempId: 'item-def', parentTempId: null, kind: 'folder', label: 'Item Definition', props: { folderKind: 'item-def' } },
         { tempId: 'item-desc', parentTempId: 'item-def', kind: 'item', label: 'Item Description', props: { Status: 'Draft' } },
         { tempId: 'item-arch', parentTempId: 'item-def', kind: 'diagram', label: 'Item Architecture', props: { Editor: 'Diagram Editor' } },
@@ -2510,7 +2525,8 @@
         folder: 'Folder', root: 'Workspace', branch: 'Discipline', archive: 'Closed Projects', project: 'Project',
         item: 'Item Description', diagram: 'System Diagram', function: 'Function',
         malfunction: 'Malfunction', hazard: 'Hazard', goal: 'Safety Goal', requirement: 'Functional Safety Requirement',
-        worksheet: 'Worksheet', element: 'Element', checklist: 'Checklist', link: 'External Link / Document'
+        worksheet: 'Worksheet', element: 'Element', checklist: 'Checklist', link: 'External Link / Document',
+        readme: 'ReadMe'
       };
       const folderLikeDesc = 'This folder groups related work products. Right-click it to create a new one, or expand it in the Model Browser on the left.';
       const descByKind = {
@@ -2521,6 +2537,23 @@
           ? 'This project is currently open \u2014 its own folders are shown below.'
           : 'Click this project to open it in the workspace.',
       };
+      if (node.kind === 'readme') {
+        const p = node.props || {};
+        el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + '</div>' +
+          '<div class="wb-editor-kind">ReadMe</div>' +
+          '<div class="wb-readme-body">' +
+            '<h4>About</h4>' +
+            '<ul>' +
+              '<li><strong>File:</strong> <span class="mono">' + escapeHtml(p.File || '') + '</span></li>' +
+              '<li><strong>Version:</strong> <span class="mono">' + escapeHtml(p.Version || '') + '</span></li>' +
+              '<li><strong>Note:</strong> ' + escapeHtml(p.Note || '') + '</li>' +
+            '</ul>' +
+            '<h4>Disclaimer</h4>' +
+            '<p>' + escapeHtml(p.Disclaimer || '') + '</p>' +
+          '</div>';
+        return;
+      }
+
       el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + (node.display_id ? ' <span class="wb-editor-kind" style="margin-left:6px;">' + node.display_id + '</span>' : '') + '</div>' +
         '<div class="wb-editor-kind">' + (kindLabels[node.kind] || node.kind) + '</div>' +
         '<div class="wb-editor-desc">' + (descByKind[node.kind] || (node.kind === 'folder'

@@ -593,7 +593,6 @@
     flex-direction: column;
     overflow: hidden;
   }
-  .modal-card.wide { width: 820px; }
   .modal-head {
     padding: 22px 24px 4px;
   }
@@ -608,10 +607,7 @@
     color: var(--text-dim);
     margin-top: 4px;
   }
-  .modal-body { padding: 18px 24px 4px; overflow-y: auto; flex: 1; min-height: 0; }
-
-  .wb-legend-grid { columns: 2; column-gap: 32px; }
-  .wb-legend-grid .wb-legend-section-block { break-inside: avoid; margin-bottom: 4px; }
+  .modal-body { padding: 18px 24px 4px; }
 
   .modal-prompt {
     font-size: 13.5px;
@@ -1934,8 +1930,6 @@
 
     function closeModal() {
       document.getElementById('modal-overlay').classList.remove('open');
-      const card = document.querySelector('.modal-card');
-      if (card) card.classList.remove('wide');
     }
 
     function renderTypePicker(onPickFn, includeAll) {
@@ -2175,29 +2169,6 @@
       { id: 'branch-combined', disciplineKey: null, label: 'FUCSAI (Combined Projects)', match: p => p.standards.length > 1 },
     ];
 
-    // Wraps any base shape's inner SVG markup into a "collection" look — a
-    // faded copy behind, a solid copy in front — so every singular/collection
-    // pair (Hazard vs Hazard Collection, etc.) shares one shape definition
-    // instead of two hand-drawn icons.
-    function wbCollectionGlyph(baseInner) {
-      return '<svg viewBox="0 0 16 16" width="14" height="14">' +
-        '<g transform="translate(-1.6,-1.6) scale(0.78)" opacity="0.45">' + baseInner + '</g>' +
-        '<g transform="translate(1.6,1.6) scale(0.78)">' + baseInner + '</g>' +
-        '</svg>';
-    }
-
-    // Base shapes (inner markup only, no <svg> wrapper) reused both standalone
-    // and inside wbCollectionGlyph() for the "…Collection" variants.
-    const WB_SHAPE = {
-      failuremode: '<circle cx="8" cy="8" r="6.2" fill="#DC2626"/>',
-      malfunction: '<rect x="2" y="2" width="12" height="12" rx="2.5" fill="#EA8C00"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">M</text>',
-      hazard:      '<path d="M8 1l7 7-7 7-7-7z" fill="#7C3AED"/>',
-      error:       '<path d="M8 1.3 14.8 13H1.2z" fill="none" stroke="#DC2626" stroke-width="1.4" stroke-linejoin="round"/>',
-      measure:     '<rect x="2.5" y="1.5" width="11" height="13" rx="1.2" fill="none" stroke="#0F766E" stroke-width="1.3"/><path d="M5.5 8.2l1.8 1.8 3.2-3.6" fill="none" stroke="#0F766E" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>',
-      safetymech:  '<path d="M8 1.5 13.5 3.5V8c0 3.5-2.3 5.8-5.5 6.8C4.8 13.8 2.5 11.5 2.5 8V3.5z" fill="none" stroke="#2563EB" stroke-width="1.3"/>',
-      securitymech:'<path d="M8 1.5 13.5 3.5V8c0 3.5-2.3 5.8-5.5 6.8C4.8 13.8 2.5 11.5 2.5 8V3.5z" fill="none" stroke="#EA4335" stroke-width="1.3"/>',
-    };
-
     // Glyph set — deliberately distinct shapes/colors from medini's own icon set,
     // but carrying the same meaning (Failure Mode / Malfunction / Hazard / Error / Function / folders).
     const WB_GLYPHS = {
@@ -2207,9 +2178,9 @@
       archive:     '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h11A1.5 1.5 0 0 1 15 3.5V5H1V3.5z" fill="#96A0AC"/><path d="M1.5 6H14.5V13A1.5 1.5 0 0 1 13 14.5H3A1.5 1.5 0 0 1 1.5 13V6z" fill="none" stroke="#96A0AC" stroke-width="1.1"/><line x1="6.2" y1="9" x2="9.8" y2="9" stroke="#96A0AC" stroke-width="1.1"/></svg>',
       project:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2.5" width="12" height="11" rx="1.8" fill="none" stroke="currentColor" stroke-width="1.3"/><circle cx="8" cy="8" r="1.8" fill="currentColor"/></svg>',
       item:        '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#4285F4" stroke-width="1.3"/><line x1="5.2" y1="5" x2="10.8" y2="5" stroke="#4285F4" stroke-width="1.1"/><line x1="5.2" y1="7.4" x2="10.8" y2="7.4" stroke="#4285F4" stroke-width="1.1"/><line x1="5.2" y1="9.8" x2="8.5" y2="9.8" stroke="#4285F4" stroke-width="1.1"/></svg>',
-      hazard:      '<svg viewBox="0 0 16 16" width="14" height="14">' + WB_SHAPE.hazard + '</svg>',
-      malfunction: '<svg viewBox="0 0 16 16" width="14" height="14">' + WB_SHAPE.malfunction + '</svg>',
-      failuremode: '<svg viewBox="0 0 16 16" width="14" height="14">' + WB_SHAPE.failuremode + '</svg>',
+      hazard:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1l7 7-7 7-7-7z" fill="#7C3AED"/></svg>',
+      malfunction: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="2.5" fill="#EA8C00"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#fff">M</text></svg>',
+      failuremode: '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="#DC2626"/></svg>',
       function:    '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#2563EB" stroke-width="1.4"/><text x="8" y="11" font-size="8" font-weight="700" text-anchor="middle" fill="#2563EB">F</text></svg>',
       goal:        '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#0F766E" stroke-width="1.4"/><circle cx="8" cy="8" r="2.6" fill="#0F766E"/></svg>',
       requirement: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="2" width="11" height="12" rx="1.2" fill="none" stroke="#0F766E" stroke-width="1.3"/><line x1="4.7" y1="5.2" x2="11.3" y2="5.2" stroke="#0F766E" stroke-width="1.1"/><line x1="4.7" y1="7.6" x2="11.3" y2="7.6" stroke="#0F766E" stroke-width="1.1"/><line x1="4.7" y1="10" x2="9" y2="10" stroke="#0F766E" stroke-width="1.1"/></svg>',
@@ -2218,79 +2189,6 @@
       element:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2"/></svg>',
       checklist:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="#5B6470" stroke-width="1.3"/><polyline points="4.5 8 7 10.5 11.5 5.5" fill="none" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
       link:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M6.5 9.5L9.5 6.5" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M7.8 4.2L9 3a2.2 2.2 0 0 1 3.1 3.1L10.9 7.3" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M8.2 11.8L7 13a2.2 2.2 0 0 1-3.1-3.1L5.1 8.7" stroke="#4285F4" stroke-width="1.4" fill="none" stroke-linecap="round"/></svg>',
-      failuremodecollection: wbCollectionGlyph(WB_SHAPE.failuremode),
-      malfunctioncollection: wbCollectionGlyph(WB_SHAPE.malfunction),
-      hazardcollection:      wbCollectionGlyph(WB_SHAPE.hazard),
-      error:                 '<svg viewBox="0 0 16 16" width="14" height="14">' + WB_SHAPE.error + '</svg>',
-      errorcollection:       wbCollectionGlyph(WB_SHAPE.error),
-      transientfailuremode:  '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#DC2626" stroke-width="1.4" stroke-dasharray="2.2 1.6"/></svg>',
-      generalmeasure:        '<svg viewBox="0 0 16 16" width="14" height="14">' + WB_SHAPE.measure + '</svg>',
-      measurecollection:     wbCollectionGlyph(WB_SHAPE.measure),
-      safetymechanism:       '<svg viewBox="0 0 16 16" width="14" height="14">' + WB_SHAPE.safetymech + '</svg>',
-      safetymechanismcollection: wbCollectionGlyph(WB_SHAPE.safetymech),
-      securitymechanism:     '<svg viewBox="0 0 16 16" width="14" height="14">' + WB_SHAPE.securitymech + '</svg>',
-      hazardanalysismodel:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2.5" width="13" height="11" rx="1.2" fill="none" stroke="#7C3AED" stroke-width="1.2"/><line x1="1.5" y1="6.3" x2="14.5" y2="6.3" stroke="#7C3AED" stroke-width="1"/><line x1="6.5" y1="6.3" x2="6.5" y2="13.5" stroke="#7C3AED" stroke-width="1"/><line x1="10.8" y1="6.3" x2="10.8" y2="13.5" stroke="#7C3AED" stroke-width="1"/></svg>',
-      hazardousevent:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.3l6.7 6.7-6.7 6.7-6.7-6.7z" fill="none" stroke="#7C3AED" stroke-width="1.3" stroke-dasharray="2 1.4"/></svg>',
-      mechanism:             '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="none" stroke="#0F766E" stroke-width="1.3"/></svg>',
-      requirement_func:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="none" stroke="#0F766E" stroke-width="1.3"/><text x="8" y="10.3" font-size="6.5" font-weight="700" text-anchor="middle" fill="#0F766E">F</text></svg>',
-      requirement_tech:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="none" stroke="#0F766E" stroke-width="1.3"/><text x="8" y="10.3" font-size="6.5" font-weight="700" text-anchor="middle" fill="#0F766E">T</text></svg>',
-      requirement_hw:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="none" stroke="#0F766E" stroke-width="1.3"/><text x="8" y="10.3" font-size="6.5" font-weight="700" text-anchor="middle" fill="#0F766E">H</text></svg>',
-      requirement_sw:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="none" stroke="#0F766E" stroke-width="1.3"/><text x="8" y="10.3" font-size="6.5" font-weight="700" text-anchor="middle" fill="#0F766E">S</text></svg>',
-      requirement_decomposed:'<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.5l6.5 6.5-6.5 6.5-6.5-6.5z" fill="none" stroke="#0F766E" stroke-width="1.3"/><path d="M8 8v4.5M8 8l-2.2 2.2M8 8l2.2 2.2" stroke="#0F766E" stroke-width="1"/></svg>',
-      itemtype:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#4285F4" stroke-width="1.2" stroke-dasharray="2 1.4"/></svg>',
-      itemorsystem:  '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#4285F4" stroke-width="1.3"/></svg>',
-      elementtype:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2" stroke-dasharray="2 1.4"/></svg>',
-      elementlibrary:'<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2.5" width="3.2" height="11" fill="#B9C2CC"/><rect x="6" y="2.5" width="3.2" height="11" fill="#96A0AC"/><rect x="10" y="2.5" width="3.2" height="11" fill="#B9C2CC"/></svg>',
-      package:       '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.4a1.5 1.5 0 0 1 1.2.6l.9 1.2a.5.5 0 0 0 .4.2H13.5A1.5 1.5 0 0 1 15 5.5v7A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" fill="#B9C2CC"/></svg>',
-      componenttype: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="2" fill="none" stroke="#4285F4" stroke-width="1.2" stroke-dasharray="2 1.4"/></svg>',
-      component:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2.5" y="3" width="11" height="10" rx="2" fill="none" stroke="#4285F4" stroke-width="1.3"/></svg>',
-      controllertype:'<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5z" fill="none" stroke="#2563EB" stroke-width="1.2" stroke-dasharray="2 1.4"/></svg>',
-      controller:    '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.8 14 5v6l-6 3.2L2 11V5z" fill="none" stroke="#2563EB" stroke-width="1.3"/></svg>',
-      actuatortype:  '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2 14 13H2z" fill="none" stroke="#B08200" stroke-width="1.2" stroke-dasharray="2 1.4"/></svg>',
-      actuator:      '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2 14 13H2z" fill="none" stroke="#B08200" stroke-width="1.3"/></svg>',
-      sensortype:    '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#16A34A" stroke-width="1.2" stroke-dasharray="2 1.4"/></svg>',
-      sensor:        '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#16A34A" stroke-width="1.3"/><polyline points="5.2 8 7.2 10 11 6" fill="none" stroke="#16A34A" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      hardwareparttype: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="3" width="10" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.2" stroke-dasharray="2 1.4"/><line x1="5" y1="1" x2="5" y2="3" stroke="#5B6470" stroke-width="1.1"/><line x1="11" y1="1" x2="11" y2="3" stroke="#5B6470" stroke-width="1.1"/><line x1="5" y1="13" x2="5" y2="15" stroke="#5B6470" stroke-width="1.1"/><line x1="11" y1="13" x2="11" y2="15" stroke="#5B6470" stroke-width="1.1"/></svg>',
-      hardwarepart:  '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="3" width="10" height="10" rx="1" fill="none" stroke="#5B6470" stroke-width="1.3"/><line x1="5" y1="1" x2="5" y2="3" stroke="#5B6470" stroke-width="1.1"/><line x1="11" y1="1" x2="11" y2="3" stroke="#5B6470" stroke-width="1.1"/><line x1="5" y1="13" x2="5" y2="15" stroke="#5B6470" stroke-width="1.1"/><line x1="11" y1="13" x2="11" y2="15" stroke="#5B6470" stroke-width="1.1"/></svg>',
-      softwareunittype: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="3" width="12" height="10" rx="1.5" fill="none" stroke="#7C3AED" stroke-width="1.2" stroke-dasharray="2 1.4"/><line x1="4.2" y1="6" x2="11.8" y2="6" stroke="#7C3AED" stroke-width="1"/><line x1="4.2" y1="8.3" x2="9.5" y2="8.3" stroke="#7C3AED" stroke-width="1"/></svg>',
-      softwareunit:  '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="3" width="12" height="10" rx="1.5" fill="none" stroke="#7C3AED" stroke-width="1.3"/><line x1="4.2" y1="6" x2="11.8" y2="6" stroke="#7C3AED" stroke-width="1"/><line x1="4.2" y1="8.3" x2="9.5" y2="8.3" stroke="#7C3AED" stroke-width="1"/></svg>',
-      characteristictype: '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M2 8.5V3a1 1 0 0 1 1-1h5.5l5.5 5.5-6.5 6.5L2 8.5z" fill="none" stroke="#96A0AC" stroke-width="1.2" stroke-dasharray="2 1.4"/><circle cx="5.2" cy="5.2" r="0.9" fill="#96A0AC"/></svg>',
-      characteristic:'<svg viewBox="0 0 16 16" width="14" height="14"><path d="M2 8.5V3a1 1 0 0 1 1-1h5.5l5.5 5.5-6.5 6.5L2 8.5z" fill="none" stroke="#5B6470" stroke-width="1.3"/><circle cx="5.2" cy="5.2" r="0.9" fill="#5B6470"/></svg>',
-      inport:        '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="5" y="3" width="8" height="10" rx="1" fill="none" stroke="#4285F4" stroke-width="1.2"/><polyline points="1 8 5 8" stroke="#4285F4" stroke-width="1.3" fill="none"/><polyline points="3 6 1 8 3 10" stroke="#4285F4" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      outport:       '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="3" width="8" height="10" rx="1" fill="none" stroke="#4285F4" stroke-width="1.2"/><polyline points="11 8 15 8" stroke="#4285F4" stroke-width="1.3" fill="none"/><polyline points="13 6 15 8 13 10" stroke="#4285F4" stroke-width="1.3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      inoutport:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="4" y="3" width="8" height="10" rx="1" fill="none" stroke="#4285F4" stroke-width="1.2"/><polyline points="1 6.5 4 6.5" stroke="#4285F4" stroke-width="1.2" fill="none"/><polyline points="12 9.5 15 9.5" stroke="#4285F4" stroke-width="1.2" fill="none"/><polyline points="2.5 5 1 6.5 2.5 8" stroke="#4285F4" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/><polyline points="13.5 8 15 9.5 13.5 11" stroke="#4285F4" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      activity:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="4" width="13" height="8" rx="4" fill="none" stroke="#2563EB" stroke-width="1.3"/></svg>',
-      action:        '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="4.5" width="12" height="7" rx="3.5" fill="none" stroke="#2563EB" stroke-width="1.3"/></svg>',
-      pin:           '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="6.5" y="1.5" width="3" height="13" fill="#5B6470"/></svg>',
-      objectnode:    '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="4" width="12" height="8" fill="none" stroke="#5B6470" stroke-width="1.3"/></svg>',
-      structuredactivity: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="4" width="13" height="8" rx="4" fill="none" stroke="#2563EB" stroke-width="1.3" stroke-dasharray="2.4 1.4"/></svg>',
-      controldataflow: '<svg viewBox="0 0 16 16" width="14" height="14"><line x1="1.5" y1="8" x2="12" y2="8" stroke="#5B6470" stroke-width="1.3"/><polyline points="9.5 5.5 12 8 9.5 10.5" fill="none" stroke="#5B6470" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      initialnode:   '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="5.5" fill="#1F2937"/></svg>',
-      activityfinalnode: '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.3" fill="none" stroke="#1F2937" stroke-width="1.3"/><circle cx="8" cy="8" r="3.6" fill="#1F2937"/></svg>',
-      flowfinalnode: '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.3" fill="none" stroke="#1F2937" stroke-width="1.3"/><line x1="5.4" y1="5.4" x2="10.6" y2="10.6" stroke="#1F2937" stroke-width="1.2"/><line x1="10.6" y1="5.4" x2="5.4" y2="10.6" stroke="#1F2937" stroke-width="1.2"/></svg>',
-      decisionmerge: '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 1.5 14.5 8 8 14.5 1.5 8z" fill="none" stroke="#5B6470" stroke-width="1.3"/></svg>',
-      forkjoin:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="7" y="1.5" width="2" height="13" fill="#1F2937"/></svg>',
-      simulink:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="2" width="12" height="12" rx="1.5" fill="none" stroke="#96A0AC" stroke-width="1.3"/><path d="M4.5 8h2l1-3 2 6 1-3h1" fill="none" stroke="#96A0AC" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      stateflow:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="3" width="12" height="10" rx="1.5" fill="none" stroke="#96A0AC" stroke-width="1.3" stroke-dasharray="2.2 1.4"/></svg>',
-      ftamodel:      '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="3.5" r="1.6" fill="#5B6470"/><line x1="8" y1="5.1" x2="8" y2="7" stroke="#5B6470" stroke-width="1.1"/><line x1="8" y1="7" x2="3.8" y2="11" stroke="#5B6470" stroke-width="1.1"/><line x1="8" y1="7" x2="12.2" y2="11" stroke="#5B6470" stroke-width="1.1"/><circle cx="3.8" cy="12.2" r="1.4" fill="none" stroke="#5B6470" stroke-width="1.1"/><circle cx="12.2" cy="12.2" r="1.4" fill="none" stroke="#5B6470" stroke-width="1.1"/></svg>',
-      ftaevent:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="4" width="13" height="8" fill="none" stroke="#5B6470" stroke-width="1.3"/><text x="8" y="9.7" font-size="7" font-weight="700" text-anchor="middle" fill="#5B6470">E</text></svg>',
-      andgate:       '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 13.5V8a5 5 0 0 1 10 0v5.5z" fill="none" stroke="#B08200" stroke-width="1.3"/></svg>',
-      orgate:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 13.5C3 9 4.5 4.5 8 2c3.5 2.5 5 7 5 11.5z" fill="none" stroke="#B08200" stroke-width="1.3"/></svg>',
-      xorgate:       '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M3.3 13.5C3.3 9 4.7 4.7 8 2.2c3.3 2.5 4.7 6.8 4.7 11.3z" fill="none" stroke="#B08200" stroke-width="1.2"/><path d="M2 13.5C2.6 9.8 3.8 6 8 2.2" fill="none" stroke="#B08200" stroke-width="1"/></svg>',
-      votinggate:    '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M3 13.5V8a5 5 0 0 1 10 0v5.5z" fill="none" stroke="#B08200" stroke-width="1.3"/><text x="8" y="12" font-size="6" font-weight="700" text-anchor="middle" fill="#B08200">k/n</text></svg>',
-      transfergate:  '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M8 2 14 13H2z" fill="none" stroke="#B08200" stroke-width="1.3"/></svg>',
-      cutsetmodel:   '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2.5" width="13" height="11" rx="1.2" fill="none" stroke="#5B6470" stroke-width="1.2"/><line x1="1.5" y1="7" x2="14.5" y2="7" stroke="#5B6470" stroke-width="1"/><line x1="1.5" y1="10.3" x2="14.5" y2="10.3" stroke="#5B6470" stroke-width="1"/></svg>',
-      cutset:        '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M2 12 8 3l6 9" fill="none" stroke="#5B6470" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      fmeaworksheet:          '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2" width="13" height="12" rx="1.2" fill="none" stroke="#B08200" stroke-width="1.3"/><line x1="1.5" y1="6" x2="14.5" y2="6" stroke="#B08200" stroke-width="1"/><line x1="6" y1="6" x2="6" y2="14" stroke="#B08200" stroke-width="1"/><line x1="10.3" y1="6" x2="10.3" y2="14" stroke="#B08200" stroke-width="1"/></svg>',
-      fmeaworksheetfunction:  '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2" width="13" height="12" rx="1.2" fill="none" stroke="#B08200" stroke-width="1.3"/><line x1="1.5" y1="6" x2="14.5" y2="6" stroke="#B08200" stroke-width="1"/><circle cx="4" cy="10" r="2" fill="none" stroke="#2563EB" stroke-width="1"/></svg>',
-      fmeaworksheetcomponent: '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="1.5" y="2" width="13" height="12" rx="1.2" fill="none" stroke="#B08200" stroke-width="1.3"/><line x1="1.5" y1="6" x2="14.5" y2="6" stroke="#B08200" stroke-width="1"/><rect x="2.8" y="8.3" width="3.2" height="3.2" rx="0.8" fill="none" stroke="#4285F4" stroke-width="1"/></svg>',
-      componentorfunction:    '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="4.5" width="12" height="7" rx="1.5" fill="none" stroke="#5B6470" stroke-width="1.3"/></svg>',
-      failureeffect:          '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#EA8C00" stroke-width="1.4"/><circle cx="8" cy="8" r="2.4" fill="#EA8C00"/></svg>',
-      failurecause:           '<svg viewBox="0 0 16 16" width="14" height="14"><path d="M2 8h9" stroke="#DC2626" stroke-width="1.3" fill="none"/><polyline points="8 5 11 8 8 11" fill="none" stroke="#DC2626" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      designcontrol:          '<svg viewBox="0 0 16 16" width="14" height="14"><circle cx="8" cy="8" r="6.2" fill="none" stroke="#96A0AC" stroke-width="1.3" stroke-dasharray="2 1.6"/></svg>',
-      actionrecommended:      '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#96A0AC" stroke-width="1.3"/></svg>',
-      actiontaken:            '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="3" y="1.5" width="10" height="13" rx="1.2" fill="none" stroke="#16A34A" stroke-width="1.3"/><polyline points="5.3 8 7.2 10 10.7 5.8" fill="none" stroke="#16A34A" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-      derivedfailuremode:     '<svg viewBox="0 0 16 16" width="14" height="14"><rect x="2" y="4.5" width="12" height="7" rx="3.5" fill="none" stroke="#DC2626" stroke-width="1.3" stroke-dasharray="2 1.4"/></svg>',
     };
 
     // Kinds that behave like folders (expandable, get an "Empty" note when childless).
@@ -2946,88 +2844,31 @@
 
     function wbShowLegend() {
       document.getElementById('modal-title').textContent = 'Model Browser Legend';
-      document.getElementById('modal-context').textContent = 'Full icon key \u2014 User Guide \u00a714.20';
+      document.getElementById('modal-context').textContent = 'Icon key for the FuSa workspace';
       const rows = [
         ['section', 'Project'],
-        ['folder', 'Predefined / custom folder in the project'],
-        ['link', 'External document or link added to the project'],
-        ['diagram', 'Diagram of a corresponding model'],
-        ['section', 'Safety'],
-        ['failuremode', 'Failure Mode'], ['failuremodecollection', 'Failure Mode Collection'],
-        ['malfunction', 'Malfunction'], ['malfunctioncollection', 'Malfunction Collection'],
-        ['hazard', 'Hazard'], ['hazardcollection', 'Hazard Collection'],
-        ['error', 'Error'], ['errorcollection', 'Error Collection'],
-        ['transientfailuremode', 'Transient Failure Mode'],
-        ['generalmeasure', 'General Measure (Prevention/Detection)'], ['measurecollection', 'Measure/Mechanism Collection'],
-        ['safetymechanism', 'Safety Mechanism'], ['safetymechanismcollection', 'Safety Mechanism Collection'],
-        ['securitymechanism', 'Security Mechanism'],
-        ['section', 'Item Definition'],
-        ['item', 'Definition of an item'],
+        ['folder', 'Predefined / custom folder'],
+        ['item', 'Item Description'],
+        ['diagram', 'System diagram / architecture'],
         ['section', 'Function Modeling'],
-        ['function', 'Function'], ['malfunction', 'Malfunction'],
+        ['function', 'Function'],
         ['section', 'Hazard Analysis'],
-        ['hazardanalysismodel', 'Model of Hazard Analysis'],
-        ['hazardousevent', 'Hazardous Event'], ['hazard', 'Hazard'],
-        ['section', 'Safety Goals and Safety Requirements'],
-        ['folder', 'Model for safety goals and safety requirements'],
-        ['goal', 'Safety Goal'], ['mechanism', 'Mechanism'],
-        ['requirement', 'Safety Requirement'],
-        ['requirement_func', 'Functional Safety Requirement'], ['requirement_decomposed', 'Decomposed Safety Requirement'],
-        ['requirement_tech', 'Technical Safety Requirement'],
-        ['requirement_hw', 'Hardware Safety Requirement'],
-        ['requirement_sw', 'Software Safety Requirement'],
-        ['section', 'System Design'],
-        ['diagram', 'Model of a system design'], ['elementlibrary', 'Element library'], ['package', 'Package to structure a system design'],
-        ['itemtype', 'Item / system type'], ['itemorsystem', 'Item / system'],
-        ['elementtype', 'Element type'], ['element', 'Element'],
-        ['componenttype', 'Component type'], ['component', 'Component'],
-        ['controllertype', 'Controller type'], ['controller', 'Controller'],
-        ['actuatortype', 'Actuator type'], ['actuator', 'Actuator'],
-        ['sensortype', 'Sensor type'], ['sensor', 'Sensor'],
-        ['hardwareparttype', 'Hardware part type'], ['hardwarepart', 'Hardware part'],
-        ['softwareunittype', 'Software unit type'], ['softwareunit', 'Software unit'],
-        ['characteristictype', 'Characteristic type'], ['characteristic', 'Characteristic'],
-        ['inoutport', 'In-/out-port'], ['inport', 'In-port'], ['outport', 'Out-port'],
-        ['section', 'Behavior'],
-        ['activity', 'Activity'], ['action', 'Action'], ['pin', 'Pin'],
-        ['objectnode', 'Object Node'], ['structuredactivity', 'Structured Activity'], ['controldataflow', 'Control/Data flow'],
-        ['initialnode', 'Initial Node'], ['activityfinalnode', 'Activity Final Node'], ['flowfinalnode', 'Flow Final Node'],
-        ['decisionmerge', 'Decision/Merge'], ['forkjoin', 'Fork/Join'],
-        ['section', 'Simulink / Stateflow (imported models)'],
-        ['simulink', 'Simulink system, subsystem, block, or port'],
-        ['stateflow', 'Stateflow model, chart, state, or transition'],
-        ['section', 'Fault Tree Analysis'],
-        ['ftamodel', 'Model of Fault Tree Analysis'], ['ftaevent', 'Event'],
-        ['andgate', 'AND gate'], ['orgate', 'OR gate'], ['xorgate', 'XOR gate'],
-        ['votinggate', 'Voting gate'], ['transfergate', 'Transfer gate (references another event)'],
-        ['cutsetmodel', 'Model of cut-set analysis'], ['cutset', 'Cut-set'],
-        ['section', 'Failure Mode and Effects Analysis'],
-        ['fmeaworksheet', 'FMEA Worksheet (detached)'],
-        ['fmeaworksheetfunction', 'FMEA Worksheet derived from system model (Function)'],
-        ['fmeaworksheetcomponent', 'FMEA Worksheet derived from system model (Component)'],
-        ['componentorfunction', 'Component or function'],
-        ['failuremode', 'Failure mode'], ['failureeffect', 'Failure effect'], ['failurecause', 'Failure cause'],
-        ['designcontrol', 'Currently implemented design control (prevention or detection)'],
-        ['actionrecommended', 'Action which is recommended'], ['actiontaken', 'Action which has been taken'],
-        ['derivedfailuremode', 'Failure mode/effect/cause in a derived FMEA'],
+        ['malfunction', 'Malfunction'],
+        ['hazard', 'Hazard'],
+        ['section', 'Safety Goals & Requirements'],
+        ['goal', 'Safety Goal'],
+        ['requirement', 'Functional Safety Requirement'],
+        ['section', 'Safety Analysis'],
+        ['worksheet', 'FMEA / FTA / Diagnostic Coverage worksheet'],
       ];
-      let html = '<div class="wb-legend-grid">';
-      let sectionOpen = false;
+      let html = '<div>';
       rows.forEach(r => {
-        if (r[0] === 'section') {
-          if (sectionOpen) html += '</div>';
-          html += '<div class="wb-legend-section-block"><div class="wb-legend-section">' + r[1] + '</div>';
-          sectionOpen = true;
-        } else {
-          html += '<div class="wb-legend-row"><span class="wb-legend-glyph">' + (WB_GLYPHS[r[0]] || WB_GLYPHS.element) + '</span>' + r[1] + '</div>';
-        }
+        if (r[0] === 'section') { html += '<div class="wb-legend-section">' + r[1] + '</div>'; }
+        else { html += '<div class="wb-legend-row"><span class="wb-legend-glyph">' + WB_GLYPHS[r[0]] + '</span>' + r[1] + '</div>'; }
       });
-      if (sectionOpen) html += '</div>';
       html += '</div>';
       document.getElementById('modal-body').innerHTML = html;
       document.getElementById('modal-actions').innerHTML = '<button class="modal-btn solid" onclick="closeModal()">Close</button>';
-      const card = document.querySelector('.modal-card');
-      if (card) card.classList.add('wide');
       document.getElementById('modal-overlay').classList.add('open');
     }
 

@@ -2214,11 +2214,14 @@
       hazard: 'H', goal: 'SG', requirement: 'FSR', worksheet: 'WS', element: 'EL'
     };
 
-    // Seed definitions — follows the standard ISO 26262-3 work-product breakdown
-    // (Item Definition / HARA / Safety Goals & Requirements / System Design / Safety Analysis),
-    // mirroring the folder layout medini ships with, populated with representative
-    // placeholder content rather than any proprietary example project data.
-    // tempId/parentTempId are only used to wire up parent_id during the one-time seed insert.
+    // Seed definitions — the Model Browser skeleton for a new Functional Safety
+    // project, structured around ISO 26262:2018's actual 12-part breakdown
+    // (Vocabulary through Adaptation for Motorcycles) rather than a single
+    // tool's example project layout. Every folder starts empty — no
+    // placeholder items, hazards, or requirements — so the tree reflects the
+    // standard's own structure first; content gets added folder by folder.
+    // tempId/parentTempId only wire up parent_id during the one-time seed insert;
+    // folderKind (= tempId here) is what the New-menu lookup keys off of.
     function wbSeedDefinitions() {
       return [
         { tempId: 'readme', parentTempId: null, kind: 'readme', label: 'ReadMe', props: {
@@ -2228,30 +2231,29 @@
             Disclaimer: 'Read the separate LICENSE.txt'
           } },
 
-        { tempId: 'item-def', parentTempId: null, kind: 'folder', label: 'Item Definition', props: { folderKind: 'item-def' } },
-        { tempId: 'item-desc', parentTempId: 'item-def', kind: 'item', label: 'Item Description', props: { Status: 'Draft' } },
-        { tempId: 'item-arch', parentTempId: 'item-def', kind: 'diagram', label: 'Item Architecture', props: { Editor: 'Diagram Editor' } },
-        { tempId: 'fn-vehicle', parentTempId: 'item-def', kind: 'folder', label: 'Vehicle Level Functions', props: { folderKind: 'fn-vehicle' } },
-        { tempId: 'f-001', parentTempId: 'fn-vehicle', kind: 'function', label: 'Lock Vehicle', props: { Type: 'Vehicle Level Function' } },
-        { tempId: 'f-002', parentTempId: 'fn-vehicle', kind: 'function', label: 'Unlock Vehicle', props: { Type: 'Vehicle Level Function' } },
+        { tempId: 'vocabulary', parentTempId: null, kind: 'folder', label: 'Vocabulary (Part 1)', props: { folderKind: 'vocabulary' } },
 
-        { tempId: 'hara', parentTempId: null, kind: 'folder', label: 'Hazard Analysis and Risk Assessment', props: { folderKind: 'hara' } },
-        { tempId: 'mal-lock', parentTempId: 'hara', kind: 'malfunction', label: 'Unintended Lock', props: {} },
-        { tempId: 'mal-unlock', parentTempId: 'hara', kind: 'malfunction', label: 'Unintended Unlock', props: {} },
-        { tempId: 'haz-001', parentTempId: 'hara', kind: 'hazard', label: 'Loss of Steering Control', props: { ASIL: 'C' } },
+        { tempId: 'management', parentTempId: null, kind: 'folder', label: 'Management of Functional Safety (Part 2)', props: { folderKind: 'management' } },
 
-        { tempId: 'goals', parentTempId: null, kind: 'folder', label: 'Safety Goals and Requirements', props: { folderKind: 'goals' } },
-        { tempId: 'sg-001', parentTempId: 'goals', kind: 'goal', label: 'Prevent Unintended Lock', props: { ASIL: 'C' } },
-        { tempId: 'fsr-001', parentTempId: 'goals', kind: 'requirement', label: 'Detect Lock Actuator Fault', props: { 'Derived from': 'SG-001' } },
+        { tempId: 'concept', parentTempId: null, kind: 'folder', label: 'Concept Phase (Part 3)', props: { folderKind: 'concept' } },
 
-        { tempId: 'sysdesign', parentTempId: null, kind: 'folder', label: 'System Design', props: { folderKind: 'sysdesign' } },
-        { tempId: 'hw-models', parentTempId: 'sysdesign', kind: 'folder', label: 'Hardware Models', props: { folderKind: 'hw-models' } },
-        { tempId: 'sw-models', parentTempId: 'sysdesign', kind: 'folder', label: 'Software Models', props: { folderKind: 'sw-models' } },
+        { tempId: 'system-dev', parentTempId: null, kind: 'folder', label: 'System Development (Part 4)', props: { folderKind: 'system-dev' } },
 
-        { tempId: 'safety-analysis', parentTempId: null, kind: 'folder', label: 'Safety Analysis', props: { folderKind: 'safety-analysis' } },
-        { tempId: 'fmea', parentTempId: 'safety-analysis', kind: 'folder', label: 'FMEA Worksheets', props: { folderKind: 'fmea' } },
-        { tempId: 'fta', parentTempId: 'safety-analysis', kind: 'folder', label: 'FTA Models', props: { folderKind: 'fta' } },
-        { tempId: 'dc', parentTempId: 'safety-analysis', kind: 'folder', label: 'Diagnostic Coverage', props: { folderKind: 'dc' } },
+        { tempId: 'hw-dev', parentTempId: null, kind: 'folder', label: 'Hardware Development (Part 5)', props: { folderKind: 'hw-dev' } },
+
+        { tempId: 'sw-dev', parentTempId: null, kind: 'folder', label: 'Software Development (Part 6)', props: { folderKind: 'sw-dev' } },
+
+        { tempId: 'prod-ops', parentTempId: null, kind: 'folder', label: 'Production, Operation, Service and Decommissioning (Part 7)', props: { folderKind: 'prod-ops' } },
+
+        { tempId: 'supporting', parentTempId: null, kind: 'folder', label: 'Supporting Processes (Part 8)', props: { folderKind: 'supporting' } },
+
+        { tempId: 'asil-analyses', parentTempId: null, kind: 'folder', label: 'ASIL and Safety Analysis (Part 9)', props: { folderKind: 'asil-analyses' } },
+
+        { tempId: 'guidelines-iso', parentTempId: null, kind: 'folder', label: 'Guidelines \u2014 ISO 26262 (Part 10)', props: { folderKind: 'guidelines-iso' } },
+
+        { tempId: 'guidelines-semi', parentTempId: null, kind: 'folder', label: 'Guidelines \u2014 Semiconductor (Part 11)', props: { folderKind: 'guidelines-semi' } },
+
+        { tempId: 'adaptation-moto', parentTempId: null, kind: 'folder', label: 'Adaptation \u2014 Motorcycle (Part 12)', props: { folderKind: 'adaptation-moto' } },
       ];
     }
 
@@ -2655,17 +2657,9 @@
     // ---------- Context menu (New / Derive / Open With / Related Elements) ----------
 
     const WB_NEW_OPTIONS = {
-      'item-def':        [['item', 'Item Description'], ['diagram', 'Item Architecture'], ['function', 'Function']],
-      'fn-vehicle':       [['function', 'Function']],
-      'hara':            [['malfunction', 'Malfunction'], ['hazard', 'Hazard']],
-      'goals':           [['goal', 'Safety Goal'], ['requirement', 'Functional Safety Requirement']],
-      'sysdesign':       [['diagram', 'System Diagram'], ['element', 'Hardware Element'], ['element', 'Software Element']],
-      'hw-models':       [['element', 'Hardware Element']],
-      'sw-models':       [['element', 'Software Element']],
-      'safety-analysis': [['worksheet', 'FMEA Worksheet'], ['worksheet', 'FTA Model'], ['worksheet', 'Diagnostic Coverage Worksheet']],
-      'fmea':            [['worksheet', 'FMEA Worksheet']],
-      'fta':             [['worksheet', 'FTA Model']],
-      'dc':              [['worksheet', 'Diagnostic Coverage Worksheet']],
+      // Populated folder-by-folder as each ISO 26262 part's work products are
+      // defined. Until then, every folder above just gets the universal
+      // GENERIC_NEW_OPTIONS set (Package, Checklist, External Link/Document).
     };
 
     // Available in EVERY folder regardless of type — matches the "marked"

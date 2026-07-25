@@ -2160,7 +2160,13 @@
         body: JSON.stringify({ max_tokens: 1000, system: systemPrompt, messages: history })
       });
       const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (data.error) {
+        // Our own proxy sends a plain string; Anthropic's API (passed through
+        // as-is on upstream errors) nests it as {type, message} — handle both
+        // rather than ever showing the person a bare "[object Object]".
+        const msg = typeof data.error === 'string' ? data.error : (data.error.message || JSON.stringify(data.error));
+        throw new Error(msg);
+      }
       const textBlock = (data.content || []).find(b => b.type === 'text');
       if (!textBlock) throw new Error('No response from assistant');
       return textBlock.text;
@@ -2207,7 +2213,7 @@
       } catch (e) {
         console.error(e);
         fcHideTyping();
-        fcAppendAssistantMessage("Sorry — I couldn't reach the assistant just now. Please try again in a moment.");
+        fcAppendAssistantMessage("Sorry — I couldn't reach the assistant just now. <span style='opacity:0.7; font-size:11px;'>(" + escapeHtml(e.message || String(e)) + ")</span>");
       } finally {
         fcBusy = false;
         document.getElementById('fc-send').disabled = false;

@@ -6,24 +6,6 @@
 // deployed (direct client-side calls to Anthropic's API don't work from an
 // arbitrary website — no key attached, and it doesn't allow that anyway).
 
-async function readJsonBody(req) {
-  // Vercel usually parses req.body automatically for JSON requests, but if
-  // that didn't happen for any reason (runtime/config quirk), fall back to
-  // reading the raw request stream ourselves rather than failing.
-  if (req.body && typeof req.body === 'object' && Object.keys(req.body).length > 0) {
-    return req.body;
-  }
-  const chunks = [];
-  for await (const chunk of req) chunks.push(chunk);
-  const raw = Buffer.concat(chunks).toString('utf8');
-  if (!raw) return {};
-  try {
-    return JSON.parse(raw);
-  } catch (e) {
-    return {};
-  }
-}
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     res.status(405).json({ error: 'Method not allowed' });
@@ -36,10 +18,9 @@ export default async function handler(req, res) {
     return;
   }
 
-  const body = await readJsonBody(req);
-  const { system, messages, max_tokens } = body;
+  const { system, messages, max_tokens } = req.body || {};
   if (!messages) {
-    res.status(400).json({ error: 'Missing "messages" in request body', debugReceivedKeys: Object.keys(body) });
+    res.status(400).json({ error: 'Missing "messages" in request body' });
     return;
   }
 
@@ -52,7 +33,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: max_tokens || 1000,
         system: system,
         messages: messages

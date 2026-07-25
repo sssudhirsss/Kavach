@@ -495,6 +495,11 @@
   #fc-header-status { font-size: 10.5px; opacity: 0.85; display:flex; align-items:center; gap:5px; }
   #fc-header-status .pulse { width:6px; height:6px; border-radius:50%; background:#B9EFDE; }
   #fc-close { background: none; border: none; color: #fff; opacity: 0.85; cursor: pointer; padding: 4px; }
+  #fc-book-btn {
+    background: rgba(255,255,255,0.18); border: none; color: #fff; opacity: 0.95; cursor: pointer;
+    padding: 5px; border-radius: 7px; display: flex; align-items: center; justify-content: center;
+  }
+  #fc-book-btn:hover { background: rgba(255,255,255,0.3); }
 
   #fc-body {
     flex: 1;
@@ -515,12 +520,45 @@
   }
   .fc-msg ul { margin: 8px 0 0; padding-left: 18px; }
   .fc-msg li { margin-bottom: 4px; }
+  .fc-msg.fc-user { background: var(--accent); color: #fff; align-self: flex-end; margin-left: auto; }
+  .fc-msg.fc-typing { display: flex; gap: 4px; align-items: center; padding: 13px; }
+  .fc-msg.fc-typing span {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--text-dim); display: inline-block;
+    animation: fcTypingBounce 1.1s infinite ease-in-out;
+  }
+  .fc-msg.fc-typing span:nth-child(2) { animation-delay: 0.15s; }
+  .fc-msg.fc-typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes fcTypingBounce { 0%,60%,100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-4px); opacity: 1; } }
+
+  .fc-quick-replies { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fc-quick-btn {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 11.5px; font-weight: 600; color: var(--accent);
+    background: var(--accent-bg-fu, #EEF9F6); border: 1px solid var(--accent); border-radius: 20px;
+    padding: 6px 12px; cursor: pointer; text-align: left;
+  }
+  .fc-quick-btn:hover { background: var(--accent); color: #fff; }
+  .fc-quick-btn.fc-quick-secondary { background: #fff; }
+
+  .fc-action-btn {
+    font-family: 'IBM Plex Sans', sans-serif; font-size: 12px; font-weight: 700; color: #fff;
+    background: var(--accent); border: none; border-radius: 8px; padding: 9px 14px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px; margin-top: 4px;
+  }
+  .fc-action-btn:hover { opacity: 0.9; }
+
+  #fc-attachments { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 12px; }
+  .fc-attach-chip {
+    display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text);
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 4px 8px;
+  }
+  .fc-attach-chip button { background: none; border: none; color: var(--text-dim); cursor: pointer; padding: 0; font-size: 13px; line-height: 1; }
 
   #fc-inputbar {
     padding: 12px;
     border-top: 1px solid var(--line);
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    align-items: flex-end;
   }
   #fc-input {
     flex: 1;
@@ -533,8 +571,9 @@
     color: var(--text-dim);
   }
   #fc-input:disabled { cursor: not-allowed; }
-  #fc-send {
-    width: 36px; height: 36px;
+  #fc-input:not(:disabled) { background: #fff; color: var(--ink); }
+  #fc-mic-btn, #fc-attach-btn, #fc-send {
+    width: 34px; height: 34px; flex-shrink: 0;
     border-radius: 8px;
     border: none;
     background: var(--line);
@@ -542,6 +581,11 @@
     display: flex; align-items: center; justify-content: center;
     cursor: not-allowed;
   }
+  #fc-mic-btn:not(:disabled), #fc-attach-btn:not(:disabled), #fc-send:not(:disabled) {
+    background: var(--accent-bg-fu, #EEF9F6); color: var(--accent); cursor: pointer;
+  }
+  #fc-mic-btn.listening { background: var(--accent); color: #fff; }
+  #fc-mic-btn.unmuted:not(.listening) { background: var(--accent-bg-fu, #EEF9F6); color: var(--accent); box-shadow: inset 0 0 0 1.5px var(--accent); }
   #fc-soon {
     font-size: 10px;
     color: var(--text-dim);
@@ -1328,6 +1372,9 @@
         <div id="fc-header-name">Safety Assistant</div>
         <div id="fc-header-status"><span class="pulse"></span> Online</div>
       </div>
+      <button id="fc-book-btn" onclick="fcShowExplainerPicker()" aria-label="Learn about a work product" title="Learn about a work product">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+      </button>
       <button id="fc-close" onclick="fcToggle()" aria-label="Close">✕</button>
     </div>
     <div id="fc-body">
@@ -1345,13 +1392,21 @@
       </div>
       <div class="fc-msg">Just tell me what you need &mdash; explain a concept, answer a question about a clause, or create/update a HARA, FMEA, FTA, or other work product right in your project.</div>
     </div>
+    <div id="fc-attachments"></div>
     <div id="fc-inputbar">
-      <input id="fc-input" type="text" placeholder="Full assistant launching soon…" disabled />
-      <button id="fc-send" disabled>
+      <input type="file" id="fc-file-input" style="display:none;" onchange="fcHandleAttachment(event)" accept=".txt,.md,.csv,.pdf,.png,.jpg,.jpeg">
+      <button id="fc-attach-btn" onclick="document.getElementById('fc-file-input').click()" aria-label="Attach a file" title="Attach a file">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+      </button>
+      <input id="fc-input" type="text" placeholder="Full assistant launching soon…" disabled onkeydown="if(event.key==='Enter'){event.preventDefault();fcSendMessage();}" />
+      <button id="fc-mic-btn" onclick="fcToggleMic()" aria-label="Turn voice on/off" title="Turn voice on/off" disabled>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+      </button>
+      <button id="fc-send" onclick="fcSendMessage()" disabled>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
       </button>
     </div>
-    <div id="fc-soon">Live Q&amp;A is coming soon.</div>
+    <div id="fc-soon" style="display:none;">Live Q&amp;A is coming soon.</div>
   </div>
 
   <div id="modal-overlay" onclick="if(event.target===this) closeModal()">
@@ -1675,6 +1730,80 @@
       }
     };
 
+    // ---------- Work product explainers (the "book icon" content) ----------
+    // Same shape/pattern as TOPICS above, one level more specific — a single
+    // work product rather than a whole standard. Grounded in the actual
+    // clause text (ISO 26262-3, 5.4), same as the Concept Phase templates.
+    const WORKPRODUCT_EXPLAINERS = {
+      'item-definition': {
+        label: 'Item Definition',
+        standardKey: 'fu',
+        text: "The Item Definition (work product 5.5.1, ISO 26262-3 clause 5.4) is the starting point for the whole safety lifecycle \u2014 everything downstream (HARA, safety goals, requirements) references it." +
+          "<p><strong>5.4.1 \u2014 Item requirements</strong></p><ul>" +
+          "<li>Legal requirements, national and international standards</li>" +
+          "<li>Functional behaviour at the vehicle level, including operating modes/states</li>" +
+          "<li>Required quality, performance, and availability</li>" +
+          "<li>Constraints \u2014 functional dependencies, dependencies on other items, operating environment</li>" +
+          "<li>Potential consequences of behavioural shortfalls, including known failure modes/hazards</li>" +
+          "<li>Capabilities of the actuators, or their assumed capabilities</li>" +
+          "</ul>" +
+          "<p><strong>5.4.2 \u2014 Item boundary and interfaces</strong></p><ul>" +
+          "<li>The elements that make up the item</li>" +
+          "<li>Assumptions on the item's effects on the vehicle</li>" +
+          "<li>Functionality this item provides to other items/elements</li>" +
+          "<li>Functionality this item requires from other items/elements</li>" +
+          "<li>Allocation of functions among the involved systems/elements</li>" +
+          "<li>Operational scenarios that impact the item's functionality</li>" +
+          "</ul>" +
+          "You don't need every field filled in before I can draft something useful \u2014 tell me what you know and I'll ask about the rest."
+      }
+    };
+
+    function fcShowExplainerPicker() {
+      document.getElementById('modal-title').textContent = 'Learn about a work product';
+      document.getElementById('modal-context').textContent = 'Reference material, any time';
+      let html = '<div class="disc-menu">';
+      Object.keys(WORKPRODUCT_EXPLAINERS).forEach(key => {
+        const wp = WORKPRODUCT_EXPLAINERS[key];
+        html += '<button class="disc-menu-btn" onclick="showWorkProductExplainer(\'' + key + '\')">' +
+          '<span class="disc-menu-title">' + wp.label + '</span>' +
+          '<span class="disc-menu-sub">' + (STANDARD_META[wp.standardKey] ? STANDARD_META[wp.standardKey].label.split(' \u2014 ')[0] : '') + '</span>' +
+        '</button>';
+      });
+      html += '</div>';
+      document.getElementById('modal-body').innerHTML = html;
+      document.getElementById('modal-actions').innerHTML = '<button class="modal-btn ghost" onclick="closeModal()">Close</button>';
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    function showWorkProductExplainer(key) {
+      const wp = WORKPRODUCT_EXPLAINERS[key];
+      document.getElementById('modal-title').textContent = wp.label;
+      document.getElementById('modal-context').textContent = STANDARD_META[wp.standardKey] ? STANDARD_META[wp.standardKey].label.split(' \u2014 ')[0] : '';
+      document.getElementById('modal-body').innerHTML = '<div class="modal-topic-text">' + wp.text + '</div>';
+      document.getElementById('modal-actions').innerHTML =
+        '<button class="modal-btn ghost" onclick="closeModal()">Close</button>' +
+        '<button class="modal-btn solid" onclick="closeModal(); fcSendMessage(\'Help me build the \' + ' + JSON.stringify(wp.label) + ');">Build this now</button>';
+      document.getElementById('modal-overlay').classList.add('open');
+    }
+
+    // Reuses the same <li><strong>Label</strong> Description</li> shape TOPICS
+    // is already written in, so the quick-reply chips can never drift from the
+    // prose shown elsewhere in the app — one source of facts, two renderings.
+    function parsePartsFromTopic(key) {
+      const topic = TOPICS[key];
+      if (!topic) return [];
+      const items = [];
+      const re = /<li><strong>([^<]+)<\/strong>([\s\S]*?)<\/li>/g;
+      let m;
+      while ((m = re.exec(topic.text))) {
+        let desc = m[2].replace(/<[^>]+>/g, '').trim();
+        desc = desc.replace(/&mdash;/g, '\u2014').replace(/&ndash;/g, '\u2013').replace(/&amp;/g, '&');
+        items.push([m[1].trim(), desc]);
+      }
+      return items;
+    }
+
     // Shared helper for pushing a user/assistant exchange into the chat panel.
     // replyHtml is trusted, pre-built HTML (canned content), never raw user input.
     function appendChatExchange(userText, replyHtml) {
@@ -1837,6 +1966,380 @@
       "I'm scoped to Functional Safety (ISO 26262), Cybersecurity (ISO/SAE 21434), SOTIF (ISO 21448), " +
       "and AI Safety (ISO/PAS 8800) &mdash; I don't discuss my own build, underlying model, training data, " +
       "or infrastructure. What would you like help with on one of those standards?";
+
+    // =========================================================================
+    // Live Safety Assistant — replaces the "coming soon" canned panel above.
+    // Text/voice/attachment all funnel into the same fcSendMessage() path, so
+    // there's exactly one place conversation state and the API call live.
+    // =========================================================================
+
+    let fcHistory = [];            // [{role:'user'|'assistant', content: string | content-blocks}]
+    let fcPendingAttachments = []; // attachments staged for the NEXT send, cleared after
+    let fcBusy = false;            // true while waiting on a reply — blocks double-sends
+    let fcVoiceMuted = true;       // default OFF — mic and spoken replies are one coupled toggle
+
+    // Enables the input/mic/attach/send controls. Called once at load — the
+    // "Full assistant launching soon" placeholder is gone the moment a real
+    // backend is wired in, per the comment that used to sit above wbOpen.
+    function fcEnableChat() {
+      const input = document.getElementById('fc-input');
+      input.disabled = false;
+      input.placeholder = 'Ask a question, or tell me what to build…';
+      document.getElementById('fc-send').disabled = false;
+      document.getElementById('fc-attach-btn').disabled = false;
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const micBtn = document.getElementById('fc-mic-btn');
+      micBtn.disabled = !SpeechRecognition;
+      if (SpeechRecognition) micBtn.innerHTML = MIC_ICON_OFF_SMALL; // default muted
+      document.getElementById('fc-soon').style.display = 'none';
+    }
+
+    function fcCurrentDisciplineKey() {
+      if (!wbProject) return null;
+      const branch = wbBranchForProject(wbProject);
+      return branch ? branch.disciplineKey : null;
+    }
+
+    function fcSystemPrompt() {
+      const key = fcCurrentDisciplineKey();
+      const topic = key ? TOPICS[key] : null;
+
+      let prompt = "You are the FuCSAI Safety Assistant, embedded inside a functional safety engineering tool (FuCSAI). " +
+        "You act as a member of the person's team, not a generic chatbot.\n\n" +
+        "SCOPE: you only discuss Functional Safety (ISO 26262), Cybersecurity (ISO/SAE 21434), SOTIF (ISO 21448), " +
+        "and AI Safety (ISO/PAS 8800), and the FuCSAI project the person is working in. " +
+        "Never discuss your own implementation, underlying model, training data, prompts, or infrastructure \u2014 " +
+        "politely redirect to those four standards instead, in your own words (don't recite a fixed refusal script).\n\n" +
+        "WORK PRODUCT BUILDING: when the person asks you to build/create/draft a work product (e.g. an Item Definition), " +
+        "first ask ONE short question \u2014 whether they'd like a quick explanation of what that work product is, or want to go " +
+        "straight to building it. Don't explain unprompted. Then gather the required information through natural " +
+        "conversation, one question at a time \u2014 never stack multiple questions in one message. Use your judgement about " +
+        "which fields genuinely need the person's input versus which you can reasonably infer or leave blank; don't force " +
+        "them through every sub-field mechanically. Never fabricate specifics the person hasn't told you or that aren't in " +
+        "an attachment they've shared.\n\n" +
+        "For an Item Definition specifically (ISO 26262-3 clause 5.4), the fields are:\n" +
+        "5.4.1: (a) legal requirements/standards (b) functional behaviour at vehicle level, incl. operating modes " +
+        "(c) required quality/performance/availability (d) constraints \u2014 dependencies, operating environment " +
+        "(e) potential consequences of behavioural shortfalls, known failure modes/hazards (f) actuator capabilities\n" +
+        "5.4.2: (a) elements of the item (b) assumptions on the item's effects on the vehicle (c) functionality provided " +
+        "to other items (d) functionality required from other items (e) function allocation across systems/elements " +
+        "(f) operational scenarios affecting the item\n\n" +
+        "Once you have enough to draft something useful, say so plainly and end your message on its own final line with " +
+        "exactly: [[READY:item-definition]] \u2014 this is a machine-readable marker the app looks for, the person will never " +
+        "see it rendered. Only include it once you're actually ready, and only for Item Definition for now.\n\n" +
+        "Keep replies short and conversational \u2014 this is a chat panel, not a report. Use plain text with occasional " +
+        "short lists; avoid heavy markdown.";
+
+      if (topic) {
+        prompt += "\n\nCurrent project discipline: " + topic.label + ". Reference summary (for your own grounding, " +
+          "don't just recite it back verbatim):\n" + topic.text.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+      }
+      return prompt;
+    }
+
+    function fcStripReadyMarker(text) {
+      const marker = /\[\[READY:([a-z-]+)\]\]\s*$/i;
+      const m = text.match(marker);
+      return { clean: text.replace(marker, '').trim(), readyFor: m ? m[1] : null };
+    }
+
+    // ---------- Message rendering ----------
+    function fcAppendUserMessage(text, attachments) {
+      const body = document.getElementById('fc-body');
+      const msg = document.createElement('div');
+      msg.className = 'fc-msg fc-user';
+      let html = escapeHtml(text || '');
+      if (attachments && attachments.length) {
+        html += '<div style="margin-top:6px; opacity:0.85; font-size:11px;">' +
+          attachments.map(a => '\uD83D\uDCCE ' + escapeHtml(a.name)).join('<br>') + '</div>';
+      }
+      msg.innerHTML = html;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function fcAppendAssistantMessage(html) {
+      const body = document.getElementById('fc-body');
+      const msg = document.createElement('div');
+      msg.className = 'fc-msg';
+      msg.innerHTML = html;
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+      return msg;
+    }
+
+    function fcRenderQuickReplies(options) {
+      const body = document.getElementById('fc-body');
+      const wrap = document.createElement('div');
+      wrap.className = 'fc-quick-replies';
+      options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'fc-quick-btn';
+        btn.textContent = opt.label;
+        btn.onclick = () => { wrap.remove(); fcSendMessage(opt.value); };
+        wrap.appendChild(btn);
+      });
+      body.appendChild(wrap);
+      body.scrollTop = body.scrollHeight;
+    }
+
+    function fcShowTyping() {
+      const body = document.getElementById('fc-body');
+      const msg = document.createElement('div');
+      msg.className = 'fc-msg fc-typing';
+      msg.id = 'fc-typing-indicator';
+      msg.innerHTML = '<span></span><span></span><span></span>';
+      body.appendChild(msg);
+      body.scrollTop = body.scrollHeight;
+    }
+    function fcHideTyping() {
+      const el = document.getElementById('fc-typing-indicator');
+      if (el) el.remove();
+    }
+
+    // ---------- Attachments ----------
+    // Text-ish files are read and inlined as plain text context; images/PDF go
+    // through as native content blocks the API can actually see, not just a filename.
+    function fcHandleAttachment(event) {
+      const file = event.target.files[0];
+      event.target.value = '';
+      if (!file) return;
+      const reader = new FileReader();
+      const isTextLike = /\.(txt|md|csv)$/i.test(file.name);
+      reader.onload = (e) => {
+        if (isTextLike) {
+          fcPendingAttachments.push({ name: file.name, kind: 'text', text: e.target.result });
+        } else {
+          const base64 = e.target.result.split(',')[1];
+          const mediaType = file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'application/octet-stream');
+          fcPendingAttachments.push({ name: file.name, kind: mediaType === 'application/pdf' ? 'document' : 'image', mediaType, base64 });
+        }
+        fcRenderAttachmentChips();
+      };
+      if (isTextLike) reader.readAsText(file); else reader.readAsDataURL(file);
+    }
+
+    function fcRemoveAttachment(idx) {
+      fcPendingAttachments.splice(idx, 1);
+      fcRenderAttachmentChips();
+    }
+
+    function fcRenderAttachmentChips() {
+      const wrap = document.getElementById('fc-attachments');
+      wrap.innerHTML = fcPendingAttachments.map((a, i) =>
+        '<span class="fc-attach-chip">\uD83D\uDCCE ' + escapeHtml(a.name) + '<button onclick="fcRemoveAttachment(' + i + ')" aria-label="Remove">\u2715</button></span>'
+      ).join('');
+    }
+
+    function fcBuildUserContent(text, attachments) {
+      const blocks = [];
+      (attachments || []).forEach(a => {
+        if (a.kind === 'text') {
+          blocks.push({ type: 'text', text: 'Attached file "' + a.name + '":\n' + a.text });
+        } else if (a.kind === 'image') {
+          blocks.push({ type: 'image', source: { type: 'base64', media_type: a.mediaType, data: a.base64 } });
+        } else if (a.kind === 'document') {
+          blocks.push({ type: 'document', source: { type: 'base64', media_type: a.mediaType, data: a.base64 } });
+        }
+      });
+      blocks.push({ type: 'text', text: text || '(see attached file)' });
+      return blocks;
+    }
+
+    // ---------- The API call ----------
+    // Goes through /api/chat (a same-origin serverless function — see
+    // api/chat.js), NOT api.anthropic.com directly. A page on your own
+    // domain can't call Anthropic's API directly: no key attached from the
+    // browser, and the API doesn't accept arbitrary cross-origin requests
+    // anyway. The proxy holds the key server-side and forwards this exact
+    // shape through unchanged.
+    async function fcCallClaude(history, systemPrompt) {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ max_tokens: 1000, system: systemPrompt, messages: history })
+      });
+      const data = await response.json();
+      if (data.error) throw new Error(data.error);
+      const textBlock = (data.content || []).find(b => b.type === 'text');
+      if (!textBlock) throw new Error('No response from assistant');
+      return textBlock.text;
+    }
+
+    // ---------- Main send path — text, voice transcript, and quick-reply values all funnel through here ----------
+    async function fcSendMessage(overrideText) {
+      if (fcBusy) return;
+      const input = document.getElementById('fc-input');
+      const text = (overrideText !== undefined ? overrideText : input.value).trim();
+      if (!text && fcPendingAttachments.length === 0) return;
+
+      if (isMetaQuestion(text)) {
+        appendChatExchange(text, META_GUARDRAIL_REPLY);
+        input.value = '';
+        return;
+      }
+
+      fcAppendUserMessage(text, fcPendingAttachments);
+      input.value = '';
+      const userContent = fcBuildUserContent(text, fcPendingAttachments);
+      fcPendingAttachments = [];
+      fcRenderAttachmentChips();
+      fcHistory.push({ role: 'user', content: userContent });
+
+      fcBusy = true;
+      document.getElementById('fc-send').disabled = true;
+      fcShowTyping();
+      try {
+        const reply = await fcCallClaude(fcHistory, fcSystemPrompt());
+        fcHideTyping();
+        fcHistory.push({ role: 'assistant', content: reply });
+        const { clean, readyFor } = fcStripReadyMarker(reply);
+        const msgEl = fcAppendAssistantMessage(escapeHtml(clean).replace(/\n/g, '<br>'));
+        if (!fcVoiceMuted) speak(clean);
+        if (readyFor && WORKPRODUCT_EXPLAINERS[readyFor]) {
+          const btn = document.createElement('button');
+          btn.className = 'fc-action-btn';
+          btn.textContent = 'Create ' + WORKPRODUCT_EXPLAINERS[readyFor].label + ' in this project';
+          btn.onclick = () => fcCreateWorkProductFromChat(readyFor, btn);
+          msgEl.appendChild(document.createElement('br'));
+          msgEl.appendChild(btn);
+        }
+      } catch (e) {
+        console.error(e);
+        fcHideTyping();
+        fcAppendAssistantMessage("Sorry — I couldn't reach the assistant just now. Please try again in a moment.");
+      } finally {
+        fcBusy = false;
+        document.getElementById('fc-send').disabled = false;
+      }
+    }
+
+    // ---------- Mic/speaker toggle for the chat panel ----------
+    // One button, one state: muted (default) or unmuted. Muted = text only,
+    // nothing is ever spoken aloud. Unmuted = clicking the mic captures a
+    // spoken question AND every assistant reply is read aloud in addition to
+    // being shown as text — the two are coupled, not independent settings.
+    function fcToggleMic() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) { comingSoon("Voice input isn't supported in this browser"); return; }
+
+      if (fcVoiceMuted) {
+        fcVoiceMuted = false;
+        document.getElementById('fc-mic-btn').classList.add('unmuted');
+        comingSoon('Voice on \u2014 listening and speaking replies');
+        fcListenAndSend();
+      } else {
+        fcVoiceMuted = true;
+        document.getElementById('fc-mic-btn').classList.remove('unmuted', 'listening');
+        document.getElementById('fc-mic-btn').innerHTML = MIC_ICON_OFF_SMALL;
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        comingSoon('Voice off \u2014 text only');
+      }
+    }
+
+    function fcListenAndSend() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const micBtn = document.getElementById('fc-mic-btn');
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'en-US';
+      recognition.interimResults = false;
+      micBtn.classList.add('listening');
+      micBtn.innerHTML = MIC_ICON_ON;
+      recognition.start();
+      recognition.onresult = (e) => {
+        fcSendMessage(e.results[0][0].transcript);
+      };
+      recognition.onend = () => {
+        micBtn.classList.remove('listening');
+        micBtn.innerHTML = fcVoiceMuted ? MIC_ICON_OFF_SMALL : MIC_ICON_ON;
+      };
+      recognition.onerror = () => {
+        micBtn.classList.remove('listening');
+        micBtn.innerHTML = fcVoiceMuted ? MIC_ICON_OFF_SMALL : MIC_ICON_ON;
+        comingSoon('Couldn\u2019t hear that \u2014 try again or type instead');
+      };
+    }
+    const MIC_ICON_OFF_SMALL = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path><path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>';
+
+    // ---------- Proactive greeting when a project opens ----------
+    // Fresh conversation per project — resets fcHistory so the assistant's
+    // memory matches what's actually visible in the panel.
+    function fcGreetForProject(project) {
+      fcHistory = [];
+      fcPendingAttachments = [];
+      fcRenderAttachmentChips();
+      const body = document.getElementById('fc-body');
+      body.innerHTML = '';
+
+      const key = fcCurrentDisciplineKey();
+      const meta = key ? STANDARD_META[key] : null;
+      const standardName = meta ? meta.label.split(' \u2014 ')[1] : null;
+      const parts = key ? parsePartsFromTopic(key) : [];
+
+      const greet = 'Welcome to <strong>' + escapeHtml(project.name) + '</strong>. I\u2019m your Safety Assistant' +
+        (standardName ? ' for ' + escapeHtml(standardName) : '') + '. Which part would you like to start with?';
+      fcAppendAssistantMessage(greet);
+      if (parts.length) {
+        fcRenderQuickReplies(parts.map(([label, desc]) =>
+          ({ label: label, value: 'Let\u2019s start with ' + label + ': ' + desc })
+        ));
+      }
+    }
+
+    // ---------- Turning a finished conversation into an actual model element ----------
+    // A second, separate API call — asked to extract strict JSON from the
+    // transcript rather than continue chatting — keeps this deterministic and
+    // reviewable, same two-phase pattern used elsewhere in FuCSAI (gather
+    // conversationally, then one structured extraction step before anything
+    // gets written to the database).
+    async function fcCreateWorkProductFromChat(kind, triggerBtn) {
+      if (kind !== 'item-definition') return; // only Item Definition is wired end-to-end for now
+      if (triggerBtn) { triggerBtn.disabled = true; triggerBtn.textContent = 'Creating\u2026'; }
+
+      const extractionPrompt = "Extract an ISO 26262-3 Item Definition from the conversation transcript below. " +
+        "Return ONLY valid JSON, no markdown fences, no preamble, matching exactly this shape:\n" +
+        '{"name":"string - a short item name","requirements":{"legal":"string","functionalBehaviour":"string",' +
+        '"quality":"string","constraints":"string","consequences":"string","actuatorCapabilities":"string"},' +
+        '"boundary":{"elements":"string","vehicleEffects":"string","providesTo":"string","requiresFrom":"string",' +
+        '"allocation":"string","scenarios":"string"}}\n' +
+        "Use an empty string for any field the transcript doesn't actually cover \u2014 never invent specifics.";
+
+      const transcriptText = fcHistory.map(m => {
+        const text = typeof m.content === 'string' ? m.content
+          : m.content.map(b => b.text || '[attachment]').join(' ');
+        return (m.role === 'user' ? 'Person: ' : 'Assistant: ') + text;
+      }).join('\n');
+
+      try {
+        const raw = await fcCallClaude([{ role: 'user', content: transcriptText }], extractionPrompt);
+        const cleaned = raw.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
+        const parsed = JSON.parse(cleaned);
+
+        const props = {
+          'Legal requirements/standards': parsed.requirements.legal,
+          'Functional behaviour at vehicle level': parsed.requirements.functionalBehaviour,
+          'Required quality/performance/availability': parsed.requirements.quality,
+          'Constraints': parsed.requirements.constraints,
+          'Potential consequences of behavioural shortfalls': parsed.requirements.consequences,
+          'Actuator capabilities': parsed.requirements.actuatorCapabilities,
+          'Elements of the item': parsed.boundary.elements,
+          'Effects on the vehicle': parsed.boundary.vehicleEffects,
+          'Functionality provided to other items': parsed.boundary.providesTo,
+          'Functionality required from other items': parsed.boundary.requiresFrom,
+          'Function allocation': parsed.boundary.allocation,
+          'Operational scenarios': parsed.boundary.scenarios,
+        };
+        Object.keys(props).forEach(k => { if (!props[k]) delete props[k]; });
+
+        await fcCreateElementWithProps(wbProject.id, 'item', parsed.name || 'Item Definition', props);
+        fcAppendAssistantMessage('Created <strong>' + escapeHtml(parsed.name || 'Item Definition') + '</strong> in the Model Browser \u2014 you can open it there to review or keep editing.');
+      } catch (e) {
+        console.error(e);
+        fcAppendAssistantMessage("I couldn't create the work product just now \u2014 nothing was written to the project. Please try again.");
+      } finally {
+        if (triggerBtn) { triggerBtn.disabled = false; triggerBtn.textContent = 'Create Item Definition in this project'; }
+      }
+    }
 
     function handleSearchSubmit(viaVoice) {
       const input = document.getElementById('search-input');
@@ -2347,6 +2850,7 @@
       document.addEventListener('keydown', wbKeyHandler);
       wbDockAssistant();
       wbInitSidebarResize();
+      fcGreetForProject(project);
     }
 
     // Switches which project's contents are loaded into the editor/tree while
@@ -2360,6 +2864,7 @@
       await wbLoadElements();
       wbExpandedIds.add(project.id);
       wbRenderTree();
+      fcGreetForProject(project);
     }
 
     // ---------- Assistant docking (workspace layout only — see chat notes) ----------
@@ -2913,6 +3418,26 @@
       fcShowToast('Created ' + label + (data.display_id ? ' (' + data.display_id + ')' : ''));
     }
 
+    // Same insert as wbCreateChild, but actually writes props at creation time
+    // (wbCreateChild always inserts {} — fine for a manual "New" click where the
+    // person fills fields in afterward, not fine for the assistant, which has
+    // gathered real values before this ever runs). No context menu involved
+    // here, so no wbCloseCtx() call.
+    async function fcCreateElementWithProps(parentId, kind, label, props) {
+      if (!sbReady()) throw new Error('Not connected');
+      const parent_id = parentId === 'root' ? null : parentId;
+      const display_id = await wbNextDisplayId(kind);
+      const { data, error } = await sb.from('elements').insert({
+        project_id: wbProject.id, parent_id, kind, label, display_id, props: props || {}
+      }).select().single();
+      if (error) { console.error(error); throw error; }
+      wbElements.push(data);
+      wbExpandedIds.add(parentId);
+      wbRenderTree();
+      wbSelectNode(data.id);
+      return data;
+    }
+
     async function wbDeleteNode(id) {
       if (!confirm('Delete this element? Child elements will be deleted too.')) return;
       if (!sbReady()) return;
@@ -2972,6 +3497,11 @@
       d.textContent = str;
       return d.innerHTML;
     }
+
+    // Called here, not near initAuth() above — this needs every fc* function
+    // and constant (including MIC_ICON_OFF_SMALL) already declared, and this
+    // is the first point in the file where that's guaranteed true.
+    fcEnableChat();
   </script>
 
 </body>

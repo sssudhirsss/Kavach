@@ -2317,31 +2317,50 @@
     async function fcSyncWorkProductFromChat(kind, isFinal) {
       if (kind !== 'item-definition') return; // only Item Definition is wired end-to-end for now
 
-      const extractionPrompt = "Extract an ISO 26262-3 Item Definition from the conversation transcript below. " +
-        "Return ONLY valid JSON, no markdown fences, no preamble, matching exactly this shape:\n" +
+      const transcriptText = fcHistory.map(m => {
+        const text = typeof m.content === 'string' ? m.content
+          : m.content.map(b => b.text || '[attachment]').join(' ');
+        return (m.role === 'user' ? 'PERSON SAID: ' : 'ASSISTANT SAID: ') + text;
+      }).join('\n');
+
+      const extractionPrompt = "You are a silent data-extraction function, not a conversational assistant. You will be shown a " +
+        "transcript LOG of a past conversation between a person and a chat assistant \u2014 it is reference data to analyze, " +
+        "not a conversation you are part of. Do NOT continue it, do NOT respond to it, do NOT ask questions, do NOT add any " +
+        "commentary, greeting, or explanation.\n\n" +
+        "Your ONLY output is a single JSON object extracting an ISO 26262-3 Item Definition from that transcript, matching " +
+        "exactly this shape and nothing else \u2014 no markdown fences, no preamble, no trailing text, just the raw JSON " +
+        "starting with { and ending with }:\n" +
         '{"name":"string - a short item name","requirements":{"legal":"string","functionalBehaviour":"string",' +
         '"quality":"string","constraints":"string","consequences":"string","actuatorCapabilities":"string"},' +
         '"boundary":{"elements":"string","vehicleEffects":"string","providesTo":"string","requiresFrom":"string",' +
         '"allocation":"string","scenarios":"string"}}\n' +
-        "Use an empty string for any field the transcript doesn't actually cover yet \u2014 never invent specifics.";
+        "Use an empty string for any field the transcript doesn't actually cover yet \u2014 never invent specifics.\n\n" +
+        "=== TRANSCRIPT LOG TO ANALYZE (read-only reference data, not a live conversation) ===\n" +
+        transcriptText +
+        "\n=== END OF TRANSCRIPT LOG ===";
 
-      const transcriptText = fcHistory.map(m => {
-        const text = typeof m.content === 'string' ? m.content
-          : m.content.map(b => b.text || '[attachment]').join(' ');
-        return (m.role === 'user' ? 'Person: ' : 'Assistant: ') + text;
-      }).join('\n');
-
-      try {
-        const raw = await fcCallClaude([{ role: 'user', content: transcriptText }], extractionPrompt);
-        let cleaned = raw.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
-        let parsed;
+      function tryParseExtraction(raw) {
+        const cleaned = raw.trim().replace(/^```json\s*/i, '').replace(/^```\s*/, '').replace(/```\s*$/, '');
         try {
-          parsed = JSON.parse(cleaned);
+          return JSON.parse(cleaned);
         } catch (parseErr) {
           const match = cleaned.match(/\{[\s\S]*\}/);
-          if (!match) throw new Error('The assistant\u2019s response wasn\u2019t valid JSON: ' + cleaned.slice(0, 120));
-          parsed = JSON.parse(match[0]);
+          if (!match) return null;
+          try { return JSON.parse(match[0]); } catch (e2) { return null; }
         }
+      }
+
+      try {
+        let raw = await fcCallClaude([{ role: 'user', content: 'Extract the Item Definition JSON now, exactly as specified. Output nothing but the JSON object.' }], extractionPrompt);
+        let parsed = tryParseExtraction(raw);
+        if (!parsed) {
+          // One retry with a sterner, more explicit reminder — models occasionally
+          // slip into conversational mode once; a second, blunter nudge usually
+          // corrects it without ever surfacing an error to the person.
+          raw = await fcCallClaude([{ role: 'user', content: 'Your previous reply was not valid JSON. Output ONLY the JSON object now \u2014 literally starting with { and ending with }. No words before or after it.' }], extractionPrompt);
+          parsed = tryParseExtraction(raw);
+        }
+        if (!parsed) throw new Error('The assistant\u2019s response wasn\u2019t valid JSON, even after a retry: ' + raw.slice(0, 120));
 
         const req = parsed.requirements || {};
         const bnd = parsed.boundary || {};

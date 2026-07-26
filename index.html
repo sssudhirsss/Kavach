@@ -3884,7 +3884,7 @@
       const isFolder = WB_FOLDER_LIKE_KINDS.includes(node.kind) ||
         (WB_KIND_META[node.kind] && WB_KIND_META[node.kind].isFolder) || node.kind === 'folder';
       if (isFolder) {
-        return '<svg viewBox="0 0 16 16" width="13" height="13"><path d="M1 3.5A1.5 1.5 0 0 1 2.5 2h3.4a1.5 1.5 0 0 1 1.2.6l.9 1.2a.5.5 0 0 0 .4.2H13.5A1.5 1.5 0 0 1 15 5.5v7A1.5 1.5 0 0 1 13.5 14h-11A1.5 1.5 0 0 1 1 12.5v-9z" fill="none" stroke="#9CA6B1" stroke-width="1.2"/></svg>';
+        return ''; // no icon for folders — hierarchy is now shown by bold/size alone, not a symbol
       }
       if (node.kind === 'readme') {
         return '<svg viewBox="0 0 16 16" width="13" height="13"><circle cx="8" cy="8" r="6.3" fill="none" stroke="#9CA6B1" stroke-width="1.2"/><line x1="8" y1="5.6" x2="8" y2="5.7" stroke="#9CA6B1" stroke-width="1.6" stroke-linecap="round"/><line x1="8" y1="7.4" x2="8" y2="11" stroke="#9CA6B1" stroke-width="1.2" stroke-linecap="round"/></svg>';
@@ -3892,23 +3892,35 @@
       return '<svg viewBox="0 0 16 16" width="13" height="13"><path d="M4 1.5h5.5L12 4v10.5H4z" fill="none" stroke="#9CA6B1" stroke-width="1.1"/><path d="M9.5 1.5V4H12" fill="none" stroke="#9CA6B1" stroke-width="1.1"/></svg>';
     }
 
-    function wbRenderNode(node) {
+    // Depth-based type scale — top-level branches (Functional Safety,
+    // Cybersecurity, etc.) read as bold and largest; each level under that
+    // steps down slightly. Hierarchy is shown by weight/size now, not an icon.
+    const WB_DEPTH_SIZES = [13.5, 12.8, 12.2, 11.7, 11.3];
+    function wbLabelStyleForDepth(depth) {
+      const size = WB_DEPTH_SIZES[Math.min(depth, WB_DEPTH_SIZES.length - 1)];
+      const weight = depth === 0 ? 700 : 400;
+      return 'font-size:' + size + 'px; font-weight:' + weight + ';';
+    }
+
+    function wbRenderNode(node, depth) {
+      depth = depth || 0;
       const children = wbChildrenOf(node.id);
       const hasChildren = children.length > 0;
       const isFolderLike = WB_FOLDER_LIKE_KINDS.includes(node.kind);
       const leafClass = (hasChildren || isFolderLike) ? '' : ' leaf';
       const expanded = wbExpandedIds.has(node.id) ? ' expanded' : '';
       const selected = node.id === wbSelectedId ? ' selected' : '';
+      const glyph = wbSimpleGlyph(node);
       let html = '<div class="wb-node' + expanded + '" data-id="' + node.id + '">';
       html += '<div class="wb-node-row' + leafClass + selected + '" onclick="wbNodeClick(\'' + node.id + '\', event)" oncontextmenu="wbContextMenu(event, \'' + node.id + '\'); return false;">';
       html += '<span class="wb-chevron"><svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="3"><polyline points="9 6 15 12 9 18"/></svg></span>';
-      html += '<span class="wb-glyph">' + wbSimpleGlyph(node) + '</span>';
-      html += '<span class="wb-node-label">' + escapeHtml(node.label) + '</span>';
+      if (glyph) html += '<span class="wb-glyph">' + glyph + '</span>';
+      html += '<span class="wb-node-label" style="' + wbLabelStyleForDepth(depth) + '">' + escapeHtml(node.label) + '</span>';
       if (node.display_id) html += '<span class="wb-node-badge">' + node.display_id + '</span>';
       html += '</div>';
       if (hasChildren) {
         html += '<div class="wb-children">';
-        children.forEach(c => { html += wbRenderNode(c); });
+        children.forEach(c => { html += wbRenderNode(c, depth + 1); });
         html += '</div>';
       } else if (isFolderLike) {
         html += '<div class="wb-children"><div class="wb-empty-note" style="padding:6px 10px;">' + wbEmptyMessage(node) + '</div></div>';

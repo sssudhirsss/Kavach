@@ -1022,6 +1022,22 @@
   .wb-readme-body li span.mono { font-family: 'IBM Plex Mono', monospace; font-size: 12.5px; }
   .wb-readme-body p { margin: 0; }
 
+  /* Annex A overview table (per-clause Objective/Prerequisites/Work products,
+     shown when a clause folder is selected — paraphrased from the standard's
+     own Annex A overview tables, not copied verbatim). */
+  .wb-annexa { max-width: 760px; }
+  .wb-annexa-note { font-size: 11.5px; color: var(--text-dim); margin-bottom: 14px; font-style: italic; }
+  .wb-annexa-table { border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .wb-annexa-head { display: grid; grid-template-columns: 70px 1fr 1fr 1fr; background: var(--bg-alt, #F5F6F8); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-dim); }
+  .wb-annexa-head > div { padding: 8px 12px; border-bottom: 1px solid var(--line); }
+  .wb-annexa-row { display: grid; grid-template-columns: 70px 1fr 1fr 1fr; }
+  .wb-annexa-row > div { padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--text); line-height: 1.55; }
+  .wb-annexa-row:last-child > div { border-bottom: none; }
+  .wb-annexa-clause { font-family: 'IBM Plex Mono', monospace; color: var(--ink); font-weight: 600; }
+  .wb-annexa-row ul { margin: 0; padding-left: 16px; }
+  .wb-annexa-row li { margin-bottom: 4px; }
+  .wb-annexa-row li:last-child { margin-bottom: 0; }
+
   .wb-panelstack {
     height: 190px;
     flex-shrink: 0;
@@ -3430,6 +3446,57 @@
     // clause-level detail yet since only the ISO 26262 source documents have
     // been reviewed in that depth so far; each gets a book-icon node instead
     // of fabricated structure.
+    // Annex A overview content, keyed by the clause folder's folderKind.
+    // Each part's Annex A gives a "Clause / Objectives / Prerequisites / Work
+    // products" table. The Objectives and Prerequisites text here is written
+    // in FuCSAI's own words from that table (not copied verbatim — ISO 26262
+    // is copyrighted and its descriptive text can't be reproduced as-is).
+    // Work products are pulled live from the tree's own child nodes rather
+    // than duplicated here, so they can never drift out of sync.
+    const ANNEX_A_DATA = {
+      'clause-fu-3-5': {
+        clauseNo: '5',
+        objective: 'Define and describe the item itself \u2014 its functionality, and how it depends on and interacts with the driver, the environment, and other items at vehicle level \u2014 so later phases have a solid, shared understanding to build on.',
+        prerequisites: ['None']
+      },
+      'clause-fu-3-6': {
+        clauseNo: '6',
+        objective: 'Identify and classify the hazardous events that could result from the item malfunctioning, then derive safety goals with their associated ASILs so the resulting risk is kept to an acceptable level.',
+        prerequisites: ['Item definition (3-5.5.1)']
+      },
+      'clause-fu-3-7': {
+        clauseNo: '7',
+        objective: 'Translate the safety goals into a functional safety concept: specify the item\u2019s required (or degraded) behaviour, define how relevant faults are detected and controlled in time, decide how fault tolerance or mitigation will be achieved, allocate the resulting requirements to the system architecture or external measures, and verify the concept while setting the criteria for later safety validation.',
+        prerequisites: ['Item definition (3-5.5.1)', 'Hazard analysis and risk assessment report (3-6.5.1)', 'System architectural design (from external source)']
+      }
+    };
+
+    function wbCleanWpLabel(label) {
+      return (label || '').replace(/^\S+\s+/, '');
+    }
+
+    function wbAnnexARowHtml(node, entry) {
+      const children = wbChildrenOf(node.id).filter(c => c.kind === 'workproduct');
+      const wpHtml = children.length
+        ? '<ul>' + children.map(c => '<li>' + escapeHtml(wbCleanWpLabel(c.label)) + '</li>').join('') + '</ul>'
+        : '<span style="color:var(--text-dim);font-style:italic;">None listed yet</span>';
+      const prereqHtml = (entry.prerequisites.length === 1 && entry.prerequisites[0] === 'None')
+        ? 'None'
+        : '<ul>' + entry.prerequisites.map(p => '<li>' + escapeHtml(p) + '</li>').join('') + '</ul>';
+      return '<div class="wb-annexa">' +
+        '<div class="wb-annexa-note">Adapted from the standard\u2019s Annex A overview table, in FuCSAI\u2019s own words.</div>' +
+        '<div class="wb-annexa-table">' +
+          '<div class="wb-annexa-head"><div>Clause</div><div>Objective</div><div>Prerequisites</div><div>Work products</div></div>' +
+          '<div class="wb-annexa-row">' +
+            '<div class="wb-annexa-clause">' + escapeHtml(entry.clauseNo) + '</div>' +
+            '<div>' + escapeHtml(entry.objective) + '</div>' +
+            '<div>' + prereqHtml + '</div>' +
+            '<div>' + wpHtml + '</div>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    }
+
     function wbSeedDefinitions() {
       return [
         { tempId: 'std-fu', parentTempId: null, kind: 'folder', label: 'Functional Safety — ISO 26262:2018', props: { folderKind: 'std-fu' } },
@@ -3998,11 +4065,16 @@
         return;
       }
 
+      const annexEntry = node.kind === 'folder' && node.props ? ANNEX_A_DATA[node.props.folderKind] : null;
+      const bodyHtml = annexEntry
+        ? wbAnnexARowHtml(node, annexEntry)
+        : '<div class="wb-editor-desc">' + (descByKind[node.kind] || (node.kind === 'folder'
+            ? folderLikeDesc
+            : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.')) + '</div>';
+
       el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + (node.display_id ? ' <span class="wb-editor-kind" style="margin-left:6px;">' + node.display_id + '</span>' : '') + '</div>' +
         '<div class="wb-editor-kind">' + (kindLabels[node.kind] || node.kind) + '</div>' +
-        '<div class="wb-editor-desc">' + (descByKind[node.kind] || (node.kind === 'folder'
-          ? folderLikeDesc
-          : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.')) + '</div>';
+        bodyHtml;
     }
 
     function wbRenderProps(node) {

@@ -3903,7 +3903,7 @@
     const WB_DEPTH_SIZES = [13.5, 12.8, 12.2, 11.7, 11.3];
     function wbLabelStyleForDepth(depth) {
       const size = WB_DEPTH_SIZES[Math.min(depth, WB_DEPTH_SIZES.length - 1)];
-      const weight = depth === 0 ? 700 : 400;
+      const weight = 400; // size alone shows hierarchy now — bold made top-level look too heavy
       return 'font-size:' + size + 'px; font-weight:' + weight + ';';
     }
 

@@ -2206,7 +2206,7 @@
     }
 
     // ---------- Main send path — text, voice transcript, and quick-reply values all funnel through here ----------
-    async function fcSendMessage(overrideText) {
+    async function fcSendMessage(overrideText, viaVoice) {
       if (fcBusy) return;
       const input = document.getElementById('fc-input');
       const text = (overrideText !== undefined ? overrideText : input.value).trim();
@@ -2234,7 +2234,6 @@
         fcHistory.push({ role: 'assistant', content: reply });
         const { clean, readyFor, buildingFor, action } = fcStripReadyMarker(reply);
         fcAppendAssistantMessage(escapeHtml(clean).replace(/\n/g, '<br>'));
-        if (!fcVoiceMuted) speak(clean);
 
         if (action) {
           await fcHandleChatAction(action);
@@ -2247,6 +2246,17 @@
           await fcSyncWorkProductFromChat(buildingFor, false);
         } else if (fcActiveWorkProduct) {
           await fcSyncWorkProductFromChat(fcActiveWorkProduct.kind, !!readyFor);
+        }
+
+        // Speech happens after any Model Browser sync/action work above, not
+        // before — so the mic doesn't start listening again (feedback risk)
+        // until the assistant has actually finished talking. Continuous,
+        // Alexa/Siri-style back-and-forth: only a voice-originated turn
+        // re-arms the mic once speech ends; a typed turn just speaks once.
+        if (!fcVoiceMuted) {
+          speak(clean, () => {
+            if (viaVoice && !fcVoiceMuted) fcListenAndSend();
+          });
         }
       } catch (e) {
         console.error(e);
@@ -2263,6 +2273,8 @@
     // nothing is ever spoken aloud. Unmuted = clicking the mic captures a
     // spoken question AND every assistant reply is read aloud in addition to
     // being shown as text — the two are coupled, not independent settings.
+    let fcCurrentRecognition = null; // the in-flight SpeechRecognition, if any — lets muting actually interrupt it
+
     function fcToggleMic() {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       if (!SpeechRecognition) { comingSoon("Voice input isn't supported in this browser"); return; }
@@ -2277,6 +2289,9 @@
         document.getElementById('fc-mic-btn').classList.remove('unmuted', 'listening');
         document.getElementById('fc-mic-btn').innerHTML = MIC_ICON_OFF_SMALL;
         if (window.speechSynthesis) window.speechSynthesis.cancel();
+        // Setting fcVoiceMuted above means onend's own auto-relisten check
+        // will correctly do nothing once this actually stops the recognizer.
+        if (fcCurrentRecognition) { try { fcCurrentRecognition.abort(); } catch (e) {} }
         comingSoon('Voice off \u2014 text only');
       }
     }
@@ -2285,19 +2300,22 @@
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       const micBtn = document.getElementById('fc-mic-btn');
       const recognition = new SpeechRecognition();
+      fcCurrentRecognition = recognition;
       recognition.lang = 'en-US';
       recognition.interimResults = false;
       micBtn.classList.add('listening');
       micBtn.innerHTML = MIC_ICON_ON;
       recognition.start();
       recognition.onresult = (e) => {
-        fcSendMessage(e.results[0][0].transcript);
+        fcSendMessage(e.results[0][0].transcript, true);
       };
       recognition.onend = () => {
+        if (fcCurrentRecognition === recognition) fcCurrentRecognition = null;
         micBtn.classList.remove('listening');
         micBtn.innerHTML = fcVoiceMuted ? MIC_ICON_OFF_SMALL : MIC_ICON_ON;
       };
       recognition.onerror = () => {
+        if (fcCurrentRecognition === recognition) fcCurrentRecognition = null;
         micBtn.classList.remove('listening');
         micBtn.innerHTML = fcVoiceMuted ? MIC_ICON_OFF_SMALL : MIC_ICON_ON;
         comingSoon('Couldn\u2019t hear that \u2014 try again or type instead');

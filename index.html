@@ -2641,6 +2641,48 @@
     // Speech is only ever triggered from voice-initiated flows (see viaVoice
     // below) \u2014 nothing speaks in response to typing or clicking.
     let voiceUnsupportedWarned = false;
+    // ---------- Picking a less robotic-sounding voice ----------
+    // Browsers usually default to whatever voice loads first, which is
+    // typically the flattest-sounding one available — better options exist on
+    // the same device, they just aren't selected automatically. This ranks
+    // known good-sounding voices (Chrome/Edge's network "Natural"/"Google"
+    // voices, Safari/macOS's higher-quality system voices) above the rest,
+    // and falls back sensibly if none of them are present on this browser.
+    let fcCachedVoice = null;
+    let fcVoiceSelectionTried = false;
+
+    function fcSelectBestVoice() {
+      if (!window.speechSynthesis) return null;
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices || voices.length === 0) return null;
+      fcVoiceSelectionTried = true;
+
+      const englishVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith('en'));
+      const pool = englishVoices.length ? englishVoices : voices;
+
+      const preferredNames = [
+        'Natural', 'Neural', 'Premium', 'Enhanced',
+        'Google US English', 'Google UK English Female',
+        'Microsoft Aria', 'Microsoft Jenny', 'Microsoft Sonia',
+        'Samantha', 'Ava', 'Nicky', 'Zira',
+      ];
+      for (const name of preferredNames) {
+        const match = pool.find(v => v.name.includes(name));
+        if (match) return match;
+      }
+      // No known-good name matched — a network ("remote") voice is usually
+      // higher quality than a purely local/offline one.
+      const remote = pool.find(v => !v.localService);
+      return remote || pool[0];
+    }
+
+    // Voice lists load asynchronously in some browsers — this catches the
+    // case where speak() ran before they were ready, so the very first reply
+    // doesn't get stuck with a worse fallback than later ones would get.
+    if (window.speechSynthesis) {
+      window.speechSynthesis.onvoiceschanged = () => { fcCachedVoice = fcSelectBestVoice(); };
+    }
+
     function speak(text, onEnd) {
       if (!window.speechSynthesis) {
         if (!voiceUnsupportedWarned) {
@@ -2657,9 +2699,11 @@
         // delay avoids it. Also nudge getVoices() in case voices haven't
         // loaded yet on first use.
         window.speechSynthesis.getVoices();
+        if (!fcVoiceSelectionTried) fcCachedVoice = fcSelectBestVoice();
         setTimeout(() => {
           const utter = new SpeechSynthesisUtterance(text);
-          utter.rate = 1.0;
+          if (fcCachedVoice) utter.voice = fcCachedVoice;
+          utter.rate = 0.96;  // very slightly slower reads as calmer, less clipped/robotic
           utter.pitch = 1.0;
           utter.volume = 1.0;
           if (onEnd) { utter.onend = onEnd; utter.onerror = onEnd; }

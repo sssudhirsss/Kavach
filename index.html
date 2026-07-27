@@ -3511,6 +3511,60 @@
           '7.5.1': '7.4.1\u20137.4.3',
           '7.5.2': '7.4.4'
         }
+      },
+      'clause-ai-7': {
+        clauseNo: '7',
+        objective: 'Set up an AI-specific safety lifecycle and its activities so errors contributed by the AI system don\u2019t create unreasonable risk at vehicle level, make sure the wider (and project-specific) functional safety management is adequate for an AI system, and plan, initiate, and run the AI safety activities.',
+        prerequisites: ['The AI system definition from the encompassing system \u2014 its functionality, its interfaces with the encompassing system (incl. any ASIL capability of its inputs), and the safety requirements allocated to it, including ASIL values and any SOTIF-derived (ISO 21448) acceptance/validation criteria'],
+        workProducts: { '7.6.1': '7.3.1\u20137.3.4', '7.6.2': '7.3.4', '7.6.3': '7.3.3, 7.3.4', '7.6.4': '7.3.4' }
+      },
+      'clause-ai-8': {
+        clauseNo: '8',
+        objective: 'Build an assurance argument showing the AI system\u2019s allocated safety requirements are actually met, and check that the argument honestly reflects the AI system\u2019s real residual risk of violating those requirements.',
+        prerequisites: ['The AI system definition (allocated safety requirements, technical context within the encompassing system, input space)', 'Assurance-argument and work-product requirements handed down from the encompassing system or Clause 7\u2019s safety management', 'Work products of the AI safety lifecycle produced so far'],
+        workProducts: { '8.8.1': '8.3.1, 8.3.2', '8.8.2': '8.3.3' }
+      },
+      'clause-ai-9': {
+        clauseNo: '9',
+        objective: 'Specify a complete, consistent set of AI safety requirements sufficient to keep the AI system safe; refine them as development, verification, and validation reveal more; identify input-space limitations that need to be escalated back to the encompassing system; and specify the off-board/on-board measures needed per Clause 14.',
+        prerequisites: ['The AI system definition \u2014 allocated safety requirements, input-space definition, functional requirements, impacted stakeholders, interfaces with the encompassing system (incl. ASIL capability where relevant), and any environment interfaces'],
+        workProducts: { '9.6.1': '9.3.1', '9.6.2': '9.3.2, 9.3.3, 9.3.4, 9.3.6', '9.6.3': '9.3.5' }
+      },
+      'clause-ai-10': {
+        clauseNo: '10',
+        objective: 'Choose and justify the AI technologies to use; identify the architectural and development measures needed to meet the safety requirements before deployment; identify architectural measures to mitigate residual functional insufficiencies discovered after deployment; and identify measures that keep the safety requirements met within the AI system\u2019s actual target execution environment.',
+        prerequisites: ['Safety requirements on the AI system (Clause 9)', 'Training and validation datasets (Clause 11)', 'Any AI component/system architecture or development process that already exists'],
+        workProducts: { '10.6.1': '10.3.1\u201310.3.7', '10.6.2': '10.3.1\u201310.3.7', '10.6.3': '10.3.8' }
+      },
+      'clause-ai-11': {
+        clauseNo: '11',
+        objective: 'Define the dataset lifecycle \u2014 gathering, creating, analysing, verifying/validating, managing, and maintaining the datasets used to develop the AI system; identify dataset insufficiencies that could affect AI system safety; identify the data-related safety properties that feed dataset safety analysis; define countermeasures for dataset insufficiencies at each stage of the lifecycle; and define the data-related work products that provide evidence of AI system safety.',
+        prerequisites: ['The AI system definition \u2014 AI safety requirements and refined input-space definition (Clause 9)', 'Field data and functional insufficiencies found during operation (Clause 14)', 'Safety analysis report (Clause 13)'],
+        workProducts: { '11.5.1': '11.3.1, 11.3.2', '11.5.2': '11.3.3', '11.5.3': '11.3.4, 11.3.5', '11.5.4': '11.3.6, 11.3.7' }
+      },
+      'clause-ai-12': {
+        clauseNo: '12',
+        objective: 'Verify that the AI system meets its AI safety requirements, and validate that the safety requirements allocated to it are actually achieved once it\u2019s integrated.',
+        prerequisites: ['Safety requirements allocated to the AI system', 'AI safety requirements, known input-space insufficiencies, and refined input-space definition (Clause 9)', 'AI component/system architecture and implemented AI component (Clause 10)', 'Dataset lifecycle, its phase-output and safety-analysis evidence, and dataset requirements specification (Clause 11)'],
+        workProducts: { '12.6.1': '12.3.1\u201312.3.5, 12.3.7', '12.6.2': '12.3.6', '12.6.3': '12.3.8' }
+      },
+      'clause-ai-13': {
+        clauseNo: '13',
+        objective: 'Identify the safety-related faults and AI errors that could violate the AI safety requirements, identify their likely causes, support defining safety measures that prevent or control them, and support verifying the AI safety requirements by feeding back into data specs, design specs, and test specs.',
+        prerequisites: ['AI safety requirements, refined input-space definition, and known input-space insufficiencies (Clause 9)', 'Refined AI component/system architecture (Clause 10)', 'Dataset requirements/design specification and verification, validation, and safety-analysis reports (Clause 11)', 'AI system verification and validation reports (Clause 12)'],
+        workProducts: { '13.5.1': '13.3.1\u201313.3.5' }
+      },
+      'clause-ai-14': {
+        clauseNo: '14',
+        objective: 'Define the process for continuously assuring AI safety after deployment; apply Clause 8\u2019s measures (and/or additional ones) to spot safety risk from the AI system in operation and keep AI safety maintained; and make sure there\u2019s a way to respond to unacceptable safety risk and get a modified AI system reapproved before release.',
+        prerequisites: ['The AI system definition \u2014 interfaces with the encompassing system and assumptions about its use', 'Field data collected by the encompassing system', 'Safety requirements on the AI system (Clause 9)', 'AI component/system architecture (Clause 10)', 'Dataset requirements specification and design/maintenance plan (Clause 11)', 'Known input-space insufficiencies (Clause 9)', 'Verification/validation results incl. known functional insufficiencies (Clause 12)', 'Safety assurance argument (Clause 8)'],
+        workProducts: { '14.9.1': '14.3.1', '14.9.2': '14.3.2', '14.9.3': '14.3.3', '14.9.4': '14.3.4', '14.9.5': '14.3.3, 14.3.5' }
+      },
+      'clause-ai-15': {
+        clauseNo: '15',
+        objective: 'Provide requirements and guidance for identifying, mitigating, and documenting possible sources of error and inappropriate bias in the offline processes, tools, and principles used to develop, verify, and deploy safety-related AI models.',
+        prerequisites: ['Documentation of the development processes and tools used across the AI safety lifecycle', 'AI-system-specific development measures and procedures (Clauses 7\u201314)'],
+        workProducts: { '15.7.1': '15.3.1', '15.7.2': '15.3.2', '15.7.3': '15.3.3' }
       }
     };
 
@@ -3732,7 +3786,43 @@
         { tempId: 'std-s', parentTempId: null, kind: 'folder', label: 'SOTIF — ISO 21448:2022', props: { folderKind: 'std-s' } },
         { tempId: 'std-s-book', parentTempId: 'std-s', kind: 'readme', label: 'Ask the Safety Assistant to learn about this standard', props: { Note: 'Clause-level structure isn’t built yet — only ISO 26262 source documents have been reviewed in detail so far.' } },
         { tempId: 'std-ai', parentTempId: null, kind: 'folder', label: 'AI Safety — ISO/PAS 8800:2024', props: { folderKind: 'std-ai' } },
-        { tempId: 'std-ai-book', parentTempId: 'std-ai', kind: 'readme', label: 'Ask the Safety Assistant to learn about this standard', props: { Note: 'Clause-level structure isn’t built yet — only ISO 26262 source documents have been reviewed in detail so far.' } },
+        { tempId: 'clause-ai-7', parentTempId: 'std-ai', kind: 'folder', label: '7 AI safety management', props: { folderKind: 'clause-ai-7' } },
+        { tempId: 'wp-ai-7.6.1', parentTempId: 'clause-ai-7', kind: 'workproduct', label: '7.6.1 AI safety lifecycle', props: { Ref: '7.6.1' } },
+        { tempId: 'wp-ai-7.6.2', parentTempId: 'clause-ai-7', kind: 'workproduct', label: '7.6.2 Work products of ISO 26262-2:2018, 5.5', props: { Ref: '7.6.2' } },
+        { tempId: 'wp-ai-7.6.3', parentTempId: 'clause-ai-7', kind: 'workproduct', label: '7.6.3 Work products of ISO 26262-2:2018, 6.5', props: { Ref: '7.6.3' } },
+        { tempId: 'wp-ai-7.6.4', parentTempId: 'clause-ai-7', kind: 'workproduct', label: '7.6.4 Work products of ISO 26262-2:2018, 7.5', props: { Ref: '7.6.4' } },
+        { tempId: 'clause-ai-8', parentTempId: 'std-ai', kind: 'folder', label: '8 Assurance arguments for AI systems', props: { folderKind: 'clause-ai-8' } },
+        { tempId: 'wp-ai-8.8.1', parentTempId: 'clause-ai-8', kind: 'workproduct', label: '8.8.1 Safety assurance argument', props: { Ref: '8.8.1' } },
+        { tempId: 'wp-ai-8.8.2', parentTempId: 'clause-ai-8', kind: 'workproduct', label: '8.8.2 Confirmation measure reports', props: { Ref: '8.8.2' } },
+        { tempId: 'clause-ai-9', parentTempId: 'std-ai', kind: 'folder', label: '9 Derivation of AI safety requirements', props: { folderKind: 'clause-ai-9' } },
+        { tempId: 'wp-ai-9.6.1', parentTempId: 'clause-ai-9', kind: 'workproduct', label: '9.6.1 Input space definition (refined)', props: { Ref: '9.6.1' } },
+        { tempId: 'wp-ai-9.6.2', parentTempId: 'clause-ai-9', kind: 'workproduct', label: '9.6.2 AI safety requirements', props: { Ref: '9.6.2' } },
+        { tempId: 'wp-ai-9.6.3', parentTempId: 'clause-ai-9', kind: 'workproduct', label: '9.6.3 Known insufficiencies of the AI system and the corresponding subdomains of the input space', props: { Ref: '9.6.3' } },
+        { tempId: 'clause-ai-10', parentTempId: 'std-ai', kind: 'folder', label: '10 Selection of AI technologies, architectural and development measures', props: { folderKind: 'clause-ai-10' } },
+        { tempId: 'wp-ai-10.6.1', parentTempId: 'clause-ai-10', kind: 'workproduct', label: '10.6.1 AI component or AI system architecture (refined)', props: { Ref: '10.6.1' } },
+        { tempId: 'wp-ai-10.6.2', parentTempId: 'clause-ai-10', kind: 'workproduct', label: '10.6.2 AI component or AI system development process (refined)', props: { Ref: '10.6.2' } },
+        { tempId: 'wp-ai-10.6.3', parentTempId: 'clause-ai-10', kind: 'workproduct', label: '10.6.3 Implemented AI component', props: { Ref: '10.6.3' } },
+        { tempId: 'clause-ai-11', parentTempId: 'std-ai', kind: 'folder', label: '11 Data-related considerations', props: { folderKind: 'clause-ai-11' } },
+        { tempId: 'wp-ai-11.5.1', parentTempId: 'clause-ai-11', kind: 'workproduct', label: '11.5.1 Dataset lifecycle', props: { Ref: '11.5.1' } },
+        { tempId: 'wp-ai-11.5.2', parentTempId: 'clause-ai-11', kind: 'workproduct', label: '11.5.2 Evidence for the outputs of the defined phases of the dataset lifecycle', props: { Ref: '11.5.2' } },
+        { tempId: 'wp-ai-11.5.3', parentTempId: 'clause-ai-11', kind: 'workproduct', label: '11.5.3 Evidence for the safety analyses of the dataset', props: { Ref: '11.5.3' } },
+        { tempId: 'wp-ai-11.5.4', parentTempId: 'clause-ai-11', kind: 'workproduct', label: '11.5.4 Dataset requirements specification', props: { Ref: '11.5.4' } },
+        { tempId: 'clause-ai-12', parentTempId: 'std-ai', kind: 'folder', label: '12 Verification and validation of the AI system', props: { folderKind: 'clause-ai-12' } },
+        { tempId: 'wp-ai-12.6.1', parentTempId: 'clause-ai-12', kind: 'workproduct', label: '12.6.1 AI system verification report', props: { Ref: '12.6.1' } },
+        { tempId: 'wp-ai-12.6.2', parentTempId: 'clause-ai-12', kind: 'workproduct', label: '12.6.2 Integrated AI system', props: { Ref: '12.6.2' } },
+        { tempId: 'wp-ai-12.6.3', parentTempId: 'clause-ai-12', kind: 'workproduct', label: '12.6.3 AI system validation report', props: { Ref: '12.6.3' } },
+        { tempId: 'clause-ai-13', parentTempId: 'std-ai', kind: 'folder', label: '13 Safety analysis of AI systems', props: { folderKind: 'clause-ai-13' } },
+        { tempId: 'wp-ai-13.5.1', parentTempId: 'clause-ai-13', kind: 'workproduct', label: '13.5.1 Safety analysis report', props: { Ref: '13.5.1' } },
+        { tempId: 'clause-ai-14', parentTempId: 'std-ai', kind: 'folder', label: '14 Measures during operation', props: { folderKind: 'clause-ai-14' } },
+        { tempId: 'wp-ai-14.9.1', parentTempId: 'clause-ai-14', kind: 'workproduct', label: '14.9.1 Specification of the process and its activities for assuring AI safety during operation', props: { Ref: '14.9.1' } },
+        { tempId: 'wp-ai-14.9.2', parentTempId: 'clause-ai-14', kind: 'workproduct', label: '14.9.2 Specification of the necessary off-board and on-board measures ensuring AI safety during operation', props: { Ref: '14.9.2' } },
+        { tempId: 'wp-ai-14.9.3', parentTempId: 'clause-ai-14', kind: 'workproduct', label: '14.9.3 Field data and functional insufficiencies detected during operation', props: { Ref: '14.9.3' } },
+        { tempId: 'wp-ai-14.9.4', parentTempId: 'clause-ai-14', kind: 'workproduct', label: '14.9.4 Evidence of the effectiveness of measures for ensuring AI system during operation', props: { Ref: '14.9.4' } },
+        { tempId: 'wp-ai-14.9.5', parentTempId: 'clause-ai-14', kind: 'workproduct', label: '14.9.5 Evaluation report of functional insufficiencies detected during operation, and updated version of the safety assurance argument if applicable', props: { Ref: '14.9.5' } },
+        { tempId: 'clause-ai-15', parentTempId: 'std-ai', kind: 'folder', label: '15 Confidence in use of AI development frameworks and software tools used for AI model development', props: { folderKind: 'clause-ai-15' } },
+        { tempId: 'wp-ai-15.7.1', parentTempId: 'clause-ai-15', kind: 'workproduct', label: '15.7.1 Evidence for the analysis of the AI model creation processes', props: { Ref: '15.7.1' } },
+        { tempId: 'wp-ai-15.7.2', parentTempId: 'clause-ai-15', kind: 'workproduct', label: '15.7.2 Evidence for the confidence in the software tools', props: { Ref: '15.7.2' } },
+        { tempId: 'wp-ai-15.7.3', parentTempId: 'clause-ai-15', kind: 'workproduct', label: '15.7.3 Evidence for the execution of the AI model creation processes with the principles', props: { Ref: '15.7.3' } },
       ];
     }
 

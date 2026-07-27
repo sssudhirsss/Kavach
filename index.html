@@ -1038,25 +1038,11 @@
   .wb-annexa-table li { margin-bottom: 4px; }
   .wb-annexa-table li:last-child { margin-bottom: 0; }
 
-  /* Work product checklist. Clicking a work product with checklist data
-     shows a small clickable "tile" first (title + icon); clicking it swaps
-     the panel to the full table (checkbox / checklist text / evidence link). */
-  .wb-wp-checklist-tile {
-    display: flex; align-items: center; gap: 12px; max-width: 460px;
-    padding: 14px 16px; border: 1px solid var(--line); border-radius: 8px; cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-  }
-  .wb-wp-checklist-tile:hover { border-color: var(--fu-ink, var(--ink)); background: var(--bg-alt, #F5F6F8); }
-  .wb-wp-checklist-tile-icon { color: var(--fu-ink, var(--ink)); flex-shrink: 0; }
-  .wb-wp-checklist-tile-title { font-size: 13px; font-weight: 600; color: var(--ink); }
-  .wb-wp-checklist-tile-sub { font-size: 11.5px; color: var(--text-dim); margin-top: 2px; }
-  .wb-wp-checklist-tile-arrow { margin-left: auto; color: var(--text-dim); flex-shrink: 0; }
-
+  /* Work product checklist. A work product with checklist data gets a
+     synthetic "Checklist" child in the Model Browser tree — clicking that
+     tree item (not the work product itself) loads this table into the
+     editor panel: checkbox / checklist text / evidence link. */
   .wb-wp-checklist { max-width: 820px; }
-  .wb-wp-checklist-back {
-    display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 600;
-    color: var(--fu-ink, var(--ink)); cursor: pointer; margin-bottom: 12px;
-  }
   .wb-wp-checklist-note { font-size: 11.5px; color: var(--text-dim); margin-bottom: 14px; font-style: italic; }
   .wb-wp-checklist-table { width: 100%; border-collapse: collapse; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; font-size: 12.5px; }
   .wb-wp-checklist-table th { text-align: left; padding: 8px 12px; background: var(--bg-alt, #F5F6F8); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; color: var(--text-dim); border-bottom: 1px solid var(--line); }
@@ -3092,7 +3078,6 @@
 
     let wbProject = null;
     let wbSelectedId = null;   // 'root' or a real element uuid
-    let wbChecklistOpenId = null; // id of the work product whose checklist table is expanded in the editor panel (null = showing the entry tile instead)
     let wbElements = [];       // flat array of element rows for the CURRENTLY OPEN project — parent_id links them into a tree
     let wbAllProjects = [];    // lightweight list of every project this user owns, across all disciplines
     let wbExpandedIds = new Set(['root']);
@@ -3688,42 +3673,24 @@
       return WP_CHECKLIST_DATA[folderKind + ':' + ref] || null;
     }
 
-    const WB_CHECKLIST_ICON = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="17" height="17" rx="2.5"/><path d="M7.5 12l2.6 2.6L16.5 8.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-
-    // The clickable entry point shown on a work product's editor panel —
-    // title names the work product, clicking loads the full table below.
-    function wbWpChecklistTileHtml(node) {
-      return '<div class="wb-wp-checklist-tile" onclick="wbOpenChecklist(\'' + node.id + '\')">' +
-        '<span class="wb-wp-checklist-tile-icon">' + WB_CHECKLIST_ICON + '</span>' +
-        '<div>' +
-          '<div class="wb-wp-checklist-tile-title">Checklist \u2014 ' + escapeHtml(wbCleanWpLabel(node.label)) + '</div>' +
-          '<div class="wb-wp-checklist-tile-sub">Click to open the requirement checklist for this work product.</div>' +
-        '</div>' +
-        '<span class="wb-wp-checklist-tile-arrow"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 6 15 12 9 18"/></svg></span>' +
-      '</div>';
-    }
-
-    // The full table, loaded into the editor panel once the tile is clicked.
-    // Columns: checkbox, checklist text, and a link back to where the
-    // evidence for that item belongs \u2014 currently the work product's own
-    // content view (there\u2019s no field-level Item Definition editor yet to
-    // deep-link a specific item into, so this returns to the work product
-    // itself, closing the checklist).
-    function wbWpChecklistTableHtml(node, entry) {
+    // The full checklist table, shown when the synthetic "Checklist" tree
+    // node under a work product is selected. Columns: checkbox, checklist
+    // text, and a link back to where the evidence for that item belongs —
+    // currently the work product's own node in the tree (there's no
+    // field-level Item Definition editor yet to deep-link a specific item
+    // into, so this just navigates back to the work product itself).
+    function wbWpChecklistTableHtml(wpNode, entry) {
       const rows = [];
       entry.groups.forEach(g => {
         g.items.forEach((item, i) => {
           rows.push('<tr>' +
             '<td class="wb-wp-checklist-cb-cell"><input type="checkbox"></td>' +
             '<td>' + (i === 0 ? '<span class="wb-wp-checklist-groupref">' + escapeHtml(g.ref) + '</span> ' : '') + escapeHtml(item) + '</td>' +
-            '<td class="wb-wp-checklist-evidence-cell"><a href="#" onclick="wbCloseChecklist(\'' + node.id + '\'); return false;">Open in ' + escapeHtml(wbCleanWpLabel(node.label)) + '</a></td>' +
+            '<td class="wb-wp-checklist-evidence-cell"><a href="#" onclick="wbGoToNode(\'' + wpNode.id + '\'); return false;">Open in ' + escapeHtml(wbCleanWpLabel(wpNode.label)) + '</a></td>' +
             '</tr>');
         });
       });
       return '<div class="wb-wp-checklist">' +
-        '<div class="wb-wp-checklist-back" onclick="wbCloseChecklist(\'' + node.id + '\')">' +
-          '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.4"><polyline points="15 6 9 12 15 18"/></svg> Back' +
-        '</div>' +
         '<div class="wb-wp-checklist-note">Checklist derived from the requirements and recommendations of the clause(s) this work product comes from, in FuCSAI\u2019s own words \u2014 not a substitute for reading the clause itself.</div>' +
         '<table class="wb-wp-checklist-table">' +
           '<thead><tr><th></th><th>Checklist</th><th>Evidence</th></tr></thead>' +
@@ -4142,6 +4109,11 @@
         return { id, label: 'Closed Projects', kind: 'archive', locked: true };
       }
 
+      if (id.indexOf('checklist:') === 0) {
+        const wpId = id.slice('checklist:'.length);
+        return { id, label: 'Checklist', kind: 'checklist', parent_id: wpId, locked: true };
+      }
+
       const proj = wbAllProjects.find(p => p.id === id);
       if (proj) {
         return {
@@ -4179,7 +4151,19 @@
       }
 
       const parentId = (id === null) ? null : id;
-      return wbElements.filter(e => e.parent_id === parentId);
+      const realChildren = wbElements.filter(e => e.parent_id === parentId);
+
+      // A work product with checklist data gets one extra synthetic child —
+      // the "Checklist" leaf — so opening the checklist is a tree click
+      // rather than something shown directly on the work product itself.
+      if (typeof id === 'string' && id.indexOf('checklist:') !== 0) {
+        const node = wbElements.find(e => e.id === id);
+        if (node && node.kind === 'workproduct' && wbWpChecklistEntry(node)) {
+          return realChildren.concat([{ id: 'checklist:' + id, label: 'Checklist', kind: 'checklist', parent_id: id, locked: true }]);
+        }
+      }
+
+      return realChildren;
     }
 
     function wbRenderTree() {
@@ -4231,6 +4215,9 @@
       }
       if (node.kind === 'readme') {
         return '<svg viewBox="0 0 16 16" width="13" height="13"><circle cx="8" cy="8" r="6.3" fill="none" stroke="#9CA6B1" stroke-width="1.2"/><line x1="8" y1="5.6" x2="8" y2="5.7" stroke="#9CA6B1" stroke-width="1.6" stroke-linecap="round"/><line x1="8" y1="7.4" x2="8" y2="11" stroke="#9CA6B1" stroke-width="1.2" stroke-linecap="round"/></svg>';
+      }
+      if (node.kind === 'checklist') {
+        return '<svg viewBox="0 0 16 16" width="13" height="13"><rect x="2" y="2" width="12" height="12" rx="2" fill="none" stroke="#9CA6B1" stroke-width="1.2"/><polyline points="4.5 8 6.7 10.2 11.5 5.3" fill="none" stroke="#16A34A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
       }
       return '<svg viewBox="0 0 16 16" width="13" height="13"><path d="M4 1.5h5.5L12 4v10.5H4z" fill="none" stroke="#9CA6B1" stroke-width="1.1"/><path d="M9.5 1.5V4H12" fill="none" stroke="#9CA6B1" stroke-width="1.1"/></svg>';
     }
@@ -4287,30 +4274,34 @@
         return;
       }
 
-      if (WB_FOLDER_LIKE_KINDS.includes(node.kind)) {
+      if (WB_FOLDER_LIKE_KINDS.includes(node.kind) || wbChildrenOf(id).length > 0) {
         if (wbExpandedIds.has(id)) wbExpandedIds.delete(id); else wbExpandedIds.add(id);
       }
       wbSelectNode(id);
       wbRenderTree();
     }
 
+    // Selects a node and reveals it in the tree — used by editor-panel links
+    // (like the checklist's "Evidence" links) that need to jump back to a
+    // specific tree item rather than being a normal tree click.
+    function wbGoToNode(id) {
+      const node = wbFindNode(id);
+      if (!node) return;
+      let cur = node.parent_id;
+      while (cur) {
+        wbExpandedIds.add(cur);
+        const p = wbFindNode(cur);
+        cur = p ? p.parent_id : null;
+      }
+      wbSelectNode(id);
+      wbRenderTree();
+    }
+
     function wbSelectNode(id) {
-      if (id !== wbSelectedId) wbChecklistOpenId = null; // switching items always starts back at the entry tile
       wbSelectedId = id;
       const node = id ? wbFindNode(id) : null;
       wbRenderEditor(node);
       wbRenderProps(node);
-    }
-
-    // Opens/closes the checklist table for a work product inside the editor
-    // panel, without changing the Model Browser selection.
-    function wbOpenChecklist(id) {
-      wbChecklistOpenId = id;
-      wbRenderEditor(wbFindNode(id));
-    }
-    function wbCloseChecklist(id) {
-      wbChecklistOpenId = null;
-      wbRenderEditor(wbFindNode(id));
     }
 
     function wbRenderEditor(node) {
@@ -4348,19 +4339,25 @@
         return;
       }
 
-      const annexEntry = node.kind === 'folder' && node.props ? ANNEX_A_DATA[node.props.folderKind] : null;
-      const checklistEntry = node.kind === 'workproduct' ? wbWpChecklistEntry(node) : null;
-      let checklistHtml = null;
-      if (checklistEntry) {
-        checklistHtml = (wbChecklistOpenId === node.id)
-          ? wbWpChecklistTableHtml(node, checklistEntry)
-          : wbWpChecklistTileHtml(node);
+      if (node.kind === 'checklist') {
+        const wpNode = wbFindNode(node.parent_id);
+        const entry = wpNode ? wbWpChecklistEntry(wpNode) : null;
+        const title = wpNode ? 'Checklist \u2014 ' + wbCleanWpLabel(wpNode.label) : 'Checklist';
+        el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(title) + '</div>' +
+          '<div class="wb-editor-kind">' + (kindLabels.checklist || 'Checklist') + '</div>' +
+          (entry ? wbWpChecklistTableHtml(wpNode, entry) : '<div class="wb-editor-desc">Checklist data isn\u2019t available for this work product yet.</div>');
+        return;
       }
+
+      const annexEntry = node.kind === 'folder' && node.props ? ANNEX_A_DATA[node.props.folderKind] : null;
+      const hasChecklist = node.kind === 'workproduct' && !!wbWpChecklistEntry(node);
       const bodyHtml = annexEntry
         ? wbAnnexARowHtml(node, annexEntry)
-        : (checklistHtml || '<div class="wb-editor-desc">' + (descByKind[node.kind] || (node.kind === 'folder'
-            ? folderLikeDesc
-            : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.')) + '</div>');
+        : (hasChecklist
+            ? '<div class="wb-editor-desc">This work product has a requirement checklist \u2014 expand it in the Model Browser on the left and open the <strong>Checklist</strong> item under it.</div>'
+            : '<div class="wb-editor-desc">' + (descByKind[node.kind] || (node.kind === 'folder'
+                ? folderLikeDesc
+                : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.')) + '</div>');
 
       el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + (node.display_id ? ' <span class="wb-editor-kind" style="margin-left:6px;">' + node.display_id + '</span>' : '') + '</div>' +
         '<div class="wb-editor-kind">' + (kindLabels[node.kind] || node.kind) + '</div>' +

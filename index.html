@@ -1038,6 +1038,18 @@
   .wb-annexa-table li { margin-bottom: 4px; }
   .wb-annexa-table li:last-child { margin-bottom: 0; }
 
+  /* Work product checklist (shown when a work product leaf is selected —
+     each item is a paraphrased requirement/recommendation from the clause(s)
+     that work product is derived from, grouped by sub-clause). */
+  .wb-wp-checklist { max-width: 720px; }
+  .wb-wp-checklist-note { font-size: 11.5px; color: var(--text-dim); margin-bottom: 16px; font-style: italic; }
+  .wb-wp-checklist-group { margin-bottom: 18px; }
+  .wb-wp-checklist-group:last-child { margin-bottom: 0; }
+  .wb-wp-checklist-groupref { font-family: 'IBM Plex Mono', monospace; font-size: 11.5px; font-weight: 600; color: var(--fu-ink, var(--ink)); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.02em; }
+  .wb-wp-checklist-item { display: flex; align-items: flex-start; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 12.5px; color: var(--text); line-height: 1.5; }
+  .wb-wp-checklist-item:last-child { border-bottom: none; }
+  .wb-wp-checklist-item input[type="checkbox"] { margin-top: 3px; flex-shrink: 0; cursor: pointer; }
+
   .wb-panelstack {
     height: 190px;
     flex-shrink: 0;
@@ -3613,6 +3625,64 @@
       '</div>';
     }
 
+    // Per-work-product checklist: each item is a paraphrased requirement or
+    // recommendation from the sub-clause(s) that work product is derived
+    // from (see the "Derived from" column above), grouped by sub-clause.
+    // Keyed by "<parent clause folderKind>:<work product Ref>" since Ref
+    // alone (e.g. "5.5.1") repeats across different clauses/parts.
+    const WP_CHECKLIST_DATA = {
+      'clause-fu-3-5:5.5.1': {
+        groups: [
+          {
+            ref: '5.4.1',
+            items: [
+              'Applicable legal requirements and national/international standards for the item are identified and captured.',
+              'The item\u2019s functional behaviour at vehicle level is described, including its operating modes or states.',
+              'The required quality, performance, and availability of the functionality are captured, where applicable.',
+              'Constraints on the item are captured \u2014 functional dependencies, dependencies on other items, and the operating environment.',
+              'Potential consequences of behavioural shortfalls are captured, including any known failure modes, hazards, or similar past safety-related incidents.',
+              'The capabilities (or assumed capabilities) of the item\u2019s actuators are captured \u2014 needed later to judge the magnitude of effect during hazard analysis and risk assessment.'
+            ]
+          },
+          {
+            ref: '5.4.2',
+            items: [
+              'The elements that make up the item are identified.',
+              'Assumptions about how the item\u2019s behaviour affects the vehicle are captured.',
+              'Functionality that the item under consideration requires from other items/elements is identified.',
+              'Functionality that other items/elements require from this item is identified.',
+              'How functions are allocated and distributed among the involved systems and elements is captured.',
+              'Operational scenarios that affect the item\u2019s functionality are identified.'
+            ]
+          }
+        ]
+      }
+    };
+
+    function wbWpChecklistHtml(node) {
+      if (!node.parent_id) return null;
+      const parent = wbFindNode(node.parent_id);
+      const folderKind = parent && parent.props && parent.props.folderKind;
+      const ref = node.props && node.props.Ref;
+      if (!folderKind || !ref) return null;
+      const entry = WP_CHECKLIST_DATA[folderKind + ':' + ref];
+      if (!entry) return null;
+
+      const groupsHtml = entry.groups.map(g =>
+        '<div class="wb-wp-checklist-group">' +
+          '<div class="wb-wp-checklist-groupref">' + escapeHtml(g.ref) + '</div>' +
+          g.items.map(item =>
+            '<label class="wb-wp-checklist-item"><input type="checkbox">' + escapeHtml(item) + '</label>'
+          ).join('') +
+        '</div>'
+      ).join('');
+
+      return '<div class="wb-wp-checklist">' +
+        '<div class="wb-wp-checklist-note">Checklist derived from the requirements and recommendations of the clause(s) this work product comes from, in FuCSAI\u2019s own words \u2014 not a substitute for reading the clause itself.</div>' +
+        groupsHtml +
+      '</div>';
+    }
+
     function wbSeedDefinitions() {
       return [
         { tempId: 'std-fu', parentTempId: null, kind: 'folder', label: 'Functional Safety — ISO 26262:2018', props: { folderKind: 'std-fu' } },
@@ -4218,11 +4288,12 @@
       }
 
       const annexEntry = node.kind === 'folder' && node.props ? ANNEX_A_DATA[node.props.folderKind] : null;
+      const checklistHtml = node.kind === 'workproduct' ? wbWpChecklistHtml(node) : null;
       const bodyHtml = annexEntry
         ? wbAnnexARowHtml(node, annexEntry)
-        : '<div class="wb-editor-desc">' + (descByKind[node.kind] || (node.kind === 'folder'
+        : (checklistHtml || '<div class="wb-editor-desc">' + (descByKind[node.kind] || (node.kind === 'folder'
             ? folderLikeDesc
-            : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.')) + '</div>';
+            : 'This is a placeholder editor view. In a full build, this panel would open the Diagram Editor, Table Editor, or worksheet appropriate to this element\u2019s type &mdash; the same way medini\u2019s Editor Area swaps content based on your selection.')) + '</div>');
 
       el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + (node.display_id ? ' <span class="wb-editor-kind" style="margin-left:6px;">' + node.display_id + '</span>' : '') + '</div>' +
         '<div class="wb-editor-kind">' + (kindLabels[node.kind] || node.kind) + '</div>' +

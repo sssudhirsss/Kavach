@@ -158,6 +158,14 @@
     cursor: pointer;
   }
   .workspace-quick-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .workspace-quick-btn-ghost { background: transparent; border-style: dashed; color: var(--text-dim); font-weight: 500; }
+  .workspace-quick-btn-ghost:hover { border-color: var(--text-dim); color: var(--text); }
+
+  .wb-offline-banner {
+    background: #FDF6EA; color: #92400E; border-bottom: 1px solid #F3E3C0;
+    font-size: 12px; padding: 7px 16px; text-align: center; flex-shrink: 0;
+  }
+  .wb-offline-banner a { color: #92400E; font-weight: 600; text-decoration: underline; }
 
   .disc-grid {
     display: grid;
@@ -1174,6 +1182,10 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
         Workspace
       </button>
+      <button class="workspace-quick-btn workspace-quick-btn-ghost" onclick="wbEnterOfflineWorkspace()" style="margin-top:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        Explore without signing in
+      </button>
     </div>
 
     <div class="disc-grid">
@@ -1397,6 +1409,7 @@
 
   <!-- Functional Safety workbench -->
   <div id="wb-shell" class="wb-shell">
+    <div id="wb-offline-banner" class="wb-offline-banner" style="display:none;">You&rsquo;re exploring in offline demo mode &mdash; nothing here is saved. <a href="#" onclick="openAuthModal('signin'); return false;">Sign in</a> to keep your work.</div>
     <div class="wb-header">
       <button class="back-link" style="position:static;" onclick="backToHome()">&larr; Back</button>
       <div class="pv-icon-sm" id="wb-icon"></div>
@@ -1546,6 +1559,57 @@
     }
 
     let currentUser = null;
+
+    // True once the person has chosen "Explore without signing in" — every
+    // Supabase read/write in the workspace short-circuits to an in-memory
+    // equivalent instead, so the tree is fully browsable (and locally
+    // editable) with no backend involved. Used both for people without an
+    // account and as a fallback while Anthropic/Supabase project access is
+    // interrupted (e.g. a paused free-tier project).
+    let wbOfflineMode = false;
+    let wbOfflineIdCounter = 0;
+    function wbOfflineNextId() {
+      wbOfflineIdCounter++;
+      return 'offline-' + wbOfflineIdCounter;
+    }
+    function wbOfflineNextDisplayId(kind) {
+      const prefix = WB_ID_PREFIX[kind];
+      if (!prefix) return null;
+      wbOfflineDisplayCounters[prefix] = (wbOfflineDisplayCounters[prefix] || 0) + 1;
+      return prefix + '-' + String(wbOfflineDisplayCounters[prefix]).padStart(3, '0');
+    }
+    let wbOfflineDisplayCounters = {};
+
+    // Builds the same seeded tree wbSeedElements() would write to Supabase,
+    // entirely in memory — no network calls, so it works even if the
+    // backend is unreachable or paused.
+    function wbOfflineSeedElements() {
+      const defs = wbSeedDefinitions();
+      const idMap = {};
+      const now = new Date().toISOString();
+      const built = [];
+      defs.forEach((def, i) => {
+        const id = wbOfflineNextId();
+        const parent_id = def.parentTempId ? idMap[def.parentTempId] : null;
+        const display_id = wbOfflineNextDisplayId(def.kind);
+        built.push({
+          id, project_id: wbProject.id, parent_id, kind: def.kind, label: def.label,
+          display_id, props: def.props || {}, created_at: now, _order: i
+        });
+        idMap[def.tempId] = id;
+      });
+      return built;
+    }
+
+    function wbEnterOfflineWorkspace() {
+      wbOfflineMode = true;
+      wbOfflineIdCounter = 0;
+      wbOfflineDisplayCounters = {};
+      const project = { id: 'offline-demo', name: 'My Functional Safety Project (offline demo)', standards: ['fu'], createdAt: new Date().toISOString() };
+      const banner = document.getElementById('wb-offline-banner');
+      if (banner) banner.style.display = 'block';
+      wbOpen(project);
+    }
 
     async function initAuth() {
       if (!sb) return;
@@ -3106,6 +3170,13 @@
       document.removeEventListener('keydown', wbKeyHandler);
       wbUndockAssistant();
       document.querySelector('.page').style.display = 'flex';
+      if (wbOfflineMode) {
+        wbOfflineMode = false;
+        wbProject = null;
+        wbElements = [];
+        const banner = document.getElementById('wb-offline-banner');
+        if (banner) banner.style.display = 'none';
+      }
     }
 
     function showAboutView() {
@@ -4380,6 +4451,7 @@
     }
 
     async function wbLoadElements() {
+      if (wbOfflineMode) { wbElements = wbOfflineSeedElements(); return; }
       if (!sbReady()) { wbElements = []; return; }
       const { data, error } = await sb.from('elements').select('*').eq('project_id', wbProject.id).order('created_at');
       if (error) { console.error(error); fcShowToast('Could not load workspace'); wbElements = []; return; }
@@ -4395,6 +4467,7 @@
     // Lightweight list of every project this user owns (id/name/standards/status
     // only — not their internal elements), used to populate the 5 branches.
     async function wbFetchAllProjects() {
+      if (wbOfflineMode) { wbAllProjects = []; return; }
       if (!sbReady() || !currentUser) { wbAllProjects = []; return; }
       const { data, error } = await sb.from('projects').select('*').eq('owner_id', currentUser.id).order('created_at', { ascending: false });
       if (error) { console.error(error); wbAllProjects = []; return; }
@@ -4889,9 +4962,10 @@
 
     function wbSave(isRefresh) {
       if (isRefresh) {
+        if (wbOfflineMode) { fcShowToast('Offline demo \u2014 nothing to refresh from a server'); return; }
         wbLoadElements().then(() => { wbRenderTree(); fcShowToast('Refreshed'); });
       } else {
-        fcShowToast('All changes are saved automatically');
+        fcShowToast(wbOfflineMode ? 'Offline demo \u2014 changes aren\u2019t saved' : 'All changes are saved automatically');
       }
     }
 
@@ -4918,6 +4992,14 @@
       if (!node || node.locked) return;
       const name = prompt('Rename to:', node.label);
       if (!name || !name.trim()) return;
+      if (wbOfflineMode) {
+        const el = wbElements.find(e => e.id === id);
+        if (el) el.label = name.trim();
+        wbRenderTree();
+        wbRenderProps(wbFindNode(wbSelectedId));
+        fcShowToast('Renamed (offline demo \u2014 not saved)');
+        return;
+      }
       if (!sbReady()) return;
       const { error } = await sb.from('elements').update({ label: name.trim() }).eq('id', id);
       if (error) { console.error(error); fcShowToast('Could not rename'); return; }
@@ -5105,6 +5187,20 @@
     });
 
     async function wbCreateChild(parentId, kind, label) {
+      if (wbOfflineMode) {
+        const parent_id = parentId === 'root' ? null : parentId;
+        const data = {
+          id: wbOfflineNextId(), project_id: wbProject.id, parent_id, kind, label,
+          display_id: wbOfflineNextDisplayId(kind), props: {}, created_at: new Date().toISOString()
+        };
+        wbElements.push(data);
+        wbExpandedIds.add(parentId);
+        wbRenderTree();
+        wbSelectNode(data.id);
+        wbCloseCtx();
+        fcShowToast('Created ' + label + (data.display_id ? ' (' + data.display_id + ')' : '') + ' \u2014 offline demo, not saved');
+        return;
+      }
       if (!sbReady()) { wbCloseCtx(); return; }
       const parent_id = parentId === 'root' ? null : parentId;
       const display_id = await wbNextDisplayId(kind);
@@ -5128,6 +5224,18 @@
     // gathered real values before this ever runs). No context menu involved
     // here, so no wbCloseCtx() call.
     async function fcCreateElementWithProps(parentId, kind, label, props) {
+      if (wbOfflineMode) {
+        const parent_id = parentId === 'root' ? null : parentId;
+        const data = {
+          id: wbOfflineNextId(), project_id: wbProject.id, parent_id, kind, label,
+          display_id: wbOfflineNextDisplayId(kind), props: props || {}, created_at: new Date().toISOString()
+        };
+        wbElements.push(data);
+        wbExpandedIds.add(parentId);
+        wbRenderTree();
+        wbSelectNode(data.id);
+        return data;
+      }
       if (!sbReady()) throw new Error('Not connected');
       const parent_id = parentId === 'root' ? null : parentId;
       const display_id = await wbNextDisplayId(kind);
@@ -5148,6 +5256,19 @@
     // too, so a value changing mid-conversation is visible immediately rather
     // than only after the person clicks back into it.
     async function fcUpdateElementProps(id, label, props) {
+      if (wbOfflineMode) {
+        const idx = wbElements.findIndex(e => e.id === id);
+        const merged = idx >= 0 ? Object.assign({}, wbElements[idx], { label, props: props || {} }) : { id, label, props: props || {} };
+        if (idx >= 0) wbElements[idx] = merged; else wbElements.push(merged);
+        wbRenderTree();
+        if (wbSelectedId === id) {
+          wbRenderEditor(merged);
+          if (document.querySelector('.wb-tab.active') && document.querySelector('.wb-tab.active').dataset.tab === 'props') {
+            wbRenderProps(merged);
+          }
+        }
+        return merged;
+      }
       if (!sbReady()) throw new Error('Not connected');
       const { data, error } = await sb.from('elements').update({ label, props: props || {} }).eq('id', id).select().single();
       if (error) { console.error(error); throw error; }
@@ -5165,6 +5286,19 @@
 
     async function wbDeleteNode(id) {
       if (!confirm('Delete this element? Child elements will be deleted too.')) return;
+      if (wbOfflineMode) {
+        const toDelete = new Set([id]);
+        let grew = true;
+        while (grew) {
+          grew = false;
+          wbElements.forEach(e => { if (e.parent_id && toDelete.has(e.parent_id) && !toDelete.has(e.id)) { toDelete.add(e.id); grew = true; } });
+        }
+        wbElements = wbElements.filter(e => !toDelete.has(e.id));
+        if (wbSelectedId === id) wbSelectNode(null);
+        wbRenderTree();
+        fcShowToast('Deleted (offline demo \u2014 not saved)');
+        return;
+      }
       if (!sbReady()) return;
       const { error } = await sb.from('elements').delete().eq('id', id);
       if (error) { console.error(error); fcShowToast('Could not delete'); return; }

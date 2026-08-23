@@ -259,26 +259,42 @@ If no build should happen yet (still clarifying, off-topic, or unsupported templ
       history.push({ role: 'assistant', content: reply });
       appendMessage('assistant', reply);
 
-      // Second, deterministic pass: does this turn actually trigger a build?
+      // Kick off the build-check call now, in parallel with speech below,
+      // instead of waiting for it before saying anything (that was the
+      // cause of the delay — this second network call used to block voice
+      // entirely). Not awaited yet, so it runs while the reply is spoken.
       const transcript = history.map(m => (m.role === 'user' ? 'USER: ' : 'ASSISTANT: ') + m.content).join('\n');
-      const extractionRaw = await callClaude(
-        [{ role: 'user', content: transcript }],
-        EXTRACTION_PROMPT,
-        200
-      );
-      const parsed = tryParseJSON(extractionRaw);
+      const extractionPromise = callClaude([{ role: 'user', content: transcript }], EXTRACTION_PROMPT, 200)
+        .catch((e) => { console.error('Build check failed:', e); return null; });
 
-      let spokenReply = reply;
+      // What happens after the reply is fully spoken (or immediately, if
+      // voice is off): by now extractionPromise has usually already
+      // resolved in the background, since it's a much shorter call than
+      // the time it takes to speak the reply out loud.
+      const afterReply = async () => {
+        const extractionRaw = await extractionPromise;
+        const parsed = extractionRaw ? tryParseJSON(extractionRaw) : null;
 
-      if (parsed && parsed.action === 'build_circuit') {
-        appendMessage('action', JSON.stringify(parsed));
-        const result = await executeAction(parsed);
-        appendMessage('assistant', result.message);
-        spokenReply = reply + ' ' + result.message;
-      }
+        if (parsed && parsed.action === 'build_circuit') {
+          appendMessage('action', JSON.stringify(parsed));
+          const result = await executeAction(parsed);
+          appendMessage('assistant', result.message);
+          if (voiceOn) {
+            speak(result.message, () => { if (viaVoice) listenOnce(); });
+            return;
+          }
+        }
+        if (voiceOn && viaVoice) listenOnce();
+      };
 
+      // The mic only ever re-arms from inside afterReply — never from the
+      // speak() call itself — so it can't fire twice, and never listens
+      // while the assistant is still talking (avoids picking up its own
+      // voice through the speaker).
       if (voiceOn) {
-        speak(spokenReply, () => { if (viaVoice) listenOnce(); });
+        speak(reply, afterReply);
+      } else {
+        afterReply();
       }
     } catch (e) {
       appendMessage('assistant', "Couldn't reach the assistant — " + e.message);

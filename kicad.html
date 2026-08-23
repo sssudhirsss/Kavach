@@ -197,7 +197,7 @@ If no build should happen yet (still clarifying, off-topic, or unsupported templ
     const dot = document.getElementById('status-dot');
     const text = document.getElementById('status-text');
     try {
-      const res = await fetch(BRIDGE_URL + '/api/health');
+      const res = await fetch(BRIDGE_URL + '/api/kicad-health');
       const data = await res.json();
       if (data.key_configured) {
         dot.classList.add('ok');
@@ -212,7 +212,7 @@ If no build should happen yet (still clarifying, off-topic, or unsupported templ
 
   // ---------- Claude calls (via local bridge, never direct) ----------
   async function callClaude(messages, system, maxTokens) {
-    const res = await fetch(BRIDGE_URL + '/api/chat', {
+    const res = await fetch(BRIDGE_URL + '/api/kicad-chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ messages, system, max_tokens: maxTokens || 400 })
@@ -234,7 +234,7 @@ If no build should happen yet (still clarifying, off-topic, or unsupported templ
 
   // ---------- Executing an action against the bridge (stub today, real KiCad later) ----------
   async function executeAction(action) {
-    const res = await fetch(BRIDGE_URL + '/api/action', {
+    const res = await fetch(BRIDGE_URL + '/api/kicad-action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(action)

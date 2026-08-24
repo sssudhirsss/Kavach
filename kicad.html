@@ -120,7 +120,10 @@
 
 <header>
   <h1>KiCad <span>Voice Coworker</span> — prototype</h1>
-  <div id="status"><span class="dot" id="status-dot"></span><span id="status-text">checking bridge…</span></div>
+  <div style="display:flex; flex-direction:column; align-items:flex-end; gap:4px;">
+    <div id="status"><span class="dot" id="status-dot"></span><span id="status-text">checking assistant…</span></div>
+    <div id="local-status"><span class="dot" id="local-status-dot"></span><span id="local-status-text">checking KiCad builder…</span></div>
+  </div>
 </header>
 
 <div id="log"></div>
@@ -138,10 +141,13 @@
 
 <script>
   // ---------- Config ----------
-  // Same-site relative paths now — the chat and action endpoints are
-  // serverless functions living in /api on this same website, not a local
-  // program on your PC. Nothing to run or start manually anymore.
+  // Chat still goes through this website's own serverless functions (holds
+  // the API key safely). The actual KiCad build step goes straight to a
+  // small program running on YOUR PC, since KiCad automation can only ever
+  // happen on the machine KiCad itself is running on - that part can't live
+  // on a website no matter what.
   const BRIDGE_URL = "";
+  const LOCAL_BUILDER_URL = "http://localhost:8899";
 
   // ---------- State ----------
   let history = [];       // [{role, content}] sent to Claude
@@ -210,6 +216,20 @@ If no build should happen yet (still clarifying, off-topic, or unsupported templ
     }
   }
 
+  // ---------- Local KiCad builder health check ----------
+  async function checkLocalBuilder() {
+    const dot = document.getElementById('local-status-dot');
+    const text = document.getElementById('local-status-text');
+    try {
+      const res = await fetch(LOCAL_BUILDER_URL + '/health');
+      const data = await res.json();
+      dot.classList.add('ok');
+      text.textContent = 'KiCad builder running · ' + data.templates.join(', ');
+    } catch (e) {
+      text.textContent = 'KiCad builder not running (voice chat still works, builds won\u2019t)';
+    }
+  }
+
   // ---------- Claude calls (via local bridge, never direct) ----------
   async function callClaude(messages, system, maxTokens) {
     const res = await fetch(BRIDGE_URL + '/api/kicad-chat', {
@@ -232,14 +252,25 @@ If no build should happen yet (still clarifying, off-topic, or unsupported templ
     }
   }
 
-  // ---------- Executing an action against the bridge (stub today, real KiCad later) ----------
+  // ---------- Executing an action: goes straight to the local KiCad
+  // builder on this PC, not through the website. If it's unreachable
+  // (program not running), that's reported plainly rather than silently
+  // falling back to a fake "simulated" response - a real build either
+  // happens or you're told clearly why not. ----------
   async function executeAction(action) {
-    const res = await fetch(BRIDGE_URL + '/api/kicad-action', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(action)
-    });
-    return res.json();
+    try {
+      const res = await fetch(LOCAL_BUILDER_URL + '/build', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(action)
+      });
+      return await res.json();
+    } catch (e) {
+      return {
+        status: 'error',
+        message: "I can't reach the KiCad builder on your PC right now — is local_server.py running?"
+      };
+    }
   }
 
   // ---------- Main send path (typed and spoken both funnel through here) ----------
@@ -361,6 +392,7 @@ If no build should happen yet (still clarifying, off-topic, or unsupported templ
 
   // ---------- Boot ----------
   checkHealth();
+  checkLocalBuilder();
   appendMessage('assistant', "Hi — I'm your KiCad coworker. Tap the mic or type. I can build a voltage divider, an RC low-pass, or an RC high-pass filter (KiCad connection is simulated for now).");
 </script>
 

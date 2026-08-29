@@ -142,6 +142,21 @@
   }
   .go-btn:hover { background: var(--accent-dark); }
 
+  .dev-delete-all-btn {
+    display: block;
+    margin: 10px auto 0;
+    padding: 4px 10px;
+    background: none;
+    border: 1px dashed var(--text-dim);
+    border-radius: 6px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 11px;
+    cursor: pointer;
+    opacity: 0.55;
+  }
+  .dev-delete-all-btn:hover { opacity: 1; border-color: #c0392b; color: #c0392b; }
+
   .workspace-quick-btn {
     margin-top: 14px;
     display: inline-flex;
@@ -1179,6 +1194,7 @@
         </button>
         <button class="go-btn" onclick="handleSearchSubmit()" aria-label="Go">Go</button>
       </div>
+      <button class="dev-delete-all-btn" onclick="wbDeleteAllProjects()">Dev: delete all projects</button>
     </div>
 
     <div class="disc-grid">
@@ -4978,12 +4994,20 @@
                                                 // restore whatever was actually selected before saving.
           wbSyncDrawioXml(folderId, msg.xml).then(result => {
             fcShowToast('Saved \u2014 ' + result.createdCount + ' new, ' + result.updatedCount + ' moved, ' + result.connectedCount + ' connected. Deletions aren\u2019t synced yet.');
-            wbLoadElements().then(() => {
+            const afterSync = () => {
               wbSelectedId = prevSelectedId;
               wbRenderTree();
               wbRenderEditor(wbFindNode(prevSelectedId));
               wbRenderProps(wbFindNode(prevSelectedId));
-            });
+            };
+            // In offline mode, wbElements/wbElementRefs were already updated directly
+            // by the sync above (fcCreateElementWithProps etc. write in-memory in that
+            // mode). Calling wbLoadElements() here would call wbOfflineSeedElements(),
+            // which re-seeds the ENTIRE tree with brand-new ids from scratch every time
+            // it runs \u2014 wiping this session's work and leaving prevSelectedId pointing
+            // at an id that no longer exists. Only reload from the real backend.
+            if (wbOfflineMode) { afterSync(); }
+            else { wbLoadElements().then(afterSync); }
           });
         } else if (msg.event === 'exit') {
           wbCloseArchDiagram();
@@ -5367,6 +5391,46 @@
       wbExpandedIds.delete(id);
       if (wbSelectedId === id) wbSelectNode(null);
       wbRenderTree();
+    }
+
+    // Dev-only convenience (this button lives on the landing page, not tucked
+    // behind a menu, since its whole purpose is fast cleanup between test
+    // runs) \u2014 wipes every project this account owns in one go, so testing
+    // doesn't pile up junk projects. Same cascading delete as wbDeleteProject,
+    // but since there's no single project name to type back, it asks for a
+    // fixed confirmation phrase instead \u2014 still deliberate, just not
+    // per-project.
+    async function wbDeleteAllProjects() {
+      if (wbOfflineMode) { fcShowToast('Offline demo \u2014 nothing to delete'); return; }
+      if (!sbReady() || !currentUser) { fcShowToast('Sign in first'); return; }
+
+      await wbFetchAllProjects(); // count shown in the prompt should be current, not stale
+      const count = wbAllProjects.length;
+      if (count === 0) { fcShowToast('No projects to delete'); return; }
+
+      const typed = prompt(
+        'This permanently deletes ALL ' + count + ' project(s) on this account \u2014 every folder, item, and analysis in every one of them. This can\u2019t be undone.\n\n' +
+        'Type DELETE ALL to confirm:'
+      );
+      if (typed === null) return;
+      if (typed.trim() !== 'DELETE ALL') {
+        fcShowToast('Text didn\u2019t match \u2014 nothing deleted');
+        return;
+      }
+
+      const { error } = await sb.from('projects').delete().eq('owner_id', currentUser.id);
+      if (error) { console.error(error); fcShowToast('Could not delete all projects'); return; }
+
+      wbAllProjects = [];
+      const wasInAProject = !!wbProject;
+      wbProject = null;
+      wbElements = [];
+      wbElementRefs = [];
+      wbSelectedId = null;
+      wbExpandedIds = new Set(['root']);
+      if (wasInAProject) backToHome();
+      wbRenderTree();
+      fcShowToast('Deleted all ' + count + ' project(s)');
     }
 
     document.addEventListener('click', function (e) {

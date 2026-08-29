@@ -3945,7 +3945,22 @@
           { label: 'Adjust Tasklist', checked: true, remark: 'no changes', description: 'Tailor this Tasklist to the project scope and your own process.' },
         ]},
         { label: 'Specify the item', checked: true, related: ['Item Definition'], description: 'The item definition scopes the work: the item itself, its functions, and its relations/interfaces to other vehicle-level systems.', children: [
-          { label: 'Textual/Verbal item description', checked: true, related: ['Electronic Steering Lock'], description: 'Fill in the item description form; put external references under Item Definition \u2192 Additional Material.' },
+          { label: '5.4.1 Item requirements', checked: true, related: ['Item Definition'], description: 'Make the item\u2019s requirements available (ISO 26262-3, 5.4.1).', children: [
+            { label: 'Legal requirements / standards', checked: true, related: ['Item Definition'], description: '[5.4.1a] Identify applicable legal requirements and national/international standards.' },
+            { label: 'Functional behaviour at vehicle level', checked: true, related: ['Item Definition'], description: '[5.4.1b] Describe the functional behaviour at vehicle level, including operating modes/states.' },
+            { label: 'Required quality/performance/availability', checked: true, related: ['Item Definition'], description: '[5.4.1c] Capture required quality, performance and availability of the functionality, where applicable.' },
+            { label: 'Constraints', checked: true, related: ['Item Definition'], description: '[5.4.1d] Identify constraints \u2014 functional dependencies, dependencies on other items, operating environment.' },
+            { label: 'Potential consequences of behavioural shortfalls', checked: true, related: ['Item Definition'], description: '[5.4.1e] Capture potential consequences of behavioural shortfalls, including known failure modes/hazards and related incidents.' },
+            { label: 'Actuator capabilities', checked: true, related: ['Item Definition'], description: '[5.4.1f] Document actuator capabilities, or assumed capabilities, needed later to judge hazard severity.' },
+          ]},
+          { label: '5.4.2 Item boundary, interfaces & assumptions', checked: true, related: ['Item Definition'], description: 'Define the item\u2019s boundary, interfaces and assumptions about its interaction with other items/elements (ISO 26262-3, 5.4.2).', children: [
+            { label: 'Elements of the item', checked: true, related: ['Item Definition'], description: '[5.4.2a] Identify the elements that make up the item.' },
+            { label: 'Effects on the vehicle', checked: true, related: ['Item Definition'], description: '[5.4.2b] State assumptions on how the item\u2019s behaviour affects the vehicle.' },
+            { label: 'Functionality provided to other items', checked: true, related: ['Item Definition'], description: '[5.4.2c] Describe functionality the item provides to other items/elements.' },
+            { label: 'Functionality required from other items', checked: true, related: ['Item Definition'], description: '[5.4.2d] Describe functionality the item requires from other items/elements.' },
+            { label: 'Function allocation', checked: true, related: ['Item Definition'], description: '[5.4.2e] Capture the allocation/distribution of functions across the involved systems and elements.' },
+            { label: 'Operational scenarios', checked: true, related: ['Item Definition'], description: '[5.4.2f] Identify operational scenarios that affect the item\u2019s functionality.' },
+          ]},
           { label: 'Item functions', checked: true, related: ['Vehicle Level Functions'], description: 'Create the item\u2019s vehicle-level-observable functions under Item Functions \u2192 Vehicle Level Functions.' },
           { label: 'Supporting Functions (optional)', checked: true, related: ['Supporting Functions'], description: 'Create supporting functions needed to describe the vehicle-level ones.' },
           { label: 'Create dependencies between Vehicle Level and Supporting Functions', checked: true, description: 'Use the Dependency Net to add Requires relations from vehicle-level to supporting functions.' },

@@ -2691,8 +2691,11 @@
         "just asked for. The draft immediately before their latest message was: " + JSON.stringify({
           blocks: fcArchDraft.blocks, connections: fcArchDraft.connections
         }) + ". Apply only the change requested in their most recent message \u2014 keep everything else from that " +
-        "prior draft exactly as it was",
-        '{"blocks":[{"label":"string"}],"connections":[{"from":"string","to":"string"}]}'
+        "prior draft exactly as it was. If their most recent message names or picks a specific architecture layer " +
+        "(Preliminary Architecture, Functional Safety Architecture, Technical Safety Architecture, or Software " +
+        "Safety Architecture), also capture that exact layer name",
+        '{"blocks":[{"label":"string"}],"connections":[{"from":"string","to":"string"}],' +
+        '"folderLabel":"string - the single architecture layer name the person just picked, verbatim, or empty string if they did not name one this turn"}'
       );
       if (!Array.isArray(parsed.blocks) || parsed.blocks.length === 0) throw new Error('The revised draft came back empty \u2014 leaving the previous draft in place');
 
@@ -2700,9 +2703,25 @@
       fcArchDraft.connections = parsed.connections || [];
 
       if (!fcArchDraft.folderId) {
-        const candidates = fcFindArchFolderByLabel('');
-        fcAppendAssistantMessage('Updated. Which architecture layer should this go into: ' +
-          candidates.map(c => escapeHtml(c.label)).join(', ') + '?');
+        const labelGuess = parsed.folderLabel || '';
+        const candidates = fcFindArchFolderByLabel(labelGuess);
+        const allFolders = fcFindArchFolderByLabel('');
+        if (candidates.length === 1) {
+          fcArchDraft.folderId = candidates[0].id;
+          fcArchDraft.folderLabel = candidates[0].label;
+          fcAppendAssistantMessage(fcArchDraftSummary());
+          return;
+        }
+        if (!labelGuess) {
+          fcAppendAssistantMessage('Which architecture layer should this go into \u2014 ' +
+            allFolders.map(c => escapeHtml(c.label)).join(', ') + '? Please name just one.');
+        } else if (candidates.length === 0) {
+          fcAppendAssistantMessage('I didn\u2019t recognize \u201C' + escapeHtml(labelGuess) + '\u201D as one of the ' +
+            'architecture layers. Pick exactly one: ' + allFolders.map(c => escapeHtml(c.label)).join(', ') + '.');
+        } else {
+          fcAppendAssistantMessage('\u201C' + escapeHtml(labelGuess) + '\u201D matches more than one layer: ' +
+            candidates.map(c => escapeHtml(c.label)).join(', ') + '. Which single one did you mean?');
+        }
         return;
       }
       fcAppendAssistantMessage(fcArchDraftSummary());

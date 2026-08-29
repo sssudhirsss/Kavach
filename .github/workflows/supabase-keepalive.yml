@@ -1,0 +1,27 @@
+name: Supabase Keep-Alive
+
+# Supabase's free tier auto-pauses a project after ~7 days with no API
+# activity. This workflow pings the project on a schedule so it never goes
+# quiet long enough to trigger that — cheap, no server needed, runs on
+# GitHub's own infrastructure.
+
+on:
+  schedule:
+    # Every 3 days, well inside the 7-day pause window, so a single missed
+    # run (GitHub sometimes delays scheduled jobs) still leaves margin.
+    - cron: '0 6 */3 * *'
+  workflow_dispatch: {}   # lets you trigger it manually from the Actions tab to test
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase REST endpoint
+        run: |
+          curl -sS -o /dev/null -w "HTTP %{http_code}\n" \
+            "${SUPABASE_URL}/rest/v1/projects?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}"
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}

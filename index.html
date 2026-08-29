@@ -4973,11 +4973,16 @@
         if (msg.event === 'init') {
           iframe.contentWindow.postMessage(JSON.stringify({ action: 'load', xml: wbGenerateDrawioXml(folderId), autosave: 0 }), '*');
         } else if (msg.event === 'save') {
+          const prevSelectedId = wbSelectedId; // fcCreateElementWithProps moves selection to each
+                                                // new shape as it's created during sync below \u2014
+                                                // restore whatever was actually selected before saving.
           wbSyncDrawioXml(folderId, msg.xml).then(result => {
             fcShowToast('Saved \u2014 ' + result.createdCount + ' new, ' + result.updatedCount + ' moved, ' + result.connectedCount + ' connected. Deletions aren\u2019t synced yet.');
             wbLoadElements().then(() => {
+              wbSelectedId = prevSelectedId;
               wbRenderTree();
-              if (wbSelectedId === folderId) wbRenderEditor(wbFindNode(folderId));
+              wbRenderEditor(wbFindNode(prevSelectedId));
+              wbRenderProps(wbFindNode(prevSelectedId));
             });
           });
         } else if (msg.event === 'exit') {

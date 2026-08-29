@@ -3190,6 +3190,7 @@
     let wbProject = null;
     let wbSelectedId = null;   // 'root' or a real element uuid
     let wbElements = [];       // flat array of element rows for the CURRENTLY OPEN project — parent_id links them into a tree
+    let wbElementRefs = [];    // non-cascading cross-references between elements (medini Trace/CausalityRelation pattern) — source_element_id, target_element_id, ref_type, props
     let wbAllProjects = [];    // lightweight list of every project this user owns, across all disciplines
     let wbExpandedIds = new Set(['root']);
     const ROOT = { id: 'root', label: 'Projects', kind: 'root', locked: true };
@@ -4189,6 +4190,10 @@
         // root instead of nested under Part 3 \u2014 matches medini's own ESL layout. ---
         { tempId: 'clause-fu-3-5', parentTempId: null, kind: 'folder', label: 'Item Definition', props: { folderKind: 'clause-fu-3-5' } },
         { tempId: 'wp-fu-3-5.5.1', parentTempId: 'clause-fu-3-5', kind: 'workproduct', label: '3-5.5.1 Item definition', props: { Ref: '5.5.1' } },
+        // Preliminary architecture sits as a sibling of the Item Definition work
+        // product, not under Architecture Models \u2014 matches medini's ESL example,
+        // where the item's block diagram (ESL) lives directly under Item Definition.
+        { tempId: 'top-item-prelim-arch', parentTempId: 'clause-fu-3-5', kind: 'folder', label: 'Preliminary Architecture', props: { archDiagram: 'preliminary' } },
         { tempId: 'clause-fu-3-6', parentTempId: null, kind: 'folder', label: 'Hazard Analysis and Risk Assessment', props: { folderKind: 'clause-fu-3-6' } },
         { tempId: 'wp-fu-3-6.5.1', parentTempId: 'clause-fu-3-6', kind: 'workproduct', label: '3-6.5.1 Hazard analysis and risk assessment report', props: { Ref: '6.5.1' } },
         { tempId: 'wp-fu-3-6.5.2', parentTempId: 'clause-fu-3-6', kind: 'workproduct', label: '3-6.5.2 Verification report of the hazard analysis and risk assessment', props: { Ref: '6.5.2' } },
@@ -4205,14 +4210,11 @@
         // the four sub-folders match medini's Functional/Technical/Software/
         // Hardware Safety Architecture split for when we get to each). ---
         { tempId: 'top-arch', parentTempId: null, kind: 'folder', label: 'Architecture Models', props: {} },
-        { tempId: 'top-arch-fsa', parentTempId: 'top-arch', kind: 'folder', label: 'Functional Safety Architecture', props: {} },
-        { tempId: 'top-arch-fsa-note', parentTempId: 'top-arch-fsa', kind: 'readme', label: 'Not yet built', props: { Note: 'This layer isn\u2019t wired up yet \u2014 it\u2019s next after Item Definition, HARA and Safety Goals/Requirements are further along.' } },
-        { tempId: 'top-arch-tsa', parentTempId: 'top-arch', kind: 'folder', label: 'Technical Safety Architecture', props: {} },
-        { tempId: 'top-arch-tsa-note', parentTempId: 'top-arch-tsa', kind: 'readme', label: 'Not yet built', props: { Note: 'This layer isn\u2019t wired up yet.' } },
-        { tempId: 'top-arch-swa', parentTempId: 'top-arch', kind: 'folder', label: 'Software Safety Architecture', props: {} },
-        { tempId: 'top-arch-swa-note', parentTempId: 'top-arch-swa', kind: 'readme', label: 'Not yet built', props: { Note: 'This layer isn\u2019t wired up yet.' } },
+        { tempId: 'top-arch-fsa', parentTempId: 'top-arch', kind: 'folder', label: 'Functional Safety Architecture', props: { archDiagram: 'fsc' } },
+        { tempId: 'top-arch-tsa', parentTempId: 'top-arch', kind: 'folder', label: 'Technical Safety Architecture', props: { archDiagram: 'system' } },
+        { tempId: 'top-arch-swa', parentTempId: 'top-arch', kind: 'folder', label: 'Software Safety Architecture', props: { archDiagram: 'ssc' } },
         { tempId: 'top-arch-hwa', parentTempId: 'top-arch', kind: 'folder', label: 'Hardware Safety Architecture', props: {} },
-        { tempId: 'top-arch-hwa-note', parentTempId: 'top-arch-hwa', kind: 'readme', label: 'Not yet built', props: { Note: 'This layer isn\u2019t wired up yet \u2014 it also needs a Hardware Part Library and BOM import, not built yet either.' } },
+        { tempId: 'top-arch-hwa-note', parentTempId: 'top-arch-hwa', kind: 'readme', label: 'Not yet built \u2014 and won\u2019t use the diagram editor', props: { Note: 'Confirmed from medini\u2019s own ESL example: Hardware Safety Architecture isn\u2019t a hand-drawn diagram at all \u2014 it\u2019s a BOM-derived part library (ASIC/CAPACITOR/COIL/.../TRANSISTOR, each part carrying Open/Short/Drift/Functional failure modes). This needs a BOM import + part-library UI, not the draw.io diagram editor used by the other three layers.' } },
 
         // --- Safety Analysis (placeholder layers). ---
         { tempId: 'top-sa', parentTempId: null, kind: 'folder', label: 'Safety Analysis', props: {} },
@@ -4459,10 +4461,10 @@
     }
 
     async function wbLoadElements() {
-      if (wbOfflineMode) { wbElements = wbOfflineSeedElements(); return; }
-      if (!sbReady()) { wbElements = []; return; }
+      if (wbOfflineMode) { wbElements = wbOfflineSeedElements(); wbElementRefs = []; return; }
+      if (!sbReady()) { wbElements = []; wbElementRefs = []; return; }
       const { data, error } = await sb.from('elements').select('*').eq('project_id', wbProject.id).order('created_at');
-      if (error) { console.error(error); fcShowToast('Could not load workspace'); wbElements = []; return; }
+      if (error) { console.error(error); fcShowToast('Could not load workspace'); wbElements = []; wbElementRefs = []; return; }
       if (!data || data.length === 0) {
         await wbSeedElements();
         const retry = await sb.from('elements').select('*').eq('project_id', wbProject.id).order('created_at');
@@ -4470,6 +4472,9 @@
       } else {
         wbElements = data;
       }
+      const { data: refData, error: refError } = await sb.from('element_refs').select('*').eq('project_id', wbProject.id);
+      if (refError) { console.error(refError); wbElementRefs = []; }
+      else { wbElementRefs = refData || []; }
     }
 
     // Lightweight list of every project this user owns (id/name/standards/status
@@ -4837,6 +4842,168 @@
       wbRenderProps(node);
     }
 
+    // ==========================================================================
+    // Architecture diagram (draw.io as view/editor over DB-owned elements)
+    // ==========================================================================
+    // The database stays the source of truth (elements + element_refs, same tables
+    // and write paths as everywhere else). draw.io is only ever a rendering/editing
+    // surface: we generate mxGraph XML from current elements on open, and on save we
+    // parse the returned XML and diff it against the model — new shapes become new
+    // elements, moved shapes update elements.props.layout, new edges become
+    // element_refs rows (ref_type 'connects'). Each shape/edge is tagged with its
+    // real element_refs/elements id via draw.io's <object> custom-data wrapper, so a
+    // re-open round-trips cleanly instead of re-creating everything each time.
+    //
+    // v1 scope, deliberately: does not sync deletions (removing a shape in the
+    // diagram does not delete the element) and does not move/retype existing edges.
+    // Both are safe to add once this round-trip is proven out.
+    const ARCH_BLOCK_KINDS = new Set([
+      'itemtype','elementtype','componenttype','controllertype','actuatortype','sensortype',
+      'hwparttype','swunittype','itemorsystem','component','controller','actuator','hwpart','swunit'
+    ]);
+
+    function wbGenerateDrawioXml(folderId) {
+      const blocks = wbElements.filter(e => e.parent_id === folderId && ARCH_BLOCK_KINDS.has(e.kind));
+      const refs = wbElementRefs.filter(r => r.ref_type === 'connects' &&
+        blocks.some(b => b.id === r.source_element_id) && blocks.some(b => b.id === r.target_element_id));
+      let cells = '<mxCell id="0"/><mxCell id="1" parent="0"/>';
+      blocks.forEach((b, i) => {
+        const layout = (b.props && b.props.layout) || {};
+        const x = typeof layout.x === 'number' ? layout.x : 40 + (i % 4) * 200;
+        const y = typeof layout.y === 'number' ? layout.y : 40 + Math.floor(i / 4) * 120;
+        const w = typeof layout.w === 'number' ? layout.w : 160;
+        const h = typeof layout.h === 'number' ? layout.h : 60;
+        cells += '<object elementId="' + escapeHtml(b.id) + '" label="' + escapeHtml(b.label) + '">' +
+          '<mxCell id="cell-' + escapeHtml(b.id) + '" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eef2f7;strokeColor=#4a6fa5;" vertex="1" parent="1">' +
+          '<mxGeometry x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" as="geometry"/>' +
+          '</mxCell></object>';
+      });
+      refs.forEach(r => {
+        cells += '<object refId="' + escapeHtml(r.id) + '">' +
+          '<mxCell id="ref-' + escapeHtml(r.id) + '" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cell-' + escapeHtml(r.source_element_id) + '" target="cell-' + escapeHtml(r.target_element_id) + '">' +
+          '<mxGeometry relative="1" as="geometry"/>' +
+          '</mxCell></object>';
+      });
+      return '<mxGraphModel dx="800" dy="600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0"><root>' + cells + '</root></mxGraphModel>';
+    }
+
+    async function wbSyncDrawioXml(folderId, xmlString) {
+      const doc = new DOMParser().parseFromString(xmlString, 'text/xml');
+      const allCells = Array.from(doc.getElementsByTagName('mxCell'));
+      const cellIdToElementId = {};
+      let createdCount = 0, updatedCount = 0, connectedCount = 0;
+
+      // Pass 1: vertices (blocks). <object> wrapper is optional — a shape the user
+      // draws fresh in draw.io (double-click canvas) has no elementId and no wrapper.
+      for (const mxCell of allCells) {
+        if (mxCell.getAttribute('vertex') !== '1') continue;
+        const wrapper = mxCell.parentNode && mxCell.parentNode.tagName === 'object' ? mxCell.parentNode : null;
+        const geo = mxCell.getElementsByTagName('mxGeometry')[0];
+        const layout = geo ? {
+          x: parseFloat(geo.getAttribute('x')) || 0, y: parseFloat(geo.getAttribute('y')) || 0,
+          w: parseFloat(geo.getAttribute('width')) || 160, h: parseFloat(geo.getAttribute('height')) || 60
+        } : null;
+        const label = (wrapper && wrapper.getAttribute('label')) || mxCell.getAttribute('value') || 'Component';
+        const elementId = wrapper ? wrapper.getAttribute('elementId') : null;
+        const cellId = mxCell.getAttribute('id');
+        if (elementId) {
+          cellIdToElementId[cellId] = elementId;
+          const existing = wbElements.find(e => e.id === elementId);
+          if (existing && layout) {
+            const prevLayout = (existing.props && existing.props.layout) || {};
+            const changed = prevLayout.x !== layout.x || prevLayout.y !== layout.y ||
+              prevLayout.w !== layout.w || prevLayout.h !== layout.h || existing.label !== label;
+            if (changed) {
+              await fcUpdateElementProps(elementId, label, Object.assign({}, existing.props, { layout }));
+              updatedCount++;
+            }
+          }
+        } else {
+          const created = await fcCreateElementWithProps(folderId, 'componenttype', label, layout ? { layout } : {});
+          cellIdToElementId[cellId] = created.id;
+          createdCount++;
+        }
+      }
+
+      // Pass 2: edges (connections), resolved against blocks matched/created above.
+      // An edge whose object wrapper already carries a refId is an existing
+      // element_refs row — v1 leaves it untouched rather than re-writing it.
+      for (const mxCell of allCells) {
+        if (mxCell.getAttribute('edge') !== '1') continue;
+        const wrapper = mxCell.parentNode && mxCell.parentNode.tagName === 'object' ? mxCell.parentNode : null;
+        if (wrapper && wrapper.getAttribute('refId')) continue;
+        const sourceId = cellIdToElementId[mxCell.getAttribute('source')];
+        const targetId = cellIdToElementId[mxCell.getAttribute('target')];
+        if (!sourceId || !targetId) continue; // dangling end, not attached to a real block
+        await fcCreateElementRef(sourceId, targetId, 'connects', {});
+        connectedCount++;
+      }
+
+      return { createdCount, updatedCount, connectedCount };
+    }
+
+    function wbOpenArchDiagram(folderId) {
+      const folder = wbFindNode(folderId);
+      if (!folder) return;
+      const overlay = document.createElement('div');
+      overlay.id = 'wb-drawio-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,32,0.55);z-index:9999;display:flex;flex-direction:column;';
+      const bar = document.createElement('div');
+      bar.style.cssText = 'background:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #ddd;font:14px -apple-system,sans-serif;';
+      const title = document.createElement('strong');
+      title.textContent = folder.label + ' \u2014 Architecture Diagram';
+      const closeBtn = document.createElement('button');
+      closeBtn.textContent = 'Close';
+      closeBtn.className = 'wb-btn';
+      closeBtn.onclick = () => wbCloseArchDiagram();
+      bar.appendChild(title);
+      bar.appendChild(closeBtn);
+      const iframe = document.createElement('iframe');
+      iframe.id = 'wb-drawio-iframe';
+      iframe.src = 'https://embed.diagrams.net/?embed=1&proto=json&spin=1&ui=min';
+      iframe.style.cssText = 'flex:1;border:0;width:100%;';
+      overlay.appendChild(bar);
+      overlay.appendChild(iframe);
+      document.body.appendChild(overlay);
+
+      function onMessage(evt) {
+        if (!evt.data || typeof evt.data !== 'string') return;
+        let msg;
+        try { msg = JSON.parse(evt.data); } catch (e) { return; }
+        if (msg.event === 'init') {
+          iframe.contentWindow.postMessage(JSON.stringify({ action: 'load', xml: wbGenerateDrawioXml(folderId), autosave: 0 }), '*');
+        } else if (msg.event === 'save') {
+          wbSyncDrawioXml(folderId, msg.xml).then(result => {
+            fcShowToast('Saved \u2014 ' + result.createdCount + ' new, ' + result.updatedCount + ' moved, ' + result.connectedCount + ' connected. Deletions aren\u2019t synced yet.');
+            wbLoadElements().then(() => {
+              wbRenderTree();
+              if (wbSelectedId === folderId) wbRenderEditor(wbFindNode(folderId));
+            });
+          });
+        } else if (msg.event === 'exit') {
+          wbCloseArchDiagram();
+        }
+      }
+      window.addEventListener('message', onMessage);
+      overlay._wbMessageHandler = onMessage;
+    }
+
+    function wbCloseArchDiagram() {
+      const overlay = document.getElementById('wb-drawio-overlay');
+      if (!overlay) return;
+      if (overlay._wbMessageHandler) window.removeEventListener('message', overlay._wbMessageHandler);
+      overlay.remove();
+    }
+
+    function wbArchDiagramSummaryHtml(node) {
+      const blocks = wbElements.filter(e => e.parent_id === node.id && ARCH_BLOCK_KINDS.has(e.kind));
+      const refs = wbElementRefs.filter(r => r.ref_type === 'connects' &&
+        blocks.some(b => b.id === r.source_element_id) && blocks.some(b => b.id === r.target_element_id));
+      return '<div class="wb-editor-desc">This layer\u2019s blocks and connections are stored as regular elements/element_refs \u2014 draw.io is only the editing surface.</div>' +
+        '<button class="wb-btn" style="margin:10px 0;" onclick="wbOpenArchDiagram(\'' + node.id + '\')">Open Architecture Diagram</button>' +
+        '<div class="wb-editor-desc">' + blocks.length + ' block(s), ' + refs.length + ' connection(s) so far.</div>';
+    }
+
     function wbRenderEditor(node) {
       const el = document.getElementById('wb-editor');
       if (!node) {
@@ -4889,6 +5056,13 @@
         el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + '</div>' +
           '<div class="wb-editor-kind">' + (kindLabels.tasklist || 'Tasklist') + '</div>' +
           wbTasklistTableHtml(node);
+        return;
+      }
+
+      if (node.kind === 'folder' && node.props && node.props.archDiagram) {
+        el.innerHTML = '<div class="wb-editor-title">' + escapeHtml(node.label) + '</div>' +
+          '<div class="wb-editor-kind">' + (kindLabels[node.kind] || node.kind) + '</div>' +
+          wbArchDiagramSummaryHtml(node);
         return;
       }
 
@@ -5258,7 +5432,41 @@
       return data;
     }
 
-    // Companion to the above, for the live-update path — same element, new
+    // Non-cascading cross-reference between two elements (medini Trace/CausalityRelation
+    // pattern) — e.g. a "connects" edge drawn between two Architecture blocks. Distinct
+    // from parent_id containment: deleting one endpoint does NOT delete the other.
+    // Silently ignores a duplicate (same source/target/ref_type already exists) rather
+    // than throwing, since re-saving a diagram re-declares edges that already exist.
+    async function fcCreateElementRef(sourceId, targetId, refType, props) {
+      const already = wbElementRefs.find(r =>
+        r.source_element_id === sourceId && r.target_element_id === targetId && r.ref_type === refType);
+      if (already) return already;
+      if (wbOfflineMode) {
+        const data = {
+          id: wbOfflineNextId(), project_id: wbProject.id,
+          source_element_id: sourceId, target_element_id: targetId, ref_type: refType,
+          props: props || {}, created_at: new Date().toISOString()
+        };
+        wbElementRefs.push(data);
+        return data;
+      }
+      if (!sbReady()) throw new Error('Not connected');
+      const { data, error } = await sb.from('element_refs').insert({
+        project_id: wbProject.id, source_element_id: sourceId, target_element_id: targetId,
+        ref_type: refType, props: props || {}
+      }).select().single();
+      if (error) {
+        if (error.code === '23505') { // unique_violation on (source,target,ref_type) — already exists, fine
+          wbElementRefs.push({ source_element_id: sourceId, target_element_id: targetId, ref_type: refType, props: props || {} });
+          return null;
+        }
+        console.error(error); throw error;
+      }
+      wbElementRefs.push(data);
+      return data;
+    }
+
+
     // props, no new row. Re-renders the tree and, if that element happens to
     // be the one currently open in the editor, refreshes the Properties panel
     // too, so a value changing mid-conversation is visible immediately rather

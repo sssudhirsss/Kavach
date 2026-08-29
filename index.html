@@ -1085,6 +1085,7 @@
   .wb-wp-form-groupref { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 600; color: var(--fu-ink, var(--ink)); text-transform: uppercase; letter-spacing: 0.02em; margin-bottom: 8px; }
   .wb-wp-form-field { display: block; margin-bottom: 12px; }
   .wb-wp-form-label { display: block; font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+  .wb-wp-form-fieldid { display: inline-block; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: 600; color: var(--accent); background: var(--fu-bg); border-radius: 4px; padding: 1px 5px; margin-right: 4px; }
   .wb-wp-form-field textarea {
     width: 100%; box-sizing: border-box; font-family: inherit; font-size: 12.5px; color: var(--text);
     border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; resize: vertical; line-height: 1.5;
@@ -3839,20 +3840,20 @@
       'clause-fu-3-5:5.5.1': {
         groups: [
           { ref: '5.4.1', fields: [
-            { key: 'Legal requirements/standards', label: 'Legal requirements / national & international standards' },
-            { key: 'Functional behaviour at vehicle level', label: 'Functional behaviour at vehicle level (incl. operating modes/states)' },
-            { key: 'Required quality/performance/availability', label: 'Required quality, performance & availability' },
-            { key: 'Constraints', label: 'Constraints (dependencies, operating environment)' },
-            { key: 'Potential consequences of behavioural shortfalls', label: 'Potential consequences of behavioural shortfalls / known failure modes' },
-            { key: 'Actuator capabilities', label: 'Actuator capabilities (or assumed capabilities)' }
+            { id: '5.4.1a', key: 'Legal requirements/standards', label: 'Legal requirements / national & international standards' },
+            { id: '5.4.1b', key: 'Functional behaviour at vehicle level', label: 'Functional behaviour at vehicle level (incl. operating modes/states)' },
+            { id: '5.4.1c', key: 'Required quality/performance/availability', label: 'Required quality, performance & availability' },
+            { id: '5.4.1d', key: 'Constraints', label: 'Constraints (dependencies, operating environment)' },
+            { id: '5.4.1e', key: 'Potential consequences of behavioural shortfalls', label: 'Potential consequences of behavioural shortfalls / known failure modes' },
+            { id: '5.4.1f', key: 'Actuator capabilities', label: 'Actuator capabilities (or assumed capabilities)' }
           ]},
           { ref: '5.4.2', fields: [
-            { key: 'Elements of the item', label: 'Elements that make up the item' },
-            { key: 'Effects on the vehicle', label: 'Assumptions on the item\u2019s effects on the vehicle' },
-            { key: 'Functionality provided to other items', label: 'Functionality this item provides to other items/elements' },
-            { key: 'Functionality required from other items', label: 'Functionality this item requires from other items/elements' },
-            { key: 'Function allocation', label: 'Allocation/distribution of functions across systems' },
-            { key: 'Operational scenarios', label: 'Operational scenarios affecting the item\u2019s functionality' }
+            { id: '5.4.2a', key: 'Elements of the item', label: 'Elements that make up the item' },
+            { id: '5.4.2b', key: 'Effects on the vehicle', label: 'Assumptions on the item\u2019s effects on the vehicle' },
+            { id: '5.4.2c', key: 'Functionality provided to other items', label: 'Functionality this item provides to other items/elements' },
+            { id: '5.4.2d', key: 'Functionality required from other items', label: 'Functionality this item requires from other items/elements' },
+            { id: '5.4.2e', key: 'Function allocation', label: 'Allocation/distribution of functions across systems' },
+            { id: '5.4.2f', key: 'Operational scenarios', label: 'Operational scenarios affecting the item\u2019s functionality' }
           ]}
         ]
       }
@@ -3873,9 +3874,9 @@
           '<div class="wb-wp-form-groupref">' + escapeHtml(g.ref) + '</div>' +
           g.fields.map(f => {
             const val = (node.props && node.props[f.key]) || '';
-            return '<label class="wb-wp-form-field">' +
-              '<span class="wb-wp-form-label">' + escapeHtml(f.label) + '</span>' +
-              '<textarea data-key="' + escapeHtml(f.key) + '" rows="2">' + escapeHtml(val) + '</textarea>' +
+            return '<label class="wb-wp-form-field" data-field-id="' + escapeHtml(f.id || '') + '">' +
+              '<span class="wb-wp-form-label"><span class="wb-wp-form-fieldid">' + escapeHtml(f.id || '') + '</span> ' + escapeHtml(f.label) + '</span>' +
+              '<textarea data-key="' + escapeHtml(f.key) + '" data-field-id="' + escapeHtml(f.id || '') + '" rows="2">' + escapeHtml(val) + '</textarea>' +
             '</label>';
           }).join('') +
         '</div>'

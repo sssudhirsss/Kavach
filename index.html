@@ -2144,6 +2144,8 @@
 
     let fcHistory = [];            // [{role:'user'|'assistant', content: string | content-blocks}]
     let fcPendingAttachments = []; // attachments staged for the NEXT send, cleared after
+    let fcArchDraft = null; // { folderId, folderLabel, blocks: [{label}], connections: [{from,to}] } while a
+                             // proposed architecture draft is under review \u2014 null once committed or dismissed
     let fcBusy = false;            // true while waiting on a reply — blocks double-sends
     let fcVoiceMuted = true;       // default OFF — mic and spoken replies are one coupled toggle
     let fcActiveWorkProduct = null; // { kind, elementId } once BUILDING fires; null the rest of the time
@@ -2217,6 +2219,17 @@
         "Warn them this can't be undone before including this marker.\n" +
         "[[ACTION:modify_workproduct]] \u2014 once you know which element and what should change (only usable while a " +
         "project is open).\n" +
+        "IMPORTING AN ARCHITECTURE DIAGRAM FROM AN IMAGE: if the person attaches an image of a system/architecture " +
+        "block diagram and asks you to import, build, or add it, respond briefly acknowledging you'll read it, then " +
+        "end that message on its own final line with exactly: [[ACTION:propose_architecture_from_image]] \u2014 this " +
+        "reads the actual image and proposes a draft (blocks + connections) for the person to review BEFORE anything " +
+        "is created. Do not describe the diagram's contents yourself first \u2014 the extraction step does that. Only " +
+        "usable while a project is open.\n" +
+        "Once a draft has been proposed, it stays open for revision: if the person asks for any change to it (rename " +
+        "a block, add one, remove a connection, pick a different architecture layer, etc.), end your reply with " +
+        "[[ACTION:revise_architecture_draft]]. When they approve it (\"looks good\", \"create it\", \"yes\", and " +
+        "similar), end your reply with [[ACTION:commit_architecture_draft]] \u2014 only then does anything get created. " +
+        "Never commit a draft the person hasn't clearly approved.\n" +
         "Only ever include ONE marker per message, and only once you actually have enough information \u2014 never guess " +
         "at a project or element name the person hasn't given you.";
 
@@ -2574,6 +2587,153 @@
       return parsed;
     }
 
+    // fcExtractJSON above works from fcTranscriptText(), which collapses every
+    // image attachment down to the literal string "[attachment]" \u2014 fine for
+    // text-only extractions, but useless here since the whole point is reading
+    // the picture. This sends the actual image bytes straight through instead.
+    function fcFindLatestImageBlock() {
+      for (let i = fcHistory.length - 1; i >= 0; i--) {
+        const msg = fcHistory[i];
+        if (msg.role !== 'user' || !Array.isArray(msg.content)) continue;
+        const img = msg.content.find(b => b.type === 'image');
+        if (img) return img;
+      }
+      return null;
+    }
+
+    async function fcExtractArchitectureFromImage() {
+      const imageBlock = fcFindLatestImageBlock();
+      if (!imageBlock) throw new Error('No image was found in this conversation to read the architecture from.');
+
+      const instruction = "You are a silent data-extraction function, not a conversational assistant. Look at the " +
+        "attached image of a system/architecture block diagram and extract its structure. Do NOT continue the " +
+        "conversation, do NOT add commentary.\n\n" +
+        "Your ONLY output is a single JSON object matching exactly this shape and nothing else \u2014 no markdown " +
+        "fences, no preamble, no trailing text, just the raw JSON starting with { and ending with }:\n" +
+        '{"folderLabel":"string - which architecture layer this looks like, if the image or conversation says so, ' +
+        'else empty string","blocks":[{"label":"string - a component/block name as labeled in the image"}],' +
+        '"connections":[{"from":"string - source block label","to":"string - target block label"}]}\n\n' +
+        "Read every labeled box as a block. Read every line/arrow between two boxes as a connection, using the " +
+        "block labels exactly as they appear in the image. Ignore ports, pin names, and signal labels \u2014 capture " +
+        "only the blocks themselves and which blocks connect to which. Never invent a block or connection that " +
+        "isn't actually visible in the image.";
+
+      let raw = await fcCallClaude([{ role: 'user', content: [imageBlock, { type: 'text', text: 'Extract the JSON now, exactly as specified. Output nothing but the JSON object.' }] }], instruction);
+      let parsed = fcTryParseJSON(raw);
+      if (!parsed) {
+        raw = await fcCallClaude(
+          [{ role: 'user', content: [imageBlock, { type: 'text', text: 'Extract the JSON now, exactly as specified. Output nothing but the JSON object.' }] },
+           { role: 'assistant', content: raw },
+           { role: 'user', content: 'That wasn\u2019t valid JSON. Output ONLY the JSON object now, starting with { and ending with }.' }],
+          instruction
+        );
+        parsed = fcTryParseJSON(raw);
+      }
+      if (!parsed) throw new Error('Couldn\u2019t read a valid structure from that image, even after a retry.');
+      if (!Array.isArray(parsed.blocks) || parsed.blocks.length === 0) throw new Error('No blocks were recognized in that image.');
+      return parsed;
+    }
+
+    function fcFindArchFolderByLabel(label) {
+      const archFolders = wbElements.filter(e => e.kind === 'folder' && e.props && e.props.archDiagram);
+      if (!label) return archFolders;
+      const lower = label.toLowerCase();
+      return archFolders.filter(f => f.label.toLowerCase().includes(lower));
+    }
+
+    function fcArchDraftSummary() {
+      const blockList = fcArchDraft.blocks.map(b => b.label).join(', ');
+      const connList = fcArchDraft.connections.length
+        ? fcArchDraft.connections.map(c => c.from + ' \u2192 ' + c.to).join(', ')
+        : '(none)';
+      return 'Draft for <strong>' + escapeHtml(fcArchDraft.folderLabel) + '</strong>:<br>' +
+        '<strong>' + fcArchDraft.blocks.length + ' block(s):</strong> ' + escapeHtml(blockList) + '<br>' +
+        '<strong>Connections:</strong> ' + escapeHtml(connList) + '<br><br>' +
+        'Tell me any changes, or say <em>\u201Ccreate it\u201D</em> to add these to the Model Browser. Nothing\u2019s been saved yet.';
+    }
+
+    async function fcActionProposeArchitectureFromImage() {
+      if (!wbProject) throw new Error('No project is currently open');
+      const parsed = await fcExtractArchitectureFromImage();
+
+      const candidates = fcFindArchFolderByLabel(parsed.folderLabel);
+      if (candidates.length === 0) {
+        fcAppendAssistantMessage('I read the diagram, but couldn\u2019t tell which architecture layer it\u2019s for \u2014 ' +
+          'Preliminary, Functional Safety, Technical Safety, or Software Safety Architecture?');
+        fcArchDraft = { folderId: null, folderLabel: '', blocks: parsed.blocks, connections: parsed.connections || [] };
+        return;
+      }
+      if (candidates.length > 1 && parsed.folderLabel) {
+        fcAppendAssistantMessage('More than one architecture folder matches \u201C' + escapeHtml(parsed.folderLabel) +
+          '\u201D: ' + candidates.map(c => escapeHtml(c.label)).join(', ') + '. Which one?');
+        fcArchDraft = { folderId: null, folderLabel: '', blocks: parsed.blocks, connections: parsed.connections || [] };
+        return;
+      }
+      if (candidates.length > 1) {
+        fcAppendAssistantMessage('Which architecture layer should this go into: ' +
+          candidates.map(c => escapeHtml(c.label)).join(', ') + '?');
+        fcArchDraft = { folderId: null, folderLabel: '', blocks: parsed.blocks, connections: parsed.connections || [] };
+        return;
+      }
+
+      fcArchDraft = {
+        folderId: candidates[0].id, folderLabel: candidates[0].label,
+        blocks: parsed.blocks, connections: parsed.connections || []
+      };
+      fcAppendAssistantMessage(fcArchDraftSummary());
+    }
+
+    async function fcActionReviseArchitectureDraft() {
+      if (!fcArchDraft) throw new Error('There\u2019s no draft in progress to revise');
+
+      const parsed = await fcExtractJSON(
+        "extracting the CURRENT state of a proposed architecture draft, after applying whatever change the person " +
+        "just asked for. The draft immediately before their latest message was: " + JSON.stringify({
+          blocks: fcArchDraft.blocks, connections: fcArchDraft.connections
+        }) + ". Apply only the change requested in their most recent message \u2014 keep everything else from that " +
+        "prior draft exactly as it was",
+        '{"blocks":[{"label":"string"}],"connections":[{"from":"string","to":"string"}]}'
+      );
+      if (!Array.isArray(parsed.blocks) || parsed.blocks.length === 0) throw new Error('The revised draft came back empty \u2014 leaving the previous draft in place');
+
+      fcArchDraft.blocks = parsed.blocks;
+      fcArchDraft.connections = parsed.connections || [];
+
+      if (!fcArchDraft.folderId) {
+        const candidates = fcFindArchFolderByLabel('');
+        fcAppendAssistantMessage('Updated. Which architecture layer should this go into: ' +
+          candidates.map(c => escapeHtml(c.label)).join(', ') + '?');
+        return;
+      }
+      fcAppendAssistantMessage(fcArchDraftSummary());
+    }
+
+    async function fcActionCommitArchitectureDraft() {
+      if (!fcArchDraft) throw new Error('There\u2019s no draft in progress to create');
+      if (!fcArchDraft.folderId) throw new Error('I still need to know which architecture layer this goes into before creating it');
+
+      const labelToId = {};
+      for (const b of fcArchDraft.blocks) {
+        const created = await fcCreateElementWithProps(fcArchDraft.folderId, 'componenttype', b.label, {});
+        labelToId[b.label] = created.id;
+      }
+      let connectedCount = 0;
+      for (const c of fcArchDraft.connections) {
+        const sourceId = labelToId[c.from];
+        const targetId = labelToId[c.to];
+        if (!sourceId || !targetId) continue; // referenced a block that wasn't in the final block list
+        await fcCreateElementRef(sourceId, targetId, 'connects', {});
+        connectedCount++;
+      }
+
+      const folderLabel = fcArchDraft.folderLabel;
+      const blockCount = fcArchDraft.blocks.length;
+      fcArchDraft = null;
+      fcAppendAssistantMessage('Added ' + blockCount + ' block(s) and ' + connectedCount + ' connection(s) to <strong>' +
+        escapeHtml(folderLabel) + '</strong>. Open the Architecture Diagram there to review the layout \u2014 it\u2019s ' +
+        'already populated, so you\u2019re just tidying, not building from scratch.');
+    }
+
     async function fcSyncWorkProductFromChat(kind, isFinal) {
       if (kind !== 'item-definition') return; // only Item Definition is wired end-to-end for now
 
@@ -2645,6 +2805,9 @@
         add_workproduct: fcActionAddWorkProduct,
         delete_workproduct: fcActionDeleteWorkProduct,
         modify_workproduct: fcActionModifyWorkProduct,
+        propose_architecture_from_image: fcActionProposeArchitectureFromImage,
+        revise_architecture_draft: fcActionReviseArchitectureDraft,
+        commit_architecture_draft: fcActionCommitArchitectureDraft,
       };
       const fn = handlers[action];
       if (!fn) return;
@@ -4870,13 +5033,17 @@
     // real element_refs/elements id via draw.io's <object> custom-data wrapper, so a
     // re-open round-trips cleanly instead of re-creating everything each time.
     //
-    // v1 scope, deliberately: does not sync deletions (removing a shape in the
-    // diagram does not delete the element) and does not move/retype existing edges.
-    // Both are safe to add once this round-trip is proven out.
+    // v1 scope, deliberately: does not move/retype an EXISTING edge (only new
+    // edges pick up a custom style) \u2014 safe to add once this is proven out.
+    // Deletions DO sync: removing a shape or connector in the diagram and
+    // saving deletes the corresponding element/ref, after one bulk
+    // confirmation naming exactly what will be removed.
     const ARCH_BLOCK_KINDS = new Set([
       'itemtype','elementtype','componenttype','controllertype','actuatortype','sensortype',
       'hwparttype','swunittype','itemorsystem','component','controller','actuator','hwpart','swunit'
     ]);
+    const ARCH_DEFAULT_BLOCK_STYLE = 'rounded=0;whiteSpace=wrap;html=1;fillColor=#eef2f7;strokeColor=#4a6fa5;';
+    const ARCH_DEFAULT_EDGE_STYLE = 'edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;';
 
     function wbGenerateDrawioXml(folderId) {
       const blocks = wbElements.filter(e => e.parent_id === folderId && ARCH_BLOCK_KINDS.has(e.kind));
@@ -4889,14 +5056,16 @@
         const y = typeof layout.y === 'number' ? layout.y : 40 + Math.floor(i / 4) * 120;
         const w = typeof layout.w === 'number' ? layout.w : 160;
         const h = typeof layout.h === 'number' ? layout.h : 60;
+        const style = layout.style || ARCH_DEFAULT_BLOCK_STYLE;
         cells += '<object elementId="' + escapeHtml(b.id) + '" label="' + escapeHtml(b.label) + '">' +
-          '<mxCell id="cell-' + escapeHtml(b.id) + '" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#eef2f7;strokeColor=#4a6fa5;" vertex="1" parent="1">' +
+          '<mxCell id="cell-' + escapeHtml(b.id) + '" style="' + escapeHtml(style) + '" vertex="1" parent="1">' +
           '<mxGeometry x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" as="geometry"/>' +
           '</mxCell></object>';
       });
       refs.forEach(r => {
+        const style = (r.props && r.props.style) || ARCH_DEFAULT_EDGE_STYLE;
         cells += '<object refId="' + escapeHtml(r.id) + '">' +
-          '<mxCell id="ref-' + escapeHtml(r.id) + '" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;" edge="1" parent="1" source="cell-' + escapeHtml(r.source_element_id) + '" target="cell-' + escapeHtml(r.target_element_id) + '">' +
+          '<mxCell id="ref-' + escapeHtml(r.id) + '" style="' + escapeHtml(style) + '" edge="1" parent="1" source="cell-' + escapeHtml(r.source_element_id) + '" target="cell-' + escapeHtml(r.target_element_id) + '">' +
           '<mxGeometry relative="1" as="geometry"/>' +
           '</mxCell></object>';
       });
@@ -4907,28 +5076,49 @@
       const doc = new DOMParser().parseFromString(xmlString, 'text/xml');
       const allCells = Array.from(doc.getElementsByTagName('mxCell'));
       const cellIdToElementId = {};
-      let createdCount = 0, updatedCount = 0, connectedCount = 0;
+      let createdCount = 0, updatedCount = 0, connectedCount = 0, deletedCount = 0;
+
+      // Snapshot what existed in this folder BEFORE this save, so afterward we
+      // can tell what the person actually removed in the diagram (as opposed
+      // to something that was simply never added).
+      const existingBlockIds = new Set(
+        wbElements.filter(e => e.parent_id === folderId && ARCH_BLOCK_KINDS.has(e.kind)).map(e => e.id)
+      );
+      const existingRefIds = new Set(
+        wbElementRefs.filter(r => r.ref_type === 'connects' &&
+          existingBlockIds.has(r.source_element_id) && existingBlockIds.has(r.target_element_id)
+        ).map(r => r.id)
+      );
+      const seenBlockIds = new Set();
+      const seenRefIds = new Set();
 
       // Pass 1: vertices (blocks). <object> wrapper is optional — a shape the user
       // draws fresh in draw.io (double-click canvas) has no elementId and no wrapper.
+      // The mxCell's own "style" attribute is captured and persisted too — this is
+      // what actually encodes the shape/symbol/color the user picked, and without
+      // saving it, regeneration would silently overwrite it back to the default box.
       for (const mxCell of allCells) {
         if (mxCell.getAttribute('vertex') !== '1') continue;
         const wrapper = mxCell.parentNode && mxCell.parentNode.tagName === 'object' ? mxCell.parentNode : null;
         const geo = mxCell.getElementsByTagName('mxGeometry')[0];
+        const style = mxCell.getAttribute('style') || '';
         const layout = geo ? {
           x: parseFloat(geo.getAttribute('x')) || 0, y: parseFloat(geo.getAttribute('y')) || 0,
-          w: parseFloat(geo.getAttribute('width')) || 160, h: parseFloat(geo.getAttribute('height')) || 60
-        } : null;
+          w: parseFloat(geo.getAttribute('width')) || 160, h: parseFloat(geo.getAttribute('height')) || 60,
+          style
+        } : { style };
         const label = (wrapper && wrapper.getAttribute('label')) || mxCell.getAttribute('value') || 'Component';
         const elementId = wrapper ? wrapper.getAttribute('elementId') : null;
         const cellId = mxCell.getAttribute('id');
         if (elementId) {
+          seenBlockIds.add(elementId);
           cellIdToElementId[cellId] = elementId;
           const existing = wbElements.find(e => e.id === elementId);
           if (existing && layout) {
             const prevLayout = (existing.props && existing.props.layout) || {};
             const changed = prevLayout.x !== layout.x || prevLayout.y !== layout.y ||
-              prevLayout.w !== layout.w || prevLayout.h !== layout.h || existing.label !== label;
+              prevLayout.w !== layout.w || prevLayout.h !== layout.h ||
+              (prevLayout.style || '') !== (layout.style || '') || existing.label !== label;
             if (changed) {
               await fcUpdateElementProps(elementId, label, Object.assign({}, existing.props, { layout }));
               updatedCount++;
@@ -4936,6 +5126,7 @@
           }
         } else {
           const created = await fcCreateElementWithProps(folderId, 'componenttype', label, layout ? { layout } : {});
+          seenBlockIds.add(created.id);
           cellIdToElementId[cellId] = created.id;
           createdCount++;
         }
@@ -4943,19 +5134,44 @@
 
       // Pass 2: edges (connections), resolved against blocks matched/created above.
       // An edge whose object wrapper already carries a refId is an existing
-      // element_refs row — v1 leaves it untouched rather than re-writing it.
+      // element_refs row — v1 leaves it untouched (including its style) rather
+      // than re-writing it; only brand-new edges are created, with their style
+      // captured the same way as vertices.
       for (const mxCell of allCells) {
         if (mxCell.getAttribute('edge') !== '1') continue;
         const wrapper = mxCell.parentNode && mxCell.parentNode.tagName === 'object' ? mxCell.parentNode : null;
-        if (wrapper && wrapper.getAttribute('refId')) continue;
+        if (wrapper && wrapper.getAttribute('refId')) { seenRefIds.add(wrapper.getAttribute('refId')); continue; }
         const sourceId = cellIdToElementId[mxCell.getAttribute('source')];
         const targetId = cellIdToElementId[mxCell.getAttribute('target')];
         if (!sourceId || !targetId) continue; // dangling end, not attached to a real block
-        await fcCreateElementRef(sourceId, targetId, 'connects', {});
+        const edgeStyle = mxCell.getAttribute('style') || '';
+        const createdRef = await fcCreateElementRef(sourceId, targetId, 'connects', edgeStyle ? { style: edgeStyle } : {});
+        if (createdRef) seenRefIds.add(createdRef.id);
         connectedCount++;
       }
 
-      return { createdCount, updatedCount, connectedCount };
+      // Pass 3: deletions. Anything that existed before this save but wasn't
+      // seen in the returned diagram was removed by the person, on purpose.
+      // One bulk confirmation covers everything from this single save rather
+      // than a dialog per shape. Elements are deleted via the same cascade
+      // path as a manual Model Browser delete (children + any refs to/from
+      // it go too); standalone removed connectors (both endpoints kept) are
+      // deleted individually.
+      const blocksToDelete = [...existingBlockIds].filter(id => !seenBlockIds.has(id));
+      const refsToDelete = [...existingRefIds].filter(id => !seenRefIds.has(id));
+      if (blocksToDelete.length > 0 || refsToDelete.length > 0) {
+        const proceed = confirm(
+          'This will permanently delete ' + blocksToDelete.length + ' block(s) and ' +
+          refsToDelete.length + ' connection(s) that were removed from the diagram.\n\n' +
+          'This can\u2019t be undone. Continue?'
+        );
+        if (proceed) {
+          for (const id of blocksToDelete) { await wbDeleteNodeCascade(id); deletedCount++; }
+          for (const id of refsToDelete) { await fcDeleteElementRef(id); }
+        }
+      }
+
+      return { createdCount, updatedCount, connectedCount, deletedCount };
     }
 
     function wbOpenArchDiagram(folderId) {
@@ -4993,7 +5209,7 @@
                                                 // new shape as it's created during sync below \u2014
                                                 // restore whatever was actually selected before saving.
           wbSyncDrawioXml(folderId, msg.xml).then(result => {
-            fcShowToast('Saved \u2014 ' + result.createdCount + ' new, ' + result.updatedCount + ' moved, ' + result.connectedCount + ' connected. Deletions aren\u2019t synced yet.');
+            fcShowToast('Saved \u2014 ' + result.createdCount + ' new, ' + result.updatedCount + ' moved, ' + result.connectedCount + ' connected, ' + result.deletedCount + ' deleted.');
             const afterSync = () => {
               wbSelectedId = prevSelectedId;
               wbRenderTree();
@@ -5525,9 +5741,16 @@
         ref_type: refType, props: props || {}
       }).select().single();
       if (error) {
-        if (error.code === '23505') { // unique_violation on (source,target,ref_type) — already exists, fine
-          wbElementRefs.push({ source_element_id: sourceId, target_element_id: targetId, ref_type: refType, props: props || {} });
-          return null;
+        if (error.code === '23505') { // unique_violation — a row already exists in the DB that our
+          // in-memory wbElementRefs didn't know about (stale cache). Fetch its real id rather than
+          // returning null, so callers that need to identify it (e.g. the diagram deletion-diff pass)
+          // don't mistake an already-existing connection for one the person just removed.
+          const { data: existingRow, error: fetchError } = await sb.from('element_refs').select('*')
+            .eq('project_id', wbProject.id).eq('source_element_id', sourceId)
+            .eq('target_element_id', targetId).eq('ref_type', refType).maybeSingle();
+          if (fetchError || !existingRow) { console.error(fetchError); return null; }
+          wbElementRefs.push(existingRow);
+          return existingRow;
         }
         console.error(error); throw error;
       }
@@ -5569,8 +5792,12 @@
       return data;
     }
 
-    async function wbDeleteNode(id) {
-      if (!confirm('Delete this element? Child elements will be deleted too.')) return;
+    // Does the actual deletion work with no confirm dialog and no toast \u2014
+    // callers decide how/when to confirm and what to tell the person
+    // afterward. wbDeleteNode (manual Model Browser delete) wraps this with
+    // its own single-item confirm; the diagram sync below wraps it with one
+    // bulk confirm covering everything removed from a diagram in one save.
+    async function wbDeleteNodeCascade(id) {
       if (wbOfflineMode) {
         const toDelete = new Set([id]);
         let grew = true;
@@ -5579,16 +5806,41 @@
           wbElements.forEach(e => { if (e.parent_id && toDelete.has(e.parent_id) && !toDelete.has(e.id)) { toDelete.add(e.id); grew = true; } });
         }
         wbElements = wbElements.filter(e => !toDelete.has(e.id));
+        // No real FK cascade in offline mode \u2014 clean up any element_refs that
+        // pointed at what we just removed, so nothing dangles.
+        wbElementRefs = wbElementRefs.filter(r => !toDelete.has(r.source_element_id) && !toDelete.has(r.target_element_id));
         if (wbSelectedId === id) wbSelectNode(null);
-        wbRenderTree();
-        fcShowToast('Deleted (offline demo \u2014 not saved)');
         return;
       }
       if (!sbReady()) return;
       const { error } = await sb.from('elements').delete().eq('id', id);
-      if (error) { console.error(error); fcShowToast('Could not delete'); return; }
-      // Cascade already happened server-side — reload to keep the local array in sync.
+      if (error) { console.error(error); throw error; }
+      // Cascade already happened server-side (children via parent_id, refs via
+      // element_refs' FKs) \u2014 caller reloads to keep the local array in sync.
       if (wbSelectedId === id) wbSelectNode(null);
+    }
+
+    async function fcDeleteElementRef(id) {
+      if (wbOfflineMode) { wbElementRefs = wbElementRefs.filter(r => r.id !== id); return; }
+      if (!sbReady()) return;
+      const { error } = await sb.from('element_refs').delete().eq('id', id);
+      if (error) { console.error(error); throw error; }
+      wbElementRefs = wbElementRefs.filter(r => r.id !== id);
+    }
+
+    async function wbDeleteNode(id) {
+      if (!confirm('Delete this element? Child elements will be deleted too.')) return;
+      try {
+        await wbDeleteNodeCascade(id);
+      } catch (e) {
+        fcShowToast('Could not delete');
+        return;
+      }
+      if (wbOfflineMode) {
+        wbRenderTree();
+        fcShowToast('Deleted (offline demo \u2014 not saved)');
+        return;
+      }
       await wbLoadElements();
       wbRenderTree();
       fcShowToast('Deleted');
